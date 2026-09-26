@@ -100,7 +100,7 @@ export default function OrdenDetallePage() {
         />
         {error && <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
         {!orden ? (
-          <p className="text-sm text-zinc-500">Cargando orden...</p>
+          <p className="text-sm text-zinc-600">Cargando orden...</p>
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="space-y-4">
@@ -146,20 +146,20 @@ export default function OrdenDetallePage() {
             <div className="space-y-4">
               <Card>
                 <h2 className="font-semibold">Pagos y repuestos</h2>
-                <p className="mt-1 text-sm text-zinc-500">
+                <p className="mt-1 text-sm text-zinc-600">
                   Precio final: <b>${Number(orden.precioFinal ?? 0).toFixed(2)}</b> · Cobrado: <b>${(orden.pagos ?? []).reduce((a, p) => a + Number(p.monto), 0).toFixed(2)}</b>
                 </p>
                 <ul className="mt-2 divide-y divide-zinc-100 text-sm">
                   {(orden.pagos ?? []).map((p) => (
                     <li key={p.id} className="py-1.5">${Number(p.monto).toFixed(2)} · {p.medioPago} · {new Date(p.fecha).toLocaleDateString()}</li>
                   ))}
-                  {(orden.pagos ?? []).length === 0 && <li className="py-1.5 text-zinc-500">Sin pagos. Cargalos en /pagos.</li>}
+                  {(orden.pagos ?? []).length === 0 && <li className="py-1.5 text-zinc-600">Sin pagos. Cargalos en /pagos.</li>}
                 </ul>
                 <ul className="mt-2 divide-y divide-zinc-100 text-sm">
                   {(orden.repuestosUsados ?? []).map((r) => (
                     <li key={r.id} className="py-1.5">{r.repuesto?.nombre ?? `Repuesto #${r.repuestoId}`} × {r.cantidad} · ${Number(r.precioUnitario).toFixed(2)} c/u</li>
                   ))}
-                  {(orden.repuestosUsados ?? []).length === 0 && <li className="py-1.5 text-zinc-500">Sin repuestos. Cargalos en /repuestos.</li>}
+                  {(orden.repuestosUsados ?? []).length === 0 && <li className="py-1.5 text-zinc-600">Sin repuestos. Cargalos en /repuestos.</li>}
                 </ul>
               </Card>
               <Card>
@@ -170,7 +170,7 @@ export default function OrdenDetallePage() {
                       <b>{ESTADO_ORDEN_LABEL[h.estado]}</b> · {new Date(h.fecha).toLocaleString()} {h.comentario ? `— ${h.comentario}` : ""}
                     </li>
                   ))}
-                  {(orden.historialEstados ?? []).length === 0 && <li className="text-zinc-500">Sin historial registrado.</li>}
+                  {(orden.historialEstados ?? []).length === 0 && <li className="text-zinc-600">Sin historial registrado.</li>}
                 </ul>
               </Card>
             </div>

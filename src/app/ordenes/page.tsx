@@ -88,7 +88,7 @@ export default function OrdenesPage() {
             </select>
           </div>
           {cargandoLista ? (
-            <p className="mt-4 text-sm text-zinc-500">Cargando...</p>
+            <p className="mt-4 text-sm text-zinc-600">Cargando...</p>
           ) : filtradas.length === 0 ? (
             <div className="mt-4">
               <Empty mensaje="Sin órdenes" detalle="Creá la primera recepción del día." />
@@ -97,7 +97,7 @@ export default function OrdenesPage() {
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-500">
+                  <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-600">
                     <th className="py-2 pr-3">N°</th>
                     <th className="py-2 pr-3">Equipo</th>
                     <th className="py-2 pr-3">Falla</th>

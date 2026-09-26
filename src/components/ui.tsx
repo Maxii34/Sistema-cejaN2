@@ -32,7 +32,7 @@ export function PageHeader({
           {titulo}
         </h1>
         {descripcion && (
-          <p className="mt-1 text-sm text-zinc-500">{descripcion}</p>
+          <p className="mt-1 text-sm font-normal text-zinc-600">{descripcion}</p>
         )}
       </div>
       {accion}
@@ -48,7 +48,7 @@ export function Badge({
   tono?: "zinc" | "green" | "amber" | "red" | "blue" | "violet";
 }) {
   const tonos: Record<string, string> = {
-    zinc: "bg-zinc-100 text-zinc-700",
+    zinc: "bg-zinc-200 text-zinc-800",
     green: "bg-green-100 text-green-800",
     amber: "bg-amber-100 text-amber-800",
     red: "bg-red-100 text-red-800",
@@ -73,14 +73,14 @@ export function Empty({
 }) {
   return (
     <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-8 text-center">
-      <p className="font-medium text-zinc-700">{mensaje}</p>
-      {detalle && <p className="mt-1 text-sm text-zinc-500">{detalle}</p>}
+      <p className="font-medium text-zinc-800">{mensaje}</p>
+      {detalle && <p className="mt-1 text-sm text-zinc-600">{detalle}</p>}
     </div>
   );
 }
 
 export const inputCls =
-  "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900";
+  "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-normal text-zinc-900 placeholder:text-zinc-500 outline-none focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900";
 
 export const btnPrimary =
   "inline-flex items-center justify-center rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50";

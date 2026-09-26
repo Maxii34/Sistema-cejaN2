@@ -24,7 +24,7 @@ export function Sidebar() {
     <aside className="flex w-60 shrink-0 flex-col border-r border-zinc-200 bg-zinc-950 text-zinc-200">
       <div className="px-5 py-5">
         <p className="text-lg font-bold text-white">CJ Reparaciones</p>
-        <p className="text-xs text-zinc-400">Sistema de reparación</p>
+        <p className="text-xs text-zinc-300">Sistema de reparación</p>
       </div>
       <nav className="flex-1 space-y-1 px-3">
         {links.map((l) => {
@@ -49,7 +49,7 @@ export function Sidebar() {
         <p className="truncate text-sm font-medium text-white">
           {usuario?.nombre ?? "—"}
         </p>
-        <p className="text-xs text-zinc-400">
+        <p className="text-xs text-zinc-300">
           {usuario?.email} · {usuario?.rol}
         </p>
         <button

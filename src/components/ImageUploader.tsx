@@ -57,9 +57,9 @@ export function ImageUploader({
   return (
     <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-4">
       <p className="text-sm font-medium text-zinc-800">
-        Foto del equipo <span className="text-zinc-400">(maqueta)</span>
+        Foto del equipo <span className="text-zinc-500">(maqueta)</span>
       </p>
-      <p className="mt-0.5 text-xs text-zinc-500">
+      <p className="mt-0.5 text-xs font-normal text-zinc-600">
         El backend aún no acepta imágenes. Se guarda solo como vista previa
         local pendiente de subir.
       </p>
@@ -89,7 +89,7 @@ export function ImageUploader({
           <span className="text-sm font-medium text-zinc-700">
             Arrastrá o hacé clic para subir
           </span>
-          <span className="mt-1 text-xs text-zinc-500">PNG / JPG · máx 5 MB</span>
+          <span className="mt-1 text-xs text-zinc-600">PNG / JPG · máx 5 MB</span>
           <input
             type="file"
             accept="image/*"

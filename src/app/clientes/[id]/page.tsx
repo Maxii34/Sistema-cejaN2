@@ -140,10 +140,10 @@ export default function ClienteDetallePage() {
               {equipos.map((q) => (
                 <li key={q.id} className="py-2 text-sm">
                   <span className="font-medium">{q.tipo} {q.marca} {q.modelo}</span>
-                  <span className="text-zinc-500"> {q.numeroSerie ? `· S/N ${q.numeroSerie}` : ""}</span>
+                  <span className="text-zinc-600"> {q.numeroSerie ? `· S/N ${q.numeroSerie}` : ""}</span>
                 </li>
               ))}
-              {equipos.length === 0 && <p className="py-2 text-sm text-zinc-500">Sin equipos aún.</p>}
+              {equipos.length === 0 && <p className="py-2 text-sm text-zinc-600">Sin equipos aún.</p>}
             </ul>
           </Card>
         </div>
