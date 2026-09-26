@@ -73,7 +73,7 @@ export default function EquiposPage() {
           onChange={(e) => setBusqueda(e.target.value)}
         />
         {cargandoLista ? (
-          <p className="text-sm text-zinc-500">Cargando...</p>
+          <p className="text-sm text-zinc-600">Cargando...</p>
         ) : filtrados.length === 0 ? (
           <Empty mensaje="Sin equipos" detalle="Primero creá un cliente y agregale equipos." />
         ) : (
@@ -88,14 +88,14 @@ export default function EquiposPage() {
                     className="mb-3 h-36 w-full rounded-lg border border-zinc-200 object-cover"
                   />
                 ) : (
-                  <div className="mb-3 flex h-36 items-center justify-center rounded-lg bg-zinc-100 text-xs text-zinc-400">
+                  <div className="mb-3 flex h-36 items-center justify-center rounded-lg bg-zinc-100 text-xs text-zinc-500">
                     Sin foto
                   </div>
                 )}
                 <p className="font-semibold text-zinc-900">
                   {q.tipo} · {q.marca} {q.modelo}
                 </p>
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-zinc-600">
                   Cliente: {q.cliente ? `${q.cliente.nombre} ${q.cliente.apellido ?? ""}` : `#${q.clienteId}`}
                   {q.numeroSerie ? ` · S/N ${q.numeroSerie}` : ""}
                 </p>

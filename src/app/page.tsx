@@ -62,7 +62,7 @@ export default function DashboardPage() {
           ].map(([label, valor, href]) => (
             <Link key={label as string} href={href as string}>
               <Card className="hover:shadow">
-                <p className="text-xs uppercase text-zinc-500">{label}</p>
+                <p className="text-xs uppercase text-zinc-600">{label}</p>
                 <p className="mt-1 text-3xl font-bold">{valor}</p>
               </Card>
             </Link>
@@ -80,7 +80,7 @@ export default function DashboardPage() {
                 </span>
               </li>
             ))}
-            {ultimas.length === 0 && <p className="py-2 text-zinc-500">Sin órdenes todavía.</p>}
+            {ultimas.length === 0 && <p className="py-2 text-zinc-600">Sin órdenes todavía.</p>}
           </ul>
         </Card>
       </main>

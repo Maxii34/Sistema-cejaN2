@@ -100,7 +100,7 @@ export default function ClientesPage() {
               onChange={(e) => setBusqueda(e.target.value)}
             />
             {cargandoLista ? (
-              <p className="mt-4 text-sm text-zinc-500">Cargando...</p>
+              <p className="mt-4 text-sm text-zinc-600">Cargando...</p>
             ) : filtrados.length === 0 ? (
               <div className="mt-4">
                 <Empty
@@ -119,7 +119,7 @@ export default function ClientesPage() {
                       >
                         {c.nombre} {c.apellido ?? ""}
                       </Link>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-zinc-600">
                         {[c.dni && `DNI ${c.dni}`, c.telefono, c.email]
                           .filter(Boolean)
                           .join(" · ") || "Sin contacto"}

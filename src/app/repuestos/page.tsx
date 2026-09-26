@@ -85,7 +85,7 @@ export default function RepuestosPage() {
                   <li key={r.id} className="flex items-center justify-between py-2 text-sm">
                     <div>
                       <p className="font-medium">{r.nombre}</p>
-                      <p className="text-xs text-zinc-500">Costo ${Number(r.costo).toFixed(2)} · Venta ${r.precioVenta != null ? Number(r.precioVenta).toFixed(2) : "—"}</p>
+                      <p className="text-xs text-zinc-600">Costo ${Number(r.costo).toFixed(2)} · Venta ${r.precioVenta != null ? Number(r.precioVenta).toFixed(2) : "—"}</p>
                     </div>
                     <Badge tono={r.stock > 0 ? "green" : "red"}>Stock {r.stock}</Badge>
                   </li>

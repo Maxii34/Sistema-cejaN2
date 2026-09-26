@@ -31,7 +31,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-zinc-100 p-4">
       <Card className="w-full max-w-sm">
         <h1 className="text-xl font-bold text-zinc-900">CJ Reparaciones</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-zinc-600">
           Ingresá con tu usuario del taller (ADMIN o TÉCNICO).
         </p>
         <form onSubmit={submit} className="mt-5 space-y-3">
@@ -70,7 +70,7 @@ export default function LoginPage() {
             {cargando ? "Ingresando..." : "Ingresar"}
           </button>
         </form>
-        <p className="mt-4 text-xs text-zinc-400">
+        <p className="mt-4 text-xs text-zinc-500">
           API: {process.env.NEXT_PUBLIC_API_URL}
         </p>
       </Card>
