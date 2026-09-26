@@ -91,10 +91,10 @@ export function useAuth() {
 }
 
 export function useRequireAuth() {
-  const { usuario, cargando } = useAuth();
+  const { usuario, cargando, esAdmin } = useAuth();
   const router = useRouter();
   useEffect(() => {
     if (!cargando && !usuario) router.replace("/login");
   }, [cargando, usuario, router]);
-  return { usuario, cargando };
+  return { usuario, cargando, esAdmin };
 }
