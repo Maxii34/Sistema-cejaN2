@@ -8,7 +8,7 @@ const LINKS = [
   { href: "/", label: "Panel" },
   { href: "/ordenes", label: "Órdenes" },
   { href: "/clientes", label: "Clientes" },
-  { href: "/equipos", label: "Equipos" },
+  { href: "/equipos", label: "Historial de equipos" },
   { href: "/repuestos", label: "Repuestos" },
   { href: "/pagos", label: "Pagos" },
   { href: "/usuarios", label: "Usuarios" },
