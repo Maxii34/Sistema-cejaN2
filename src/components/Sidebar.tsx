@@ -6,6 +6,7 @@ import {
   FiClipboard,
   FiDollarSign,
   FiHome,
+  FiInbox,
   FiLogOut,
   FiPackage,
   FiSettings,
@@ -16,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 
 const LINKS = [
   { href: "/", label: "Panel", icon: FiHome },
+  { href: "/recepcion", label: "Recepción", icon: FiInbox },
   { href: "/ordenes", label: "Órdenes", icon: FiClipboard },
   { href: "/clientes", label: "Clientes", icon: FiUsers },
   { href: "/equipos", label: "Historial de equipos", icon: FiTool },
