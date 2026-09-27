@@ -54,6 +54,8 @@ export interface Equipo {
   observaciones?: string | null;
   clienteId: number;
   cliente?: Cliente;
+  createdAt?: string;
+  updatedAt?: string;
   // Solo front: imagen pendiente hasta que el backend soporte upload
   imagenPreview?: string | null;
 }

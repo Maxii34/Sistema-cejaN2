@@ -4,10 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   FiCamera,
-  FiChevronRight,
+  FiChevronDown,
   FiClipboard,
+  FiEye,
   FiPlus,
+  FiTag,
   FiTool,
+  FiUser,
   FiUsers,
 } from "react-icons/fi";
 import { api } from "@/lib/api";
@@ -173,114 +176,132 @@ export default function HistorialEquiposPage() {
               const actual = visitas[0];
               return (
                 <Card key={q.id} className="flex flex-col">
-                  {fotos[q.id] ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={fotos[q.id]!}
-                      alt={`${q.tipo} ${q.marca}`}
-                      className="mb-3 h-40 w-full rounded-lg border border-zinc-200 object-cover"
-                    />
-                  ) : (
-                    <div className="mb-3 flex h-40 flex-col items-center justify-center gap-1 rounded-lg bg-zinc-100">
-                      <FiTool size={28} className="text-zinc-400" aria-hidden />
-                      <span className="text-xs font-normal text-zinc-500">
-                        Sin foto
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold text-zinc-900">
-                      {q.tipo} · {q.marca} {q.modelo}
-                    </p>
-                    <Badge tono={visitas.length > 0 ? "blue" : "zinc"}>
+                  {/* Foto con contador de visitas superpuesto */}
+                  <div className="relative mb-3">
+                    {fotos[q.id] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={fotos[q.id]!}
+                        alt={`${q.tipo} ${q.marca}`}
+                        className="h-36 w-full rounded-xl border border-stone-200 object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-36 flex-col items-center justify-center gap-1 rounded-xl bg-gradient-to-br from-stone-100 to-stone-200/70">
+                        <FiTool size={26} className="text-stone-400" aria-hidden />
+                        <span className="text-xs font-normal text-stone-500">
+                          Sin foto
+                        </span>
+                      </div>
+                    )}
+                    <span className="absolute right-2 top-2 rounded-full bg-stone-950/80 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">
                       {visitas.length === 0
                         ? "Sin visitas"
                         : `${visitas.length} visita${visitas.length > 1 ? "s" : ""}`}
-                    </Badge>
+                    </span>
                   </div>
-                  {actual && (
-                    <div className="mt-1">
+
+                  {/* Título + estado actual */}
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="min-w-0 flex-1 truncate font-bold text-stone-900">
+                      {q.tipo} · {q.marca} {q.modelo}
+                    </p>
+                    {actual && (
                       <Badge tono={tonoEstado(actual.estado)}>
                         {ESTADO_ORDEN_LABEL[actual.estado]}
                       </Badge>
-                    </div>
-                  )}
-
-                  <p className="mt-1 text-xs font-normal text-zinc-600">
-                    Cliente:{" "}
-                    {q.cliente ? (
-                      <Link
-                        href={`/clientes/${q.clienteId}`}
-                        className="font-medium text-zinc-900 hover:underline"
-                      >
-                        {q.cliente.nombre} {q.cliente.apellido ?? ""}
-                      </Link>
-                    ) : (
-                      `#${q.clienteId}`
                     )}
-                    {q.numeroSerie ? ` · S/N ${q.numeroSerie}` : ""}
-                  </p>
+                  </div>
+
+                  {/* Datos con iconos */}
+                  <ul className="mt-2 space-y-1 text-xs text-stone-500">
+                    <li className="flex min-w-0 items-center gap-1.5">
+                      <FiUser size={13} className="shrink-0 text-blue-700" />
+                      {q.cliente ? (
+                        <Link
+                          href={`/clientes/${q.clienteId}`}
+                          className="truncate font-semibold text-stone-800 hover:text-blue-800 hover:underline"
+                        >
+                          {q.cliente.nombre} {q.cliente.apellido ?? ""}
+                        </Link>
+                      ) : (
+                        <span className="font-ficha">#{q.clienteId}</span>
+                      )}
+                    </li>
+                    <li className="flex min-w-0 items-center gap-1.5">
+                      <FiTag size={13} className="shrink-0 text-blue-700" />
+                      <span className="font-ficha truncate">
+                        {q.numeroSerie ? `S/N ${q.numeroSerie}` : "Sin N° de serie"}
+                      </span>
+                    </li>
+                  </ul>
                   {q.observaciones && (
-                    <p className="mt-1 text-xs font-normal text-zinc-600">
+                    <p className="mt-1.5 line-clamp-2 rounded-lg bg-stone-50 px-2 py-1 text-xs text-stone-500">
                       {q.observaciones}
                     </p>
                   )}
 
-                  <div className="mt-3 border-t border-zinc-100 pt-3">
-                    <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-600">
+                  {/* Historial */}
+                  <div className="mt-3 border-t border-stone-200/70 pt-2.5">
+                    <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-stone-400">
                       <FiClipboard size={13} /> Historial
                     </p>
-                    {visitas.length === 0 ? (
-                      <p className="mt-1 text-xs font-normal text-zinc-600">
-                        Todavía no ingresó al taller.{" "}
-                        <Link
-                          href="/ordenes/nueva"
-                          className="inline-flex items-center gap-0.5 font-medium text-zinc-900 hover:underline"
-                        >
-                          <FiPlus size={13} /> Crear recepción
-                        </Link>
-                      </p>
-                    ) : (
-                      <ol className="mt-2 space-y-2">
+                    <div className="mt-2 flex items-center justify-between gap-2 rounded-xl bg-blue-50/70 px-2.5 py-2 ring-1 ring-inset ring-blue-200/60">
+                      <span className="text-xs font-medium text-blue-900">
+                        {visitas.length === 0 ? "Sin ingresos todavía" : "Ingresar este equipo de nuevo"}
+                      </span>
+                      <Link
+                        href={`/ordenes/nueva?equipoId=${q.id}`}
+                        title={`Crear recepción de ${q.tipo} ${q.marca}`}
+                        aria-label={`Crear recepción de ${q.tipo} ${q.marca}`}
+                        className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg bg-blue-800 text-white active:bg-blue-900"
+                      >
+                        <FiPlus size={16} />
+                      </Link>
+                    </div>
+                    {visitas.length === 0 ? null : (
+                      <ol className="mt-2 space-y-1.5">
                         {visitas.map((o) => (
                           <li
                             key={o.id}
-                            className="rounded-lg bg-zinc-50 px-2.5 py-2 text-xs"
+                            className="flex items-center gap-2 rounded-xl bg-stone-50 px-2.5 py-2 text-xs ring-1 ring-inset ring-stone-200/60"
                           >
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="font-ficha font-semibold text-zinc-900">
-                                {o.numero}
+                            <span className="min-w-0 flex-1">
+                              <span className="flex items-center justify-between gap-2">
+                                <span className="font-ficha truncate font-bold text-stone-900">
+                                  {o.numero}
+                                </span>
+                                <span className="shrink-0 text-stone-400">
+                                  {new Date(o.fechaIngreso).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" })}
+                                </span>
                               </span>
-                              <span className="font-normal text-zinc-600">
-                                {new Date(o.fechaIngreso).toLocaleDateString()}
+                              <span className="mt-0.5 block">
+                                <Badge tono={tonoEstado(o.estado)}>
+                                  {ESTADO_ORDEN_LABEL[o.estado]}
+                                </Badge>
                               </span>
-                            </div>
-                            <p className="mt-0.5 truncate font-normal text-zinc-600">
-                              {o.fallaReportada}
-                            </p>
-                            <div className="mt-1 flex items-center justify-between gap-2">
-                              <Badge tono={tonoEstado(o.estado)}>
-                                {ESTADO_ORDEN_LABEL[o.estado]}
-                              </Badge>
-                              <Link
-                                href={`/ordenes/${o.id}`}
-                                className="flex items-center gap-0.5 font-medium text-zinc-900 hover:underline"
-                              >
-                                Ver orden <FiChevronRight size={13} />
-                              </Link>
-                            </div>
+                            </span>
+                            <Link
+                              href={`/ordenes/${o.id}`}
+                              title={`Abrir orden ${o.numero}`}
+                              aria-label={`Abrir orden ${o.numero}`}
+                              className="inline-flex min-h-[36px] min-w-[36px] shrink-0 items-center justify-center rounded-lg border border-stone-300 bg-white text-blue-700 shadow-sm active:bg-blue-50"
+                            >
+                              <FiEye size={15} />
+                            </Link>
                           </li>
                         ))}
                       </ol>
                     )}
                   </div>
 
-                  <details className="mt-3">
-                    <summary className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-zinc-700 hover:underline">
-                      <FiCamera size={13} /> Subir / cambiar foto (maqueta)
+                  <details className="group mt-2.5">
+                    <summary className="flex min-h-[40px] cursor-pointer list-none items-center justify-between rounded-xl px-1 text-xs font-semibold text-stone-500 active:bg-stone-50 [&::-webkit-details-marker]:hidden">
+                      <span className="flex items-center gap-1.5">
+                        <FiCamera size={14} className="text-blue-700" /> Foto del equipo
+                      </span>
+                      <FiChevronDown size={15} className="transition-transform group-open:rotate-180" />
                     </summary>
-                    <div className="mt-2">
+                    <div className="mt-1.5">
                       <ImageUploader
                         equipoKey={String(q.id)}
                         value={fotos[q.id] ?? null}

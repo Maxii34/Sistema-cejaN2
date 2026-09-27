@@ -126,7 +126,16 @@ export default function OrdenDetallePage() {
           descripcion={orden ? `${orden.equipo?.tipo ?? ""} ${orden.equipo?.marca ?? ""} ${orden.equipo?.modelo ?? ""} · Falla: ${orden.fallaReportada}` : ""}
           accion={
             <div className="grid grid-cols-2 gap-2 sm:flex">
-              <button className={btnSecondary + " gap-2"} onClick={() => router.push("/ingreso")}>
+              <button
+                className={btnSecondary + " gap-2"}
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.history.length > 1) {
+                    router.back();
+                  } else {
+                    router.push("/");
+                  }
+                }}
+              >
                 <FiArrowLeft size={15} /> Volver
               </button>
               {orden && (

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { FiArrowLeft, FiCamera, FiSave, FiUser } from "react-icons/fi";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FiArrowLeft, FiCamera, FiPlus, FiSave, FiUser } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -14,9 +15,10 @@ import type { ApiEnvelope, Cliente, Equipo, Paged } from "@/lib/types";
 // comentario se envía un valor neutro fijo.
 const CONDICION_FIJA = ["BUEN_ESTADO"] as const;
 
-export default function NuevaOrdenPage() {
+function NuevaOrdenForm() {
   const { usuario, cargando } = useRequireAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [equipos, setEquipos] = useState<Equipo[]>([]);
   const [clienteId, setClienteId] = useState<number | "">("");
@@ -41,11 +43,22 @@ export default function NuevaOrdenPage() {
           api.get<ApiEnvelope<Paged<Equipo> | Equipo[]>>("/api/equipo"),
         ]);
         setClientes(rc.data);
-        setEquipos(Array.isArray(re.data) ? re.data : re.data.data);
+        const listaEq = Array.isArray(re.data) ? re.data : re.data.data;
+        setEquipos(listaEq);
+        // Preselección desde Historial (?equipoId=): equipo + su cliente
+        const pre = searchParams.get("equipoId");
+        if (pre) {
+          const q = listaEq.find((e) => e.id === Number(pre));
+          if (q) {
+            setEquipoId(q.id);
+            setClienteId(q.clienteId);
+          }
+        }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar datos");
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [usuario]);
 
   // Equipos del cliente elegido (o todos si aún no eligió)
@@ -156,7 +169,7 @@ export default function NuevaOrdenPage() {
                 <select className={inputCls} value={equipoId} onChange={(e) => elegirEquipo(e.target.value ? Number(e.target.value) : "")} required>
                   <option value="">
                     {equiposVisibles.length === 0
-                      ? "Sin equipos (creá uno en la ficha del cliente)"
+                      ? "Sin equipos"
                       : "Seleccionar N° de serie..."}
                   </option>
                   {equiposVisibles.map((q) => (
@@ -165,6 +178,14 @@ export default function NuevaOrdenPage() {
                     </option>
                   ))}
                 </select>
+                {clienteId !== "" && equiposVisibles.length === 0 && (
+                  <Link
+                    href={`/clientes/${clienteId}`}
+                    className="mt-1.5 inline-flex min-h-[40px] items-center gap-1 text-[13px] font-semibold text-blue-700 hover:underline"
+                  >
+                    <FiPlus size={14} /> Crear un equipo en la ficha del cliente
+                  </Link>
+                )}
               </div>
               {equipoElegido && (
                 <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-sm">
@@ -214,5 +235,13 @@ export default function NuevaOrdenPage() {
         </form>
       </main>
     </div>
+  );
+}
+
+export default function NuevaOrdenPage() {
+  return (
+    <Suspense fallback={<p className="p-8">Cargando...</p>}>
+      <NuevaOrdenForm />
+    </Suspense>
   );
 }
