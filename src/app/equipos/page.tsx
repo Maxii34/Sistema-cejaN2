@@ -124,6 +124,7 @@ export default function HistorialEquiposPage() {
       <Sidebar />
       <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
         <PageHeader
+          eyebrow="Banco de trabajo"
           titulo="Historial de equipos"
           descripcion={`${equipos.length} aparatos · ${totalVisitas} visitas al taller. Cada tarjeta muestra el equipo con todas sus órdenes.`}
           accion={

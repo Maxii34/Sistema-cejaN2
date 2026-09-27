@@ -6,7 +6,7 @@ import { FiArrowLeft, FiCamera, FiSave, FiUser } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
-import { Card, PageHeader, btnPrimary, btnSecondary, inputCls } from "@/components/ui";
+import { Card, PageHeader, btnPrimary, btnSecondary, inputCls, IconTile } from "@/components/ui";
 import { ImageUploader } from "@/components/ImageUploader";
 import type { ApiEnvelope, Cliente, Equipo, Paged } from "@/lib/types";
 
@@ -110,6 +110,7 @@ export default function NuevaOrdenPage() {
       <Sidebar />
       <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
         <PageHeader
+          eyebrow="Paso 1 · Recepción"
           titulo="Nueva recepción"
           descripcion="Elegí cliente y equipo, describí la falla y el estado físico del aparato."
           accion={
@@ -123,8 +124,8 @@ export default function NuevaOrdenPage() {
         )}
         <form onSubmit={(e) => void guardar(e)} className="grid gap-3 sm:gap-4 lg:grid-cols-2">
           <Card>
-            <h2 className="flex items-center gap-2 font-semibold">
-              <FiUser size={16} /> 1 · Cliente y equipo
+            <h2 className="flex items-center gap-2 font-bold text-stone-900">
+              <IconTile tono="blue"><FiUser size={16} /></IconTile> 1 · Cliente y equipo
             </h2>
             <div className="mt-3 space-y-2">
               <select className={inputCls} value={clienteId} onChange={(e) => { setClienteId(e.target.value ? Number(e.target.value) : ""); setEquipoId(""); }} required>
@@ -159,8 +160,8 @@ export default function NuevaOrdenPage() {
           </Card>
           <div className="min-w-0 space-y-3 sm:space-y-4">
             <Card>
-              <h2 className="flex items-center gap-2 font-semibold">
-                <FiCamera size={16} /> 2 · Estado físico y foto
+              <h2 className="flex items-center gap-2 font-bold text-stone-900">
+                <IconTile tono="brand"><FiCamera size={16} /></IconTile> 2 · Estado físico y foto
               </h2>
               <label className="mt-3 block text-xs font-medium text-zinc-600">
                 Condición física del equipo (comentario)

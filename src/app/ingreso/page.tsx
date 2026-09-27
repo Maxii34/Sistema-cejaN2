@@ -22,6 +22,7 @@ import {
   Empty,
   btnPrimary,
   inputCls,
+  IconTile,
 } from "@/components/ui";
 import type {
   ApiEnvelope,
@@ -180,6 +181,7 @@ export default function IngresoPage() {
       <Sidebar />
       <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
         <PageHeader
+          eyebrow="Recepción del taller"
           titulo="Ingreso"
           descripcion="Clientes que dejan equipos y sus órdenes de reparación, todo en un solo lugar."
           accion={
@@ -198,20 +200,20 @@ export default function IngresoPage() {
         <div className="mb-3 grid grid-cols-2 gap-2 sm:mb-4 sm:flex sm:w-auto">
           <button
             onClick={() => setTab("clientes")}
-            className={`flex min-h-[48px] items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-[15px] sm:text-sm font-medium ${
+            className={`flex min-h-[48px] items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[15px] sm:text-sm font-bold ${
               tab === "clientes"
-                ? "bg-zinc-900 text-white"
-                : "border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
+                ? "brand-btn bg-blue-800 text-white"
+                : "border border-stone-300 bg-white text-stone-600 hover:bg-stone-50"
             }`}
           >
             <FiUsers size={15} /> Clientes ({clientes.length})
           </button>
           <button
             onClick={() => setTab("ordenes")}
-            className={`flex min-h-[48px] items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-[15px] sm:text-sm font-medium ${
+            className={`flex min-h-[48px] items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[15px] sm:text-sm font-bold ${
               tab === "ordenes"
-                ? "bg-zinc-900 text-white"
-                : "border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
+                ? "brand-btn bg-blue-800 text-white"
+                : "border border-stone-300 bg-white text-stone-600 hover:bg-stone-50"
             }`}
           >
             <FiClipboard size={15} /> Órdenes ({ordenes.length})
@@ -374,12 +376,12 @@ export default function IngresoPage() {
             </Card>
             <Card className="order-first shadow-md transition-shadow duration-300 hover:shadow-xl lg:order-none">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-white shadow">
+                <IconTile tono="brand">
                   <FiUserPlus size={18} />
-                </span>
+                </IconTile>
                 <div>
-                  <h2 className="font-semibold text-zinc-900">Alta rápida</h2>
-                  <p className="text-xs font-normal text-zinc-600">
+                  <h2 className="font-bold text-stone-900">Alta rápida</h2>
+                  <p className="text-xs font-normal text-stone-500">
                     Cargá un cliente en segundos
                   </p>
                 </div>

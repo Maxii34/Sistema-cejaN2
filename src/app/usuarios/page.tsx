@@ -6,7 +6,7 @@ import { FiShield, FiUserPlus } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
-import { Card, PageHeader, Badge, Empty, btnPrimary, inputCls } from "@/components/ui";
+import { Card, PageHeader, Badge, Empty, btnPrimary, inputCls, IconTile } from "@/components/ui";
 import type { ApiEnvelope, Usuario } from "@/lib/types";
 
 export default function UsuariosPage() {
@@ -52,7 +52,7 @@ export default function UsuariosPage() {
     <div className="flex min-h-screen flex-col bg-zinc-100 lg:flex-row">
       <Sidebar />
       <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
-        <PageHeader titulo="Usuarios" descripcion="Solo ADMIN. El backend permite un único administrador." />
+        <PageHeader eyebrow="Administración" titulo="Usuarios" descripcion="Solo ADMIN. El backend permite un único administrador." />
         {error && <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
         <div className="flex flex-col gap-3 sm:gap-4 lg:grid lg:grid-cols-[1fr_320px]">
           <Card className="order-last lg:order-none">
@@ -74,8 +74,8 @@ export default function UsuariosPage() {
             )}
           </Card>
           <Card className="order-first lg:order-none">
-            <h2 className="flex items-center gap-2 font-semibold">
-              <FiShield size={16} /> Nuevo usuario
+            <h2 className="flex items-center gap-2 font-bold text-stone-900">
+              <IconTile tono="violet"><FiShield size={16} /></IconTile> Nuevo usuario
             </h2>
             <form onSubmit={(e) => void crear(e)} className="mt-2 space-y-2">
               <input className={inputCls} required placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />

@@ -1,14 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #18181b;
+  --background: #eef2f7;
+  --foreground: #1e293b;
+  --brand-300: #93c5fd;
+  --brand-400: #60a5fa;
+  --brand-500: #1d4ed8;
+  --brand-600: #1e40af;
+  --ink-900: #0c1428;
+  --ink-800: #131f3a;
   color-scheme: light;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-ink-800: var(--ink-800);
+  --color-ink-900: var(--ink-900);
   --font-sans: var(--font-inter), var(--font-geist-sans), ui-sans-serif,
     system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
@@ -20,7 +32,10 @@ html {
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(1200px 500px at 100% -10%, rgba(29, 78, 216, 0.08), transparent 60%),
+    radial-gradient(900px 420px at -10% 0%, rgba(29, 78, 216, 0.06), transparent 55%),
+    var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   text-rendering: optimizeLegibility;
@@ -68,12 +83,12 @@ textarea {
 
 /* Legibilidad: placeholders y textos secundarios con contraste suficiente */
 ::placeholder {
-  color: #71717a;
+  color: #78716c;
   opacity: 1;
 }
 
 ::selection {
-  background: #18181b;
+  background: #1e40af;
   color: #fff;
 }
 
@@ -81,4 +96,70 @@ textarea {
 .font-ficha {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+}
+
+/* ---- Identidad de taller: azul profesional ---- */
+.brand-text {
+  background: linear-gradient(100deg, #e0e7ff 0%, #93c5fd 55%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-btn {
+  box-shadow:
+    0 10px 20px -12px rgba(30, 64, 175, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.brand-ring:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(ellipse 90% 100% at 50% 0%, black 55%, transparent 100%);
+}
+
+.card-lift {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px -18px rgba(28, 25, 23, 0.35);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise {
+  animation: rise 0.45s ease both;
+}
+.rise-1 { animation-delay: 0.05s; }
+.rise-2 { animation-delay: 0.12s; }
+.rise-3 { animation-delay: 0.19s; }
+
+/* Scrollbar elegante */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+  border: 2px solid #eef2f7;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
 }

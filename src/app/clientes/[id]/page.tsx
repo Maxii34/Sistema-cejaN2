@@ -15,7 +15,7 @@ import Swal from "sweetalert2";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
-import { Card, PageHeader, btnPrimary, btnSecondary, inputCls } from "@/components/ui";
+import { Card, PageHeader, btnPrimary, btnSecondary, inputCls, IconTile } from "@/components/ui";
 import type { ApiEnvelope, Cliente, Equipo } from "@/lib/types";
 
 export default function ClienteDetallePage() {
@@ -121,6 +121,7 @@ export default function ClienteDetallePage() {
       <Sidebar />
       <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
         <PageHeader
+          eyebrow="Ficha del cliente"
           titulo={cliente ? `${cliente.nombre} ${cliente.apellido ?? ""}` : "Cliente"}
           descripcion={`Ficha del cliente #${id} y sus equipos`}
           accion={
@@ -135,8 +136,8 @@ export default function ClienteDetallePage() {
         <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
           <Card>
             <div className="flex items-center justify-between gap-2">
-              <h2 className="flex items-center gap-2 font-semibold">
-                <FiUser size={16} /> Datos del cliente
+              <h2 className="flex items-center gap-2 font-bold text-stone-900">
+                <IconTile tono="blue"><FiUser size={16} /></IconTile> Datos del cliente
               </h2>
               {!editando ? (
                 <button
@@ -190,8 +191,8 @@ export default function ClienteDetallePage() {
             </form>
           </Card>
           <Card>
-            <h2 className="flex items-center gap-2 font-semibold">
-              <FiTool size={16} /> Equipos ({equipos.length})
+            <h2 className="flex items-center gap-2 font-bold text-stone-900">
+              <IconTile tono="brand"><FiTool size={16} /></IconTile> Equipos ({equipos.length})
             </h2>
             <form onSubmit={(e) => void crearEquipo(e)} className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
               <input className={inputCls} required placeholder="Tipo * ej: Heladera" value={eq.tipo} onChange={(e) => setEq({ ...eq, tipo: e.target.value })} />

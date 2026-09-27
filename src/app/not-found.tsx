@@ -5,7 +5,7 @@ export default function NotFound() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-100 p-4">
       <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-8 text-center shadow-sm">
-        <p className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+        <p className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-800 ring-1 ring-inset ring-blue-200">
           <FiAlertTriangle size={28} />
         </p>
         <p className="font-ficha mt-4 text-5xl font-bold text-zinc-900">404</p>

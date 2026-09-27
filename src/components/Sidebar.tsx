@@ -13,6 +13,7 @@ import {
   FiSettings,
   FiTool,
   FiX,
+  FiZap,
 } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 
@@ -38,6 +39,17 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(href);
 }
 
+function BrandMark({ size = "md" }: { size?: "md" | "lg" }) {
+  const box = size === "lg" ? "h-11 w-11" : "h-9 w-9";
+  return (
+    <span
+      className={`flex ${box} shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-900 text-white shadow-[0_8px_18px_-8px_rgba(30,64,175,0.7)]`}
+    >
+      <FiZap size={size === "lg" ? 22 : 18} strokeWidth={2.5} />
+    </span>
+  );
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const { usuario, logout, esAdmin } = useAuth();
@@ -48,42 +60,45 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Header móvil: sticky, compacto, con botón hamburguesa */}
-      <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-zinc-800 bg-zinc-950 px-3 py-2.5 text-zinc-200 lg:hidden">
+      {/* Header móvil */}
+      <header className="sticky top-0 z-40 flex items-center gap-2.5 border-b border-white/10 bg-gradient-to-r from-[#0c1428] via-[#14224a] to-[#0c1428] px-3 py-2.5 text-zinc-200 lg:hidden">
         <button
           type="button"
           onClick={() => setAbierto(true)}
           aria-label="Abrir menú"
-          className="flex h-11 w-11 items-center justify-center rounded-lg text-white active:bg-zinc-800"
+          className="flex h-11 w-11 items-center justify-center rounded-xl text-white active:bg-white/10"
         >
           <FiMenu size={22} />
         </button>
-        <Link href="/" className="flex min-w-0 flex-1 items-center gap-2">
-          <FiSettings size={20} className="shrink-0 text-white" />
+        <Link href="/" className="flex min-w-0 flex-1 items-center gap-2.5">
+          <BrandMark />
           <span className="min-w-0">
-            <span className="block truncate text-[15px] font-bold leading-tight text-white">
-              CJ Reparaciones
+            <span className="block truncate text-[15px] font-extrabold leading-tight text-white">
+              CJ <span className="brand-text">Reparaciones</span>
             </span>
-            <span className="block text-[11px] leading-tight text-zinc-400">
-              Sistema de taller
+            <span className="block text-[11px] font-medium leading-tight text-slate-400">
+              Taller · Ingreso y órdenes
             </span>
           </span>
         </Link>
         <span
           title={usuario?.nombre ?? ""}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-zinc-900"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-extrabold text-blue-900 ring-2 ring-white/20"
         >
           {inicial}
         </span>
       </header>
 
-      {/* Sidebar escritorio (se mantiene para pantallas grandes) */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-zinc-200 bg-zinc-950 text-zinc-200 lg:flex">
-        <div className="px-5 py-5">
-          <p className="flex items-center gap-2 text-lg font-bold text-white">
-            <FiSettings size={20} /> CJ Reparaciones
-          </p>
-          <p className="text-xs text-zinc-300">Sistema de reparación</p>
+      {/* Sidebar escritorio */}
+      <aside className="hidden w-64 shrink-0 flex-col bg-gradient-to-b from-[#0c1428] via-[#111d3d] to-[#0c1428] text-zinc-200 lg:flex">
+        <div className="flex items-center gap-3 px-5 pb-5 pt-6">
+          <BrandMark size="lg" />
+          <div>
+            <p className="text-lg font-extrabold leading-tight text-white">
+              CJ <span className="brand-text">Reparaciones</span>
+            </p>
+            <p className="text-xs font-medium text-slate-400">Sistema de taller</p>
+          </div>
         </div>
         <nav className="flex-1 space-y-1 px-3">
           {links.map((l) => {
@@ -92,28 +107,41 @@ export function Sidebar() {
               <Link
                 key={l.href}
                 href={l.href}
-                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
                   activo
-                    ? "bg-white text-zinc-900"
-                    : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                    ? "bg-white/10 text-white ring-1 ring-inset ring-white/15"
+                    : "text-slate-300 hover:bg-white/5 hover:text-white"
                 }`}
               >
-                <l.icon size={16} />
+                <l.icon size={17} className={activo ? "text-blue-300" : ""} />
                 {"fullLabel" in l && l.fullLabel ? l.fullLabel : l.label}
               </Link>
             );
           })}
+          <Link
+            href="/ordenes/nueva"
+            className="brand-btn mt-2 flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-blue-500"
+          >
+            <FiPlus size={16} strokeWidth={2.5} /> Nueva recepción
+          </Link>
         </nav>
-        <div className="border-t border-zinc-800 p-4">
-          <p className="truncate text-sm font-medium text-white">
-            {usuario?.nombre ?? "—"}
-          </p>
-          <p className="truncate text-xs text-zinc-300">
-            {usuario?.email} · {usuario?.rol}
-          </p>
+        <div className="border-t border-white/10 p-4">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-extrabold text-blue-900">
+              {inicial}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-white">
+                {usuario?.nombre ?? "—"}
+              </p>
+              <p className="truncate text-xs text-slate-400">
+                {usuario?.email} · {usuario?.rol}
+              </p>
+            </div>
+          </div>
           <button
             onClick={() => void logout()}
-            className="mt-3 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-zinc-800 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+            className="mt-3 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/15"
           >
             <FiLogOut size={15} />
             Cerrar sesión
@@ -125,20 +153,21 @@ export function Sidebar() {
       {abierto && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-stone-950/60 backdrop-blur-sm"
             onClick={() => setAbierto(false)}
             aria-hidden
           />
-          <div className="absolute inset-y-0 left-0 flex w-[85%] max-w-xs flex-col bg-zinc-950 text-zinc-200 shadow-2xl">
-            <div className="flex items-center justify-between px-4 py-4">
-              <p className="flex items-center gap-2 text-base font-bold text-white">
-                <FiSettings size={19} /> CJ Reparaciones
+          <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-xs flex-col bg-gradient-to-b from-[#0c1428] via-[#111d3d] to-[#0c1428] text-zinc-200 shadow-2xl">
+            <div className="flex items-center gap-2.5 px-4 py-4">
+              <BrandMark />
+              <p className="min-w-0 flex-1 text-base font-extrabold text-white">
+                CJ <span className="brand-text">Reparaciones</span>
               </p>
               <button
                 type="button"
                 onClick={() => setAbierto(false)}
                 aria-label="Cerrar menú"
-                className="flex h-11 w-11 items-center justify-center rounded-lg text-zinc-300 active:bg-zinc-800"
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-slate-300 active:bg-white/10"
               >
                 <FiX size={22} />
               </button>
@@ -151,13 +180,13 @@ export function Sidebar() {
                     key={l.href}
                     href={l.href}
                     onClick={() => setAbierto(false)}
-                    className={`flex min-h-[48px] items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium ${
+                    className={`flex min-h-[52px] items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-semibold ${
                       activo
-                        ? "bg-white text-zinc-900"
-                        : "text-zinc-200 active:bg-zinc-800"
+                        ? "bg-white/10 text-white ring-1 ring-inset ring-white/15"
+                        : "text-slate-200 active:bg-white/10"
                     }`}
                   >
-                    <l.icon size={18} />
+                    <l.icon size={19} className={activo ? "text-blue-300" : ""} />
                     {"fullLabel" in l && l.fullLabel ? l.fullLabel : l.label}
                   </Link>
                 );
@@ -165,16 +194,16 @@ export function Sidebar() {
               <Link
                 href="/ordenes/nueva"
                 onClick={() => setAbierto(false)}
-                className="flex min-h-[48px] items-center gap-3 rounded-lg bg-white/10 px-3 py-2.5 text-[15px] font-medium text-white active:bg-zinc-800"
+                className="brand-btn mt-1 flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2.5 text-[15px] font-semibold text-white"
               >
-                <FiPlus size={18} /> Nueva recepción
+                <FiPlus size={19} strokeWidth={2.5} /> Nueva recepción
               </Link>
             </nav>
-            <div className="border-t border-zinc-800 p-4">
-              <p className="truncate text-sm font-medium text-white">
+            <div className="border-t border-white/10 p-4">
+              <p className="truncate text-sm font-semibold text-white">
                 {usuario?.nombre ?? "—"}
               </p>
-              <p className="truncate text-xs text-zinc-400">
+              <p className="truncate text-xs text-slate-400">
                 {usuario?.email} · {usuario?.rol}
               </p>
               <button
@@ -182,7 +211,7 @@ export function Sidebar() {
                   setAbierto(false);
                   void logout();
                 }}
-                className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg bg-zinc-800 px-3 py-2.5 text-[15px] font-medium text-white active:bg-zinc-700"
+                className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2.5 text-[15px] font-semibold text-white active:bg-white/15"
               >
                 <FiLogOut size={16} />
                 Cerrar sesión
@@ -192,10 +221,10 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* Barra inferior móvil: navegación con el pulgar */}
+      {/* Barra inferior móvil */}
       <nav
         aria-label="Navegación principal"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
       >
         <div className="grid grid-cols-5">
           {TABS.map((t) => {
@@ -208,14 +237,10 @@ export function Sidebar() {
                   aria-label="Nueva recepción"
                   className="flex flex-col items-center justify-center gap-0.5 py-1.5"
                 >
-                  <span
-                    className={`flex h-11 w-11 items-center justify-center rounded-full shadow-lg ${
-                      activo ? "bg-zinc-900 text-white" : "bg-zinc-900 text-white"
-                    }`}
-                  >
-                    <FiPlus size={22} />
+                  <span className="brand-btn -mt-6 flex h-13 w-13 items-center justify-center rounded-2xl bg-blue-800 p-3.5 text-white ring-4 ring-[#eef2f7]">
+                    <FiPlus size={24} strokeWidth={2.5} />
                   </span>
-                  <span className="text-[10px] font-semibold text-zinc-900">
+                  <span className="text-[10px] font-bold text-blue-800">
                     {t.label}
                   </span>
                 </Link>
@@ -226,13 +251,13 @@ export function Sidebar() {
                 key={t.href}
                 href={t.href}
                 className={`flex min-h-[60px] flex-col items-center justify-center gap-0.5 py-1.5 ${
-                  activo ? "text-zinc-900" : "text-zinc-500"
+                  activo ? "text-blue-800" : "text-stone-400"
                 }`}
               >
-                <t.icon size={21} />
-                <span className="text-[10px] font-medium">{t.label}</span>
+                <t.icon size={21} strokeWidth={activo ? 2.5 : 2} />
+                <span className="text-[10px] font-semibold">{t.label}</span>
                 <span
-                  className={`h-1 w-8 rounded-full ${activo ? "bg-zinc-900" : "bg-transparent"}`}
+                  className={`h-1 w-8 rounded-full ${activo ? "bg-blue-800" : "bg-transparent"}`}
                 />
               </Link>
             );

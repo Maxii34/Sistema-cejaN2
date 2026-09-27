@@ -32,12 +32,13 @@ export function Modal({
       onClick={onClose}
     >
       <div
-        className={`max-h-[92dvh] w-full ${ancho} overflow-y-auto rounded-t-2xl bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-xl sm:rounded-xl sm:p-5 sm:pb-5`}
+        className={`relative max-h-[92dvh] w-full ${ancho} overflow-y-auto rounded-t-2xl bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl sm:rounded-2xl sm:p-5 sm:pb-5`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
-        <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-blue-800" aria-hidden />
+        <div className="mb-4 flex items-center justify-between gap-2 pt-1">
           <h2 className="min-w-0 truncate text-lg font-bold text-zinc-900">{titulo}</h2>
           <button
             onClick={onClose}

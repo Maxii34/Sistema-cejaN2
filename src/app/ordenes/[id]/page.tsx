@@ -13,7 +13,7 @@ import {
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
-import { Card, PageHeader, Badge, btnPrimary, btnSecondary, inputCls } from "@/components/ui";
+import { Card, PageHeader, Badge, btnPrimary, btnSecondary, inputCls, IconTile } from "@/components/ui";
 import type { ApiEnvelope, EstadoOrden, OrdenReparacion, Usuario } from "@/lib/types";
 import { ESTADO_ORDEN_LABEL, CONDICION_LABEL } from "@/lib/types";
 
@@ -95,6 +95,7 @@ export default function OrdenDetallePage() {
       <Sidebar />
       <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
         <PageHeader
+          eyebrow="Ficha de reparación"
           titulo={orden ? `Orden ${orden.numero}` : `Orden #${id}`}
           descripcion={orden ? `${orden.equipo?.tipo ?? ""} ${orden.equipo?.marca ?? ""} ${orden.equipo?.modelo ?? ""} · Falla: ${orden.fallaReportada}` : ""}
           accion={
@@ -132,8 +133,8 @@ export default function OrdenDetallePage() {
                 </dl>
               </Card>
               <Card>
-                <h2 className="flex items-center gap-2 font-semibold">
-                  <FiTool size={16} /> Diagnóstico y reparación
+                <h2 className="flex items-center gap-2 font-bold text-stone-900">
+                  <IconTile tono="blue"><FiTool size={16} /></IconTile> Diagnóstico y reparación
                 </h2>
                 <form onSubmit={(e) => void guardar(e)} className="mt-3 space-y-2">
                   <textarea className={inputCls} rows={2} placeholder="Diagnóstico" value={diag} onChange={(e) => setDiag(e.target.value)} />
@@ -161,8 +162,8 @@ export default function OrdenDetallePage() {
             </div>
             <div className="min-w-0 space-y-3 sm:space-y-4">
               <Card>
-                <h2 className="flex items-center gap-2 font-semibold">
-                  <FiDollarSign size={16} /> Pagos
+                <h2 className="flex items-center gap-2 font-bold text-stone-900">
+                  <IconTile tono="green"><FiDollarSign size={16} /></IconTile> Pagos
                 </h2>
                 <p className="mt-1 text-sm text-zinc-600">
                   Precio final: <b>${Number(orden.precioFinal ?? 0).toFixed(2)}</b> · Cobrado: <b>${(orden.pagos ?? []).reduce((a, p) => a + Number(p.monto), 0).toFixed(2)}</b>
@@ -175,8 +176,8 @@ export default function OrdenDetallePage() {
                 </ul>
               </Card>
               <Card>
-                <h2 className="flex items-center gap-2 font-semibold">
-                  <FiClock size={16} /> Historial de estados
+                <h2 className="flex items-center gap-2 font-bold text-stone-900">
+                  <IconTile tono="violet"><FiClock size={16} /></IconTile> Historial de estados
                 </h2>
                 <ul className="mt-2 space-y-1 text-sm">
                   {(orden.historialEstados ?? []).map((h) => (
