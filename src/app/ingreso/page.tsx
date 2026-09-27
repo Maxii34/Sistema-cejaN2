@@ -5,11 +5,13 @@ import Link from "next/link";
 import {
   FiChevronRight,
   FiClipboard,
+  FiEye,
   FiPlus,
   FiTrash2,
   FiUserPlus,
   FiUsers,
 } from "react-icons/fi";
+import Swal from "sweetalert2";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -105,18 +107,45 @@ export default function IngresoPage() {
       setTelefono("");
       setDni("");
       await cargarClientes();
+      void Swal.fire({
+        icon: "success",
+        title: "Cliente creado",
+        text: "El cliente se guardó correctamente.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo crear");
+      const mensaje = e instanceof Error ? e.message : "No se pudo crear";
+      setError(mensaje);
+      void Swal.fire({ icon: "error", title: "Error", text: mensaje });
     }
   };
 
-  const eliminarCliente = async (id: number) => {
-    if (!confirm("¿Eliminar cliente?")) return;
+  const eliminarCliente = async (id: number, nombreCliente: string) => {
+    const confirm = await Swal.fire({
+      icon: "warning",
+      title: "¿Eliminar cliente?",
+      text: `Se eliminará a "${nombreCliente}". Esta acción no se puede deshacer.`,
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#dc2626",
+    });
+    if (!confirm.isConfirmed) return;
     try {
       await api.del(`/api/cliente/${id}`);
       await cargarClientes();
+      void Swal.fire({
+        icon: "success",
+        title: "Eliminado",
+        text: "El cliente fue eliminado.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo eliminar");
+      const mensaje = e instanceof Error ? e.message : "No se pudo eliminar";
+      setError(mensaje);
+      void Swal.fire({ icon: "error", title: "Error", text: mensaje });
     }
   };
 
@@ -191,9 +220,9 @@ export default function IngresoPage() {
 
         {tab === "clientes" && (
           <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-            <Card>
+            <Card className="shadow-md transition-shadow duration-300 hover:shadow-lg">
               <input
-                className={inputCls}
+                className={inputCls + " transition-shadow focus:shadow-md"}
                 placeholder="Buscar por nombre, DNI o teléfono..."
                 value={busquedaC}
                 onChange={(e) => setBusquedaC(e.target.value)}
@@ -208,70 +237,126 @@ export default function IngresoPage() {
                   />
                 </div>
               ) : (
-                <ul className="mt-4 divide-y divide-zinc-100">
-                  {clientesFiltrados.map((c) => (
-                    <li
-                      key={c.id}
-                      className="flex items-center justify-between py-3"
-                    >
-                      <div>
-                        <Link
-                          href={`/clientes/${c.id}`}
-                          className="font-medium text-zinc-900 hover:underline"
+                <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-200 shadow-sm">
+                  <table className="w-full min-w-[620px] text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-600">
+                        <th className="px-4 py-3 font-semibold">Cliente</th>
+                        <th className="px-4 py-3 font-semibold">Contacto</th>
+                        <th className="px-4 py-3 font-semibold">Estado</th>
+                        <th className="px-4 py-3 text-right font-semibold">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {clientesFiltrados.map((c) => (
+                        <tr
+                          key={c.id}
+                          className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50"
                         >
-                          {c.nombre} {c.apellido ?? ""}
-                        </Link>
-                        <p className="text-xs font-normal text-zinc-600">
-                          {[c.dni && `DNI ${c.dni}`, c.telefono, c.email]
-                            .filter(Boolean)
-                            .join(" · ") || "Sin contacto"}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge tono={c.activo ? "green" : "zinc"}>
-                          {c.activo ? "Activo" : "Inactivo"}
-                        </Badge>
-                        <button
-                          onClick={() => void eliminarCliente(c.id)}
-                          className="flex items-center gap-1 text-xs font-medium text-red-600 hover:underline"
-                        >
-                          <FiTrash2 size={13} />
-                          Eliminar
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-bold text-white">
+                                {(c.nombre[0] ?? "?").toUpperCase()}
+                                {(c.apellido?.[0] ?? "").toUpperCase()}
+                              </span>
+                              <span>
+                                <Link
+                                  href={`/clientes/${c.id}`}
+                                  className="font-medium text-zinc-900 hover:underline"
+                                >
+                                  {c.nombre} {c.apellido ?? ""}
+                                </Link>
+                                <span className="block text-xs font-normal text-zinc-600">
+                                  {c.dni ? `DNI ${c.dni}` : "Sin DNI"}
+                                </span>
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-xs font-normal text-zinc-600">
+                            {[c.telefono, c.email]
+                              .filter(Boolean)
+                              .join(" · ") || "Sin contacto"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge tono={c.activo ? "green" : "zinc"}>
+                              {c.activo ? "Activo" : "Inactivo"}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-end gap-2">
+                              <Link
+                                href={`/clientes/${c.id}`}
+                                title="Abrir ficha del cliente"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700"
+                              >
+                                <FiEye size={13} />
+                                Abrir
+                              </Link>
+                              <button
+                                onClick={() =>
+                                  void eliminarCliente(
+                                    c.id,
+                                    `${c.nombre} ${c.apellido ?? ""}`.trim()
+                                  )
+                                }
+                                title="Eliminar cliente"
+                                aria-label={`Eliminar a ${c.nombre}`}
+                                className="inline-flex items-center justify-center rounded-lg border border-red-200 bg-white p-2 text-red-600 transition-colors hover:bg-red-50"
+                              >
+                                <FiTrash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </Card>
-            <Card>
-              <h2 className="flex items-center gap-2 font-semibold text-zinc-900">
-                <FiUserPlus size={16} /> Alta rápida
-              </h2>
+            <Card className="shadow-md transition-shadow duration-300 hover:shadow-xl">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-white shadow">
+                  <FiUserPlus size={18} />
+                </span>
+                <div>
+                  <h2 className="font-semibold text-zinc-900">Alta rápida</h2>
+                  <p className="text-xs font-normal text-zinc-600">
+                    Cargá un cliente en segundos
+                  </p>
+                </div>
+              </div>
               <form
                 onSubmit={(e) => void crearCliente(e)}
-                className="mt-3 space-y-2"
+                className="mt-4 space-y-2"
               >
                 <input
-                  className={inputCls}
+                  className={inputCls + " transition-shadow focus:shadow-md"}
                   required
                   placeholder="Nombre *"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                 />
                 <input
-                  className={inputCls}
+                  className={inputCls + " transition-shadow focus:shadow-md"}
                   placeholder="DNI"
                   value={dni}
                   onChange={(e) => setDni(e.target.value)}
                 />
                 <input
-                  className={inputCls}
+                  className={inputCls + " transition-shadow focus:shadow-md"}
                   placeholder="Teléfono / WhatsApp"
                   value={telefono}
                   onChange={(e) => setTelefono(e.target.value)}
                 />
-                <button className={btnPrimary + " w-full gap-2"}>
+                <button
+                  className={
+                    btnPrimary +
+                    " w-full gap-2 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
+                  }
+                >
                   <FiUserPlus size={15} />
                   Guardar cliente
                 </button>
