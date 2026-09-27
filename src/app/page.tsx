@@ -6,7 +6,6 @@ import {
   FiChevronRight,
   FiClipboard,
   FiClock,
-  FiPackage,
   FiPlus,
   FiTool,
   FiUsers,
@@ -15,11 +14,11 @@ import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, PageHeader, Badge, btnPrimary } from "@/components/ui";
-import type { ApiEnvelope, Cliente, OrdenReparacion, Paged, Repuesto } from "@/lib/types";
+import type { ApiEnvelope, Cliente, OrdenReparacion, Paged } from "@/lib/types";
 
 export default function DashboardPage() {
   const { usuario, cargando } = useRequireAuth();
-  const [stats, setStats] = useState({ ordenes: 0, clientes: 0, repuestos: 0, pendientes: 0 });
+  const [stats, setStats] = useState({ ordenes: 0, clientes: 0, pendientes: 0 });
   const [ultimas, setUltimas] = useState<OrdenReparacion[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,16 +26,14 @@ export default function DashboardPage() {
     if (!usuario) return;
     (async () => {
       try {
-        const [o, c, r] = await Promise.all([
+        const [o, c] = await Promise.all([
           api.get<ApiEnvelope<Paged<OrdenReparacion> | OrdenReparacion[]>>("/api/orden-reparacion"),
           api.get<ApiEnvelope<Cliente[]>>("/api/cliente"),
-          api.get<ApiEnvelope<Repuesto[]>>("/api/repuesto"),
         ]);
         const lista = Array.isArray(o.data) ? o.data : o.data.data;
         setStats({
           ordenes: lista.length,
           clientes: c.data.length,
-          repuestos: r.data.length,
           pendientes: lista.filter((x) => !["ENTREGADO", "CANCELADO"].includes(x.estado)).length,
         });
         setUltimas(lista.slice(0, 5));
@@ -62,13 +59,12 @@ export default function DashboardPage() {
           }
         />
         {error && <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {(
             [
-              ["Órdenes totales", stats.ordenes, "/ordenes", FiClipboard],
-              ["Activas / pendientes", stats.pendientes, "/ordenes", FiClock],
-              ["Clientes", stats.clientes, "/clientes", FiUsers],
-              ["Repuestos", stats.repuestos, "/repuestos", FiPackage],
+              ["Órdenes totales", stats.ordenes, "/ingreso", FiClipboard],
+              ["Activas / pendientes", stats.pendientes, "/ingreso", FiClock],
+              ["Clientes", stats.clientes, "/ingreso", FiUsers],
             ] as [string, number, string, typeof FiClipboard][]
           ).map(([label, valor, href, Icon]) => (
             <Link key={label} href={href}>

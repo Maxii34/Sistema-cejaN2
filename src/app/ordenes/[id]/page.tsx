@@ -99,7 +99,7 @@ export default function OrdenDetallePage() {
           descripcion={orden ? `${orden.equipo?.tipo ?? ""} ${orden.equipo?.marca ?? ""} ${orden.equipo?.modelo ?? ""} · Falla: ${orden.fallaReportada}` : ""}
           accion={
             <div className="flex gap-2">
-              <button className={btnSecondary + " gap-2"} onClick={() => router.push("/ordenes")}>
+              <button className={btnSecondary + " gap-2"} onClick={() => router.push("/ingreso")}>
                 <FiArrowLeft size={15} /> Volver
               </button>
               {orden && (
@@ -162,7 +162,7 @@ export default function OrdenDetallePage() {
             <div className="space-y-4">
               <Card>
                 <h2 className="flex items-center gap-2 font-semibold">
-                  <FiDollarSign size={16} /> Pagos y repuestos
+                  <FiDollarSign size={16} /> Pagos
                 </h2>
                 <p className="mt-1 text-sm text-zinc-600">
                   Precio final: <b>${Number(orden.precioFinal ?? 0).toFixed(2)}</b> · Cobrado: <b>${(orden.pagos ?? []).reduce((a, p) => a + Number(p.monto), 0).toFixed(2)}</b>
@@ -172,12 +172,6 @@ export default function OrdenDetallePage() {
                     <li key={p.id} className="py-1.5">${Number(p.monto).toFixed(2)} · {p.medioPago} · {new Date(p.fecha).toLocaleDateString()}</li>
                   ))}
                   {(orden.pagos ?? []).length === 0 && <li className="py-1.5 text-zinc-600">Sin pagos. Cargalos en /pagos.</li>}
-                </ul>
-                <ul className="mt-2 divide-y divide-zinc-100 text-sm">
-                  {(orden.repuestosUsados ?? []).map((r) => (
-                    <li key={r.id} className="py-1.5">{r.repuesto?.nombre ?? `Repuesto #${r.repuestoId}`} × {r.cantidad} · ${Number(r.precioUnitario).toFixed(2)} c/u</li>
-                  ))}
-                  {(orden.repuestosUsados ?? []).length === 0 && <li className="py-1.5 text-zinc-600">Sin repuestos. Cargalos en /repuestos.</li>}
                 </ul>
               </Card>
               <Card>

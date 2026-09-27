@@ -88,7 +88,7 @@ export default function ClienteDetallePage() {
           titulo={cliente ? `${cliente.nombre} ${cliente.apellido ?? ""}` : "Cliente"}
           descripcion={`Ficha del cliente #${id} y sus equipos`}
           accion={
-            <button className={btnSecondary + " gap-2"} onClick={() => router.push("/clientes")}>
+            <button className={btnSecondary + " gap-2"} onClick={() => router.push("/ingreso")}>
               <FiArrowLeft size={15} /> Volver
             </button>
           }

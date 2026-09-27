@@ -127,8 +127,8 @@ export default function HistorialEquiposPage() {
           titulo="Historial de equipos"
           descripcion={`${equipos.length} aparatos · ${totalVisitas} visitas al taller. Cada tarjeta muestra el equipo con todas sus órdenes.`}
           accion={
-            <Link href="/clientes" className={btnPrimary + " gap-2"}>
-              <FiUsers size={16} /> Ir a clientes
+            <Link href="/ingreso" className={btnPrimary + " gap-2"}>
+              <FiUsers size={16} /> Ir a ingreso
             </Link>
           }
         />

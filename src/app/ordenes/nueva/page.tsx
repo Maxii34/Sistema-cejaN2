@@ -110,7 +110,7 @@ export default function NuevaOrdenPage() {
           titulo="Nueva recepción (ficha 3-A / 3-B / 5)"
           descripcion="Replica la ficha papel: datos del equipo, estado físico, accesorios y firmas."
           accion={
-            <button className={btnSecondary + " gap-2"} onClick={() => router.push("/ordenes")}>
+            <button className={btnSecondary + " gap-2"} onClick={() => router.push("/ingreso")}>
               <FiArrowLeft size={15} /> Volver
             </button>
           }

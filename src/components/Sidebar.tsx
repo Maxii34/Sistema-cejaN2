@@ -3,25 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  FiClipboard,
   FiDollarSign,
   FiHome,
   FiInbox,
   FiLogOut,
-  FiPackage,
   FiSettings,
   FiTool,
-  FiUsers,
 } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 
 const LINKS = [
   { href: "/", label: "Panel", icon: FiHome },
-  { href: "/recepcion", label: "Recepción", icon: FiInbox },
-  { href: "/ordenes", label: "Órdenes", icon: FiClipboard },
-  { href: "/clientes", label: "Clientes", icon: FiUsers },
+  { href: "/ingreso", label: "Ingreso", icon: FiInbox },
   { href: "/equipos", label: "Historial de equipos", icon: FiTool },
-  { href: "/repuestos", label: "Repuestos", icon: FiPackage },
   { href: "/pagos", label: "Pagos", icon: FiDollarSign },
   { href: "/usuarios", label: "Usuarios", icon: FiSettings },
 ];
