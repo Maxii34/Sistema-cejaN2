@@ -8,6 +8,7 @@ import {
   FiClock,
   FiPlus,
   FiTool,
+  FiUser,
   FiUsers,
   FiZap,
 } from "react-icons/fi";
@@ -113,21 +114,67 @@ export default function DashboardPage() {
             </IconTile>
             Últimas órdenes
           </h2>
-          <ul className="mt-2 divide-y divide-stone-100 text-sm">
-            {ultimas.map((o) => (
-              <li key={o.id} className="flex flex-col gap-1.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-2">
-                <span className="min-w-0 font-mono text-[13px] leading-snug">
-                  <span className="font-bold text-stone-900">{o.numero}</span>
-                  <span className="text-stone-500"> · {o.fallaReportada.slice(0, 60)}</span>
-                </span>
-                <span className="flex shrink-0 items-center gap-2">
-                  <Badge tono="violet">{o.estado}</Badge>
-                  <Link href={`/ordenes/${o.id}`} className="flex min-h-[36px] items-center gap-0.5 rounded-lg px-2 font-semibold text-blue-700 hover:bg-blue-50">
-                    Abrir <FiChevronRight size={14} />
+          <ul className="mt-3 space-y-2 text-sm">
+            {ultimas.map((o) => {
+              const cliente = o.equipo?.cliente
+                ? `${o.equipo.cliente.nombre} ${o.equipo.cliente.apellido ?? ""}`.trim()
+                : null;
+              const ultimoMov =
+                o.updatedAt ??
+                (o.historialEstados ?? []).reduce<string | null>(
+                  (acc, h) => (!acc || new Date(h.fecha) > new Date(acc) ? h.fecha : acc),
+                  null
+                );
+              const fechaHora = (f: string) =>
+                new Date(f).toLocaleString("es-AR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+              return (
+                <li key={o.id} className="rounded-xl border border-stone-200/80 bg-stone-50/50 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-ficha text-[13px] font-bold text-stone-900">{o.numero}</span>
+                    <Badge tono="violet">{o.estado}</Badge>
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-stone-600">{o.fallaReportada}</p>
+                  <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-stone-200/70 pt-2 text-xs">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <FiUser size={13} className="shrink-0 text-blue-700" />
+                      <span className="min-w-0">
+                        <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">Cliente</span>
+                        <span className="block truncate font-semibold text-stone-800">{cliente ?? "—"}</span>
+                      </span>
+                    </div>
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <FiTool size={13} className="shrink-0 text-blue-700" />
+                      <span className="min-w-0">
+                        <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">Técnico</span>
+                        <span className="block truncate font-semibold text-stone-800">{o.tecnico?.nombre ?? "Sin asignar"}</span>
+                      </span>
+                    </div>
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <FiClock size={13} className="shrink-0 text-blue-700" />
+                      <span className="min-w-0">
+                        <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">Ingreso</span>
+                        <span className="font-ficha block truncate font-semibold text-stone-800">{fechaHora(o.fechaIngreso)}</span>
+                      </span>
+                    </div>
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <FiClock size={13} className="shrink-0 text-blue-700" />
+                      <span className="min-w-0">
+                        <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">Actualizado</span>
+                        <span className="font-ficha block truncate font-semibold text-stone-800">{ultimoMov ? fechaHora(ultimoMov) : "—"}</span>
+                      </span>
+                    </div>
+                  </dl>
+                  <Link href={`/ordenes/${o.id}`} className="mt-2 flex min-h-[40px] items-center justify-center gap-0.5 rounded-lg bg-blue-800 text-[13px] font-semibold text-white active:bg-blue-900">
+                    Abrir orden <FiChevronRight size={14} />
                   </Link>
-                </span>
-              </li>
-            ))}
+                </li>
+              );
+            })}
             {ultimas.length === 0 && <p className="py-2 text-stone-500">Sin órdenes todavía.</p>}
           </ul>
         </Card>

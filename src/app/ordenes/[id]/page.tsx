@@ -17,6 +17,22 @@ import { Card, PageHeader, Badge, btnPrimary, btnSecondary, inputCls, IconTile }
 import type { ApiEnvelope, EstadoOrden, OrdenReparacion, Usuario } from "@/lib/types";
 import { ESTADO_ORDEN_LABEL, CONDICION_LABEL } from "@/lib/types";
 
+function TagOpcional() {
+  return (
+    <span className="ml-1.5 rounded-full bg-stone-100 px-1.5 py-0.5 align-middle text-[10px] font-semibold normal-case tracking-normal text-stone-500 ring-1 ring-inset ring-stone-200">
+      Opcional
+    </span>
+  );
+}
+
+function Req() {
+  return (
+    <span className="ml-0.5 align-middle font-bold text-red-600" aria-label="obligatorio">
+      *
+    </span>
+  );
+}
+
 export default function OrdenDetallePage() {
   const params = useParams<{ id: string }>();
   const id = Number(params.id);
@@ -69,16 +85,26 @@ export default function OrdenDetallePage() {
 
   const guardar = async (e: React.FormEvent) => {
     e.preventDefault();
+    const faltantes: string[] = [];
+    if (!diag.trim()) faltantes.push("Diagnóstico");
+    if (!reparacion.trim()) faltantes.push("Reparación realizada");
+    if (!precio.trim() || Number.isNaN(Number(precio))) faltantes.push("Precio final");
+    if (!tecnicoId) faltantes.push("Técnico a cargo");
+    if (faltantes.length > 0) {
+      setError(`Completá los campos obligatorios: ${faltantes.join(", ")}.`);
+      return;
+    }
+    setError(null);
     try {
       await api.put(`/api/orden-reparacion/${id}`, {
-        diagnostico: diag || null,
-        pruebasRealizadas: pruebas || null,
-        recomendaciones: reco || null,
-        reparacionRealizada: reparacion || null,
+        diagnostico: diag.trim(),
+        pruebasRealizadas: pruebas.trim() || null,
+        recomendaciones: reco.trim() || null,
+        reparacionRealizada: reparacion.trim(),
         manoDeObra: mano ? Number(mano) : 0,
-        precioFinal: precio ? Number(precio) : null,
+        precioFinal: Number(precio),
         estado,
-        tecnicoId: tecnicoId ? Number(tecnicoId) : null,
+        tecnicoId: Number(tecnicoId),
         autorizadoCliente: autorizado,
         conformidadEntregaCliente: conformidad,
       });
@@ -136,21 +162,46 @@ export default function OrdenDetallePage() {
                 <h2 className="flex items-center gap-2 font-bold text-stone-900">
                   <IconTile tono="blue"><FiTool size={16} /></IconTile> Diagnóstico y reparación
                 </h2>
+                <p className="mt-1 text-xs text-stone-500">Los campos marcados con <span className="font-bold text-red-600">*</span> son obligatorios.</p>
                 <form onSubmit={(e) => void guardar(e)} className="mt-3 space-y-2">
-                  <textarea className={inputCls} rows={2} placeholder="Diagnóstico" value={diag} onChange={(e) => setDiag(e.target.value)} />
-                  <textarea className={inputCls} rows={2} placeholder="Pruebas realizadas" value={pruebas} onChange={(e) => setPruebas(e.target.value)} />
-                  <textarea className={inputCls} rows={2} placeholder="Recomendaciones" value={reco} onChange={(e) => setReco(e.target.value)} />
-                  <textarea className={inputCls} rows={2} placeholder="Reparación realizada" value={reparacion} onChange={(e) => setReparacion(e.target.value)} />
+                  <div>
+                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Diagnóstico <Req /></label>
+                    <textarea className={inputCls} rows={2} placeholder="Ej: Placa con soldadura fría en la fuente..." value={diag} onChange={(e) => setDiag(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Pruebas realizadas <TagOpcional /></label>
+                    <textarea className={inputCls} rows={2} placeholder="Ej: Medición de tensión, prueba de encendido..." value={pruebas} onChange={(e) => setPruebas(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Recomendaciones <TagOpcional /></label>
+                    <textarea className={inputCls} rows={2} placeholder="Ej: Cambiar el cable de alimentación..." value={reco} onChange={(e) => setReco(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Reparación realizada <Req /></label>
+                    <textarea className={inputCls} rows={2} placeholder="Ej: Se resoldó la fuente y se cambió el fusible..." value={reparacion} onChange={(e) => setReparacion(e.target.value)} />
+                  </div>
                   <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
-                    <input className={inputCls} type="number" min="0" step="0.01" placeholder="Mano de obra" value={mano} onChange={(e) => setMano(e.target.value)} />
-                    <input className={inputCls} type="number" min="0" step="0.01" placeholder="Precio final" value={precio} onChange={(e) => setPrecio(e.target.value)} />
-                    <select className={inputCls} value={estado} onChange={(e) => setEstado(e.target.value as EstadoOrden)}>
-                      {Object.entries(ESTADO_ORDEN_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                    </select>
-                    <select className={inputCls} value={tecnicoId} onChange={(e) => setTecnicoId(e.target.value)}>
-                      <option value="">Sin técnico</option>
-                      {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nombre} ({t.rol})</option>)}
-                    </select>
+                    <div>
+                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Mano de obra ($) <TagOpcional /></label>
+                      <input className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={mano} onChange={(e) => setMano(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Precio final ($) <Req /></label>
+                      <input className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={precio} onChange={(e) => setPrecio(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Estado <Req /></label>
+                      <select className={inputCls} value={estado} onChange={(e) => setEstado(e.target.value as EstadoOrden)}>
+                        {Object.entries(ESTADO_ORDEN_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Técnico a cargo <Req /></label>
+                      <select className={inputCls} value={tecnicoId} onChange={(e) => setTecnicoId(e.target.value)}>
+                        <option value="">Seleccionar técnico...</option>
+                        {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nombre} ({t.rol})</option>)}
+                      </select>
+                    </div>
                   </div>
                   <label className="flex min-h-[44px] items-center gap-2.5 text-[15px] sm:text-sm"><input type="checkbox" className="h-5 w-5 shrink-0 accent-zinc-900" checked={autorizado} onChange={(e) => setAutorizado(e.target.checked)} /> Autorizado por cliente</label>
                   <label className="flex min-h-[44px] items-center gap-2.5 text-[15px] sm:text-sm"><input type="checkbox" className="h-5 w-5 shrink-0 accent-zinc-900" checked={conformidad} onChange={(e) => setConformidad(e.target.checked)} /> Conformidad de entrega</label>
