@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import {
+  FiArrowLeft,
+  FiClock,
+  FiDollarSign,
+  FiPrinter,
+  FiSave,
+  FiTool,
+} from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -91,9 +99,13 @@ export default function OrdenDetallePage() {
           descripcion={orden ? `${orden.equipo?.tipo ?? ""} ${orden.equipo?.marca ?? ""} ${orden.equipo?.modelo ?? ""} · Falla: ${orden.fallaReportada}` : ""}
           accion={
             <div className="flex gap-2">
-              <button className={btnSecondary} onClick={() => router.push("/ordenes")}>← Volver</button>
+              <button className={btnSecondary + " gap-2"} onClick={() => router.push("/ordenes")}>
+                <FiArrowLeft size={15} /> Volver
+              </button>
               {orden && (
-                <button className={btnSecondary} onClick={() => window.print()}>Imprimir ficha</button>
+                <button className={btnSecondary + " gap-2"} onClick={() => window.print()}>
+                  <FiPrinter size={15} /> Imprimir ficha
+                </button>
               )}
             </div>
           }
@@ -120,7 +132,9 @@ export default function OrdenDetallePage() {
                 </dl>
               </Card>
               <Card>
-                <h2 className="font-semibold">Diagnóstico y reparación</h2>
+                <h2 className="flex items-center gap-2 font-semibold">
+                  <FiTool size={16} /> Diagnóstico y reparación
+                </h2>
                 <form onSubmit={(e) => void guardar(e)} className="mt-3 space-y-2">
                   <textarea className={inputCls} rows={2} placeholder="Diagnóstico" value={diag} onChange={(e) => setDiag(e.target.value)} />
                   <textarea className={inputCls} rows={2} placeholder="Pruebas realizadas" value={pruebas} onChange={(e) => setPruebas(e.target.value)} />
@@ -139,13 +153,17 @@ export default function OrdenDetallePage() {
                   </div>
                   <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={autorizado} onChange={(e) => setAutorizado(e.target.checked)} /> Autorizado por cliente</label>
                   <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={conformidad} onChange={(e) => setConformidad(e.target.checked)} /> Conformidad de entrega</label>
-                  <button className={btnPrimary + " w-full"}>Guardar avance</button>
+                  <button className={btnPrimary + " w-full gap-2"}>
+                    <FiSave size={15} /> Guardar avance
+                  </button>
                 </form>
               </Card>
             </div>
             <div className="space-y-4">
               <Card>
-                <h2 className="font-semibold">Pagos y repuestos</h2>
+                <h2 className="flex items-center gap-2 font-semibold">
+                  <FiDollarSign size={16} /> Pagos y repuestos
+                </h2>
                 <p className="mt-1 text-sm text-zinc-600">
                   Precio final: <b>${Number(orden.precioFinal ?? 0).toFixed(2)}</b> · Cobrado: <b>${(orden.pagos ?? []).reduce((a, p) => a + Number(p.monto), 0).toFixed(2)}</b>
                 </p>
@@ -163,7 +181,9 @@ export default function OrdenDetallePage() {
                 </ul>
               </Card>
               <Card>
-                <h2 className="font-semibold">Historial de estados</h2>
+                <h2 className="flex items-center gap-2 font-semibold">
+                  <FiClock size={16} /> Historial de estados
+                </h2>
                 <ul className="mt-2 space-y-1 text-sm">
                   {(orden.historialEstados ?? []).map((h) => (
                     <li key={h.id} className="text-zinc-700">

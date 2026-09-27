@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FiDollarSign, FiPlus } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -73,7 +74,9 @@ export default function PagosPage() {
             )}
           </Card>
           <Card>
-            <h2 className="font-semibold">Registrar cobro</h2>
+            <h2 className="flex items-center gap-2 font-semibold">
+              <FiDollarSign size={16} /> Registrar cobro
+            </h2>
             <form onSubmit={(e) => void crear(e)} className="mt-2 space-y-2">
               <select className={inputCls} required value={ordenId} onChange={(e) => setOrdenId(e.target.value)}>
                 <option value="">Orden...</option>
@@ -84,7 +87,9 @@ export default function PagosPage() {
                 {MEDIOS.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
               <input className={inputCls} placeholder="Observaciones" value={obs} onChange={(e) => setObs(e.target.value)} />
-              <button className={btnPrimary + " w-full"}>Registrar</button>
+              <button className={btnPrimary + " w-full gap-2"}>
+                <FiPlus size={15} /> Registrar
+              </button>
             </form>
           </Card>
         </div>

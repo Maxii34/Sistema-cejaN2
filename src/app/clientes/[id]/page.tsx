@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { FiArrowLeft, FiPlus, FiSave, FiTool, FiUser } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -87,8 +88,8 @@ export default function ClienteDetallePage() {
           titulo={cliente ? `${cliente.nombre} ${cliente.apellido ?? ""}` : "Cliente"}
           descripcion={`Ficha del cliente #${id} y sus equipos`}
           accion={
-            <button className={btnSecondary} onClick={() => router.push("/clientes")}>
-              ← Volver
+            <button className={btnSecondary + " gap-2"} onClick={() => router.push("/clientes")}>
+              <FiArrowLeft size={15} /> Volver
             </button>
           }
         />
@@ -97,7 +98,9 @@ export default function ClienteDetallePage() {
         )}
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
-            <h2 className="font-semibold">Datos del cliente</h2>
+            <h2 className="flex items-center gap-2 font-semibold">
+              <FiUser size={16} /> Datos del cliente
+            </h2>
             <form onSubmit={(e) => void guardarCliente(e)} className="mt-3 grid grid-cols-2 gap-2">
               {(
                 [
@@ -123,18 +126,24 @@ export default function ClienteDetallePage() {
                 value={form.direccion}
                 onChange={(e) => setForm({ ...form, direccion: e.target.value })}
               />
-              <button className={btnPrimary + " col-span-2"}>Guardar cambios</button>
+              <button className={btnPrimary + " col-span-2 gap-2"}>
+                <FiSave size={15} /> Guardar cambios
+              </button>
             </form>
           </Card>
           <Card>
-            <h2 className="font-semibold">Equipos ({equipos.length})</h2>
+            <h2 className="flex items-center gap-2 font-semibold">
+              <FiTool size={16} /> Equipos ({equipos.length})
+            </h2>
             <form onSubmit={(e) => void crearEquipo(e)} className="mt-3 grid grid-cols-2 gap-2">
               <input className={inputCls} required placeholder="Tipo * ej: Heladera" value={eq.tipo} onChange={(e) => setEq({ ...eq, tipo: e.target.value })} />
               <input className={inputCls} required placeholder="Marca *" value={eq.marca} onChange={(e) => setEq({ ...eq, marca: e.target.value })} />
               <input className={inputCls} required placeholder="Modelo *" value={eq.modelo} onChange={(e) => setEq({ ...eq, modelo: e.target.value })} />
               <input className={inputCls} placeholder="N° serie" value={eq.numeroSerie} onChange={(e) => setEq({ ...eq, numeroSerie: e.target.value })} />
               <input className={inputCls + " col-span-2"} placeholder="Observaciones" value={eq.observaciones} onChange={(e) => setEq({ ...eq, observaciones: e.target.value })} />
-              <button className={btnSecondary + " col-span-2"}>+ Agregar equipo</button>
+              <button className={btnSecondary + " col-span-2 gap-2"}>
+                <FiPlus size={15} /> Agregar equipo
+              </button>
             </form>
             <ul className="mt-3 divide-y divide-zinc-100">
               {equipos.map((q) => (

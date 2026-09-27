@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { FiShield, FiUserPlus } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -59,7 +60,10 @@ export default function UsuariosPage() {
               <ul className="divide-y divide-zinc-100 text-sm">
                 {lista.map((u) => (
                   <li key={u.id} className="flex items-center justify-between py-2">
-                    <span>{u.nombre} · {u.email}</span>
+                    <span className="flex items-center gap-2">
+                      <FiUserPlus size={15} className="shrink-0 text-zinc-400" />
+                      {u.nombre} · {u.email}
+                    </span>
                     <span className="flex gap-2">
                       <Badge tono={u.rol === "ADMIN" ? "violet" : "blue"}>{u.rol}</Badge>
                       <Badge tono={u.activo ? "green" : "zinc"}>{u.activo ? "Activo" : "Inactivo"}</Badge>
@@ -70,7 +74,9 @@ export default function UsuariosPage() {
             )}
           </Card>
           <Card>
-            <h2 className="font-semibold">Nuevo usuario</h2>
+            <h2 className="flex items-center gap-2 font-semibold">
+              <FiShield size={16} /> Nuevo usuario
+            </h2>
             <form onSubmit={(e) => void crear(e)} className="mt-2 space-y-2">
               <input className={inputCls} required placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
               <input className={inputCls} required type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -79,7 +85,9 @@ export default function UsuariosPage() {
                 <option value="TECNICO">TECNICO</option>
                 <option value="ADMIN">ADMIN</option>
               </select>
-              <button className={btnPrimary + " w-full"}>Crear</button>
+              <button className={btnPrimary + " w-full gap-2"}>
+                <FiUserPlus size={15} /> Crear
+              </button>
             </form>
           </Card>
         </div>

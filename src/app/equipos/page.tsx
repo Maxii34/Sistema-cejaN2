@@ -2,6 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import {
+  FiCamera,
+  FiChevronRight,
+  FiClipboard,
+  FiPlus,
+  FiTool,
+  FiUsers,
+} from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -119,8 +127,8 @@ export default function HistorialEquiposPage() {
           titulo="Historial de equipos"
           descripcion={`${equipos.length} aparatos · ${totalVisitas} visitas al taller. Cada tarjeta muestra el equipo con todas sus órdenes.`}
           accion={
-            <Link href="/clientes" className={btnPrimary}>
-              Ir a clientes
+            <Link href="/clientes" className={btnPrimary + " gap-2"}>
+              <FiUsers size={16} /> Ir a clientes
             </Link>
           }
         />
@@ -173,9 +181,7 @@ export default function HistorialEquiposPage() {
                     />
                   ) : (
                     <div className="mb-3 flex h-40 flex-col items-center justify-center gap-1 rounded-lg bg-zinc-100">
-                      <span className="text-2xl" aria-hidden>
-                        🔧
-                      </span>
+                      <FiTool size={28} className="text-zinc-400" aria-hidden />
                       <span className="text-xs font-normal text-zinc-500">
                         Sin foto
                       </span>
@@ -221,17 +227,17 @@ export default function HistorialEquiposPage() {
                   )}
 
                   <div className="mt-3 border-t border-zinc-100 pt-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-600">
-                      Historial
+                    <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-600">
+                      <FiClipboard size={13} /> Historial
                     </p>
                     {visitas.length === 0 ? (
                       <p className="mt-1 text-xs font-normal text-zinc-600">
                         Todavía no ingresó al taller.{" "}
                         <Link
                           href="/ordenes/nueva"
-                          className="font-medium text-zinc-900 hover:underline"
+                          className="inline-flex items-center gap-0.5 font-medium text-zinc-900 hover:underline"
                         >
-                          Crear recepción →
+                          <FiPlus size={13} /> Crear recepción
                         </Link>
                       </p>
                     ) : (
@@ -258,9 +264,9 @@ export default function HistorialEquiposPage() {
                               </Badge>
                               <Link
                                 href={`/ordenes/${o.id}`}
-                                className="font-medium text-zinc-900 hover:underline"
+                                className="flex items-center gap-0.5 font-medium text-zinc-900 hover:underline"
                               >
-                                Ver orden →
+                                Ver orden <FiChevronRight size={13} />
                               </Link>
                             </div>
                           </li>
@@ -270,8 +276,8 @@ export default function HistorialEquiposPage() {
                   </div>
 
                   <details className="mt-3">
-                    <summary className="cursor-pointer text-xs font-medium text-zinc-700 hover:underline">
-                      Subir / cambiar foto (maqueta)
+                    <summary className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-zinc-700 hover:underline">
+                      <FiCamera size={13} /> Subir / cambiar foto (maqueta)
                     </summary>
                     <div className="mt-2">
                       <ImageUploader

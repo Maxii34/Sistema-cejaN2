@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { FiPlus, FiTrash2, FiUserPlus } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -81,8 +82,8 @@ export default function ClientesPage() {
           titulo="Clientes"
           descripcion="Personas que dejan equipos a reparar. Buscá, creá y accedé a su ficha."
           accion={
-            <Link href="/ordenes/nueva" className={btnPrimary}>
-              + Nueva recepción
+            <Link href="/ordenes/nueva" className={btnPrimary + " gap-2"}>
+              <FiPlus size={16} /> Nueva recepción
             </Link>
           }
         />
@@ -131,8 +132,9 @@ export default function ClientesPage() {
                       </Badge>
                       <button
                         onClick={() => void eliminar(c.id)}
-                        className="text-xs font-medium text-red-600 hover:underline"
+                        className="flex items-center gap-1 text-xs font-medium text-red-600 hover:underline"
                       >
+                        <FiTrash2 size={13} />
                         Eliminar
                       </button>
                     </div>
@@ -142,7 +144,9 @@ export default function ClientesPage() {
             )}
           </Card>
           <Card>
-            <h2 className="font-semibold text-zinc-900">Alta rápida</h2>
+            <h2 className="flex items-center gap-2 font-semibold text-zinc-900">
+              <FiUserPlus size={16} /> Alta rápida
+            </h2>
             <form onSubmit={(e) => void crear(e)} className="mt-3 space-y-2">
               <input
                 className={inputCls}
@@ -163,7 +167,10 @@ export default function ClientesPage() {
                 value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
               />
-              <button className={btnPrimary + " w-full"}>Guardar cliente</button>
+              <button className={btnPrimary + " w-full gap-2"}>
+                <FiUserPlus size={15} />
+                Guardar cliente
+              </button>
             </form>
           </Card>
         </div>

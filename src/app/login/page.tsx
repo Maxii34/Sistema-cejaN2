@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { FiLogIn, FiSettings } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
 import { Card, inputCls, btnPrimary } from "@/components/ui";
 
@@ -30,7 +31,9 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-100 p-4">
       <Card className="w-full max-w-sm">
-        <h1 className="text-xl font-bold text-zinc-900">CJ Reparaciones</h1>
+        <h1 className="flex items-center gap-2 text-xl font-bold text-zinc-900">
+          <FiSettings size={22} /> CJ Reparaciones
+        </h1>
         <p className="mt-1 text-sm text-zinc-600">
           Ingresá con tu usuario del taller (ADMIN o TÉCNICO).
         </p>
@@ -66,7 +69,8 @@ export default function LoginPage() {
               {error}
             </p>
           )}
-          <button className={btnPrimary + " w-full"} disabled={cargando}>
+          <button className={btnPrimary + " w-full gap-2"} disabled={cargando}>
+            <FiLogIn size={16} />
             {cargando ? "Ingresando..." : "Ingresar"}
           </button>
         </form>

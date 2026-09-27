@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FiAlertTriangle, FiCamera, FiUpload, FiX } from "react-icons/fi";
 
 /**
  * Maqueta de subida de imagen por equipo.
@@ -56,8 +57,9 @@ export function ImageUploader({
 
   return (
     <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-4">
-      <p className="text-sm font-medium text-zinc-800">
-        Foto del equipo <span className="text-zinc-500">(maqueta)</span>
+      <p className="flex items-center gap-1.5 text-sm font-medium text-zinc-800">
+        <FiCamera size={15} /> Foto del equipo{" "}
+        <span className="text-zinc-500">(maqueta)</span>
       </p>
       <p className="mt-0.5 text-xs font-normal text-zinc-600">
         El backend aún no acepta imágenes. Se guarda solo como vista previa
@@ -78,16 +80,16 @@ export function ImageUploader({
             <button
               type="button"
               onClick={quitar}
-              className="text-xs font-medium text-red-600 hover:underline"
+              className="flex items-center gap-1 text-xs font-medium text-red-600 hover:underline"
             >
-              Quitar
+              <FiX size={13} /> Quitar
             </button>
           </div>
         </div>
       ) : (
         <label className="mt-3 flex cursor-pointer flex-col items-center justify-center rounded-lg border border-zinc-200 bg-white px-4 py-6 text-center hover:bg-zinc-100">
-          <span className="text-sm font-medium text-zinc-700">
-            Arrastrá o hacé clic para subir
+          <span className="flex items-center gap-1.5 text-sm font-medium text-zinc-700">
+            <FiUpload size={15} /> Arrastrá o hacé clic para subir
           </span>
           <span className="mt-1 text-xs text-zinc-600">PNG / JPG · máx 5 MB</span>
           <input
@@ -98,7 +100,11 @@ export function ImageUploader({
           />
         </label>
       )}
-      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+      {error && (
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-red-600">
+          <FiAlertTriangle size={13} /> {error}
+        </p>
+      )}
     </div>
   );
 }

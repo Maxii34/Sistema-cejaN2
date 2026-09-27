@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { FiArrowLeft, FiCamera, FiPenTool, FiSave, FiUser } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -109,8 +110,8 @@ export default function NuevaOrdenPage() {
           titulo="Nueva recepción (ficha 3-A / 3-B / 5)"
           descripcion="Replica la ficha papel: datos del equipo, estado físico, accesorios y firmas."
           accion={
-            <button className={btnSecondary} onClick={() => router.push("/ordenes")}>
-              ← Volver
+            <button className={btnSecondary + " gap-2"} onClick={() => router.push("/ordenes")}>
+              <FiArrowLeft size={15} /> Volver
             </button>
           }
         />
@@ -119,7 +120,9 @@ export default function NuevaOrdenPage() {
         )}
         <form onSubmit={(e) => void guardar(e)} className="grid gap-4 lg:grid-cols-2">
           <Card>
-            <h2 className="font-semibold">1 · Cliente y equipo</h2>
+            <h2 className="flex items-center gap-2 font-semibold">
+              <FiUser size={16} /> 1 · Cliente y equipo
+            </h2>
             <div className="mt-3 space-y-2">
               <select className={inputCls} value={clienteId} onChange={(e) => { setClienteId(e.target.value ? Number(e.target.value) : ""); setEquipoId(""); }} required>
                 <option value="">Seleccionar cliente...</option>
@@ -143,7 +146,9 @@ export default function NuevaOrdenPage() {
           </Card>
           <div className="space-y-4">
             <Card>
-              <h2 className="font-semibold">2 · Condición física (3-A)</h2>
+              <h2 className="flex items-center gap-2 font-semibold">
+                <FiCamera size={16} /> 2 · Condición física (3-A)
+              </h2>
               <div className="mt-3 grid grid-cols-1 gap-2">
                 {CONDICIONES.map((c) => (
                   <label key={c} className="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm">
@@ -158,7 +163,9 @@ export default function NuevaOrdenPage() {
               </div>
             </Card>
             <Card>
-              <h2 className="font-semibold">3 · Conformidad de recepción (5)</h2>
+              <h2 className="flex items-center gap-2 font-semibold">
+                <FiPenTool size={16} /> 3 · Conformidad de recepción (5)
+              </h2>
               <label className="mt-3 flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={firmaC} onChange={(e) => setFirmaC(e.target.checked)} />
                 Firma cliente recepción
@@ -167,7 +174,8 @@ export default function NuevaOrdenPage() {
                 <input type="checkbox" checked={firmaT} onChange={(e) => setFirmaT(e.target.checked)} />
                 Firma técnico recepción
               </label>
-              <button className={btnPrimary + " mt-4 w-full"} disabled={guardando}>
+              <button className={btnPrimary + " mt-4 w-full gap-2"} disabled={guardando}>
+                <FiSave size={15} />
                 {guardando ? "Guardando..." : "Crear orden de reparación"}
               </button>
             </Card>

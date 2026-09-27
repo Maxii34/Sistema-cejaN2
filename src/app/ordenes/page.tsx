@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { FiChevronRight, FiPlus } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -60,8 +61,8 @@ export default function OrdenesPage() {
           titulo="Órdenes de reparación"
           descripcion="Fichas de recepción, diagnóstico, reparación y entrega."
           accion={
-            <Link href="/ordenes/nueva" className={btnPrimary}>
-              + Nueva recepción
+            <Link href="/ordenes/nueva" className={btnPrimary + " gap-2"}>
+              <FiPlus size={16} /> Nueva recepción
             </Link>
           }
         />
@@ -125,8 +126,8 @@ export default function OrdenesPage() {
                         </Badge>
                       </td>
                       <td className="py-2 text-right">
-                        <Link href={`/ordenes/${o.id}`} className="font-medium text-zinc-900 hover:underline">
-                          Abrir →
+                        <Link href={`/ordenes/${o.id}`} className="inline-flex items-center gap-0.5 font-medium text-zinc-900 hover:underline">
+                          Abrir <FiChevronRight size={14} />
                         </Link>
                       </td>
                     </tr>

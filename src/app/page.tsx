@@ -2,6 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  FiChevronRight,
+  FiClipboard,
+  FiClock,
+  FiPackage,
+  FiPlus,
+  FiTool,
+  FiUsers,
+} from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -47,36 +56,45 @@ export default function DashboardPage() {
           titulo={`Hola, ${usuario.nombre}`}
           descripcion="Resumen del taller: recepciones activas, clientes y stock."
           accion={
-            <Link href="/ordenes/nueva" className={btnPrimary}>
-              + Nueva recepción
+            <Link href="/ordenes/nueva" className={btnPrimary + " gap-2"}>
+              <FiPlus size={16} /> Nueva recepción
             </Link>
           }
         />
         {error && <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            ["Órdenes totales", stats.ordenes, "/ordenes"],
-            ["Activas / pendientes", stats.pendientes, "/ordenes"],
-            ["Clientes", stats.clientes, "/clientes"],
-            ["Repuestos", stats.repuestos, "/repuestos"],
-          ].map(([label, valor, href]) => (
-            <Link key={label as string} href={href as string}>
+          {(
+            [
+              ["Órdenes totales", stats.ordenes, "/ordenes", FiClipboard],
+              ["Activas / pendientes", stats.pendientes, "/ordenes", FiClock],
+              ["Clientes", stats.clientes, "/clientes", FiUsers],
+              ["Repuestos", stats.repuestos, "/repuestos", FiPackage],
+            ] as [string, number, string, typeof FiClipboard][]
+          ).map(([label, valor, href, Icon]) => (
+            <Link key={label} href={href}>
               <Card className="hover:shadow">
-                <p className="text-xs uppercase text-zinc-600">{label}</p>
+                <p className="flex items-center gap-1.5 text-xs uppercase text-zinc-600">
+                  <Icon size={14} />
+                  {label}
+                </p>
                 <p className="mt-1 text-3xl font-bold">{valor}</p>
               </Card>
             </Link>
           ))}
         </div>
         <Card className="mt-4">
-          <h2 className="font-semibold">Últimas órdenes</h2>
+          <h2 className="flex items-center gap-2 font-semibold">
+            <FiTool size={16} /> Últimas órdenes
+          </h2>
           <ul className="mt-2 divide-y divide-zinc-100 text-sm">
             {ultimas.map((o) => (
               <li key={o.id} className="flex items-center justify-between py-2">
                 <span className="font-mono">{o.numero} · {o.fallaReportada.slice(0, 60)}</span>
                 <span className="flex items-center gap-2">
                   <Badge tono="violet">{o.estado}</Badge>
-                  <Link href={`/ordenes/${o.id}`} className="font-medium hover:underline">Abrir →</Link>
+                  <Link href={`/ordenes/${o.id}`} className="flex items-center gap-0.5 font-medium hover:underline">
+                    Abrir <FiChevronRight size={14} />
+                  </Link>
                 </span>
               </li>
             ))}

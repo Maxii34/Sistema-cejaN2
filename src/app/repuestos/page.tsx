@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FiLink, FiPackage, FiPlus } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -95,7 +96,9 @@ export default function RepuestosPage() {
           </Card>
           <div className="space-y-4">
             <Card>
-              <h2 className="font-semibold">Nuevo repuesto</h2>
+              <h2 className="flex items-center gap-2 font-semibold">
+                <FiPlus size={15} /> Nuevo repuesto
+              </h2>
               <form onSubmit={(e) => void crear(e)} className="mt-2 space-y-2">
                 <input className={inputCls} required placeholder="Nombre *" value={nombre} onChange={(e) => setNombre(e.target.value)} />
                 <div className="grid grid-cols-3 gap-2">
@@ -103,11 +106,15 @@ export default function RepuestosPage() {
                   <input className={inputCls} type="number" min="0" step="0.01" placeholder="Venta" value={precio} onChange={(e) => setPrecio(e.target.value)} />
                   <input className={inputCls} type="number" min="0" step="1" placeholder="Stock" value={stock} onChange={(e) => setStock(e.target.value)} />
                 </div>
-                <button className={btnPrimary + " w-full"}>Guardar</button>
+                <button className={btnPrimary + " w-full gap-2"}>
+                  <FiPackage size={15} /> Guardar
+                </button>
               </form>
             </Card>
             <Card>
-              <h2 className="font-semibold">Asignar a orden</h2>
+              <h2 className="flex items-center gap-2 font-semibold">
+                <FiLink size={15} /> Asignar a orden
+              </h2>
               <form onSubmit={(e) => void asignar(e)} className="mt-2 space-y-2">
                 <select className={inputCls} value={ordenId} onChange={(e) => setOrdenId(e.target.value)} required>
                   <option value="">Orden...</option>
@@ -118,7 +125,9 @@ export default function RepuestosPage() {
                   {repuestos.map((r) => <option key={r.id} value={r.id}>{r.nombre}</option>)}
                 </select>
                 <input className={inputCls} type="number" min="1" step="1" value={cant} onChange={(e) => setCant(e.target.value)} />
-                <button className={btnPrimary + " w-full"}>Asignar</button>
+                <button className={btnPrimary + " w-full gap-2"}>
+                  <FiLink size={15} /> Asignar
+                </button>
               </form>
             </Card>
           </div>
