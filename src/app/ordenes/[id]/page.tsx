@@ -91,20 +91,20 @@ export default function OrdenDetallePage() {
   if (cargando || !usuario) return <p className="p-8">Cargando...</p>;
 
   return (
-    <div className="flex min-h-screen bg-zinc-100">
+    <div className="flex min-h-screen flex-col bg-zinc-100 lg:flex-row">
       <Sidebar />
-      <main className="flex-1 p-6">
+      <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
         <PageHeader
           titulo={orden ? `Orden ${orden.numero}` : `Orden #${id}`}
           descripcion={orden ? `${orden.equipo?.tipo ?? ""} ${orden.equipo?.marca ?? ""} ${orden.equipo?.modelo ?? ""} · Falla: ${orden.fallaReportada}` : ""}
           accion={
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex">
               <button className={btnSecondary + " gap-2"} onClick={() => router.push("/ingreso")}>
                 <FiArrowLeft size={15} /> Volver
               </button>
               {orden && (
                 <button className={btnSecondary + " gap-2"} onClick={() => window.print()}>
-                  <FiPrinter size={15} /> Imprimir ficha
+                  <FiPrinter size={15} /> Imprimir
                 </button>
               )}
             </div>
@@ -114,15 +114,15 @@ export default function OrdenDetallePage() {
         {!orden ? (
           <p className="text-sm text-zinc-600">Cargando orden...</p>
         ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-4">
+          <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
+            <div className="min-w-0 space-y-3 sm:space-y-4">
               <Card>
                 <div className="flex flex-wrap gap-2">
                   <Badge tono="blue">{ESTADO_ORDEN_LABEL[orden.estado]}</Badge>
                   <Badge tono={orden.estadoPago === "PAGADO" ? "green" : "amber"}>{orden.estadoPago}</Badge>
                   {orden.autorizadoCliente && <Badge tono="green">Autorizado</Badge>}
                 </div>
-                <dl className="mt-3 space-y-1 text-sm text-zinc-700">
+                <dl className="mt-3 space-y-1.5 break-words text-sm text-zinc-700">
                   <p><b>Cliente:</b> {orden.equipo?.cliente ? `${orden.equipo.cliente.nombre} ${orden.equipo.cliente.apellido ?? ""}` : `Equipo #${orden.equipoId}`}</p>
                   <p><b>Accesorios:</b> {orden.accesorios || "—"}</p>
                   <p><b>Condición:</b> {orden.condicionFisica.map((c) => CONDICION_LABEL[c]).join(", ")}</p>
@@ -140,7 +140,7 @@ export default function OrdenDetallePage() {
                   <textarea className={inputCls} rows={2} placeholder="Pruebas realizadas" value={pruebas} onChange={(e) => setPruebas(e.target.value)} />
                   <textarea className={inputCls} rows={2} placeholder="Recomendaciones" value={reco} onChange={(e) => setReco(e.target.value)} />
                   <textarea className={inputCls} rows={2} placeholder="Reparación realizada" value={reparacion} onChange={(e) => setReparacion(e.target.value)} />
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
                     <input className={inputCls} type="number" min="0" step="0.01" placeholder="Mano de obra" value={mano} onChange={(e) => setMano(e.target.value)} />
                     <input className={inputCls} type="number" min="0" step="0.01" placeholder="Precio final" value={precio} onChange={(e) => setPrecio(e.target.value)} />
                     <select className={inputCls} value={estado} onChange={(e) => setEstado(e.target.value as EstadoOrden)}>
@@ -151,15 +151,15 @@ export default function OrdenDetallePage() {
                       {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nombre} ({t.rol})</option>)}
                     </select>
                   </div>
-                  <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={autorizado} onChange={(e) => setAutorizado(e.target.checked)} /> Autorizado por cliente</label>
-                  <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={conformidad} onChange={(e) => setConformidad(e.target.checked)} /> Conformidad de entrega</label>
+                  <label className="flex min-h-[44px] items-center gap-2.5 text-[15px] sm:text-sm"><input type="checkbox" className="h-5 w-5 shrink-0 accent-zinc-900" checked={autorizado} onChange={(e) => setAutorizado(e.target.checked)} /> Autorizado por cliente</label>
+                  <label className="flex min-h-[44px] items-center gap-2.5 text-[15px] sm:text-sm"><input type="checkbox" className="h-5 w-5 shrink-0 accent-zinc-900" checked={conformidad} onChange={(e) => setConformidad(e.target.checked)} /> Conformidad de entrega</label>
                   <button className={btnPrimary + " w-full gap-2"}>
                     <FiSave size={15} /> Guardar avance
                   </button>
                 </form>
               </Card>
             </div>
-            <div className="space-y-4">
+            <div className="min-w-0 space-y-3 sm:space-y-4">
               <Card>
                 <h2 className="flex items-center gap-2 font-semibold">
                   <FiDollarSign size={16} /> Pagos

@@ -28,21 +28,23 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className={`max-h-[90vh] w-full ${ancho} overflow-y-auto rounded-xl bg-white p-5 shadow-xl`}
+        className={`max-h-[92dvh] w-full ${ancho} overflow-y-auto rounded-t-2xl bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-xl sm:rounded-xl sm:p-5 sm:pb-5`}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-zinc-900">{titulo}</h2>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 className="min-w-0 truncate text-lg font-bold text-zinc-900">{titulo}</h2>
           <button
             onClick={onClose}
             aria-label="Cerrar"
-            className="rounded-lg p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
           >
-            <FiX size={20} />
+            <FiX size={22} />
           </button>
         </div>
         {children}

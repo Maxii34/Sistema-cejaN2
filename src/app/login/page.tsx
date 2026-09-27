@@ -29,8 +29,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-100 p-4">
-      <Card className="w-full max-w-sm">
+    <div className="flex min-h-dvh items-center justify-center bg-zinc-950 p-4 sm:bg-zinc-100">
+      <Card className="w-full max-w-sm shadow-xl">
         <h1 className="flex items-center gap-2 text-xl font-bold text-zinc-900">
           <FiSettings size={22} /> CJ Reparaciones
         </h1>
@@ -46,6 +46,8 @@ export default function LoginPage() {
               className={inputCls}
               type="email"
               required
+              autoComplete="email"
+              inputMode="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tecnico@taller.com"
@@ -59,6 +61,7 @@ export default function LoginPage() {
               className={inputCls}
               type="password"
               required
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••"

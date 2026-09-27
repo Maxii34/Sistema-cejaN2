@@ -49,22 +49,22 @@ export default function UsuariosPage() {
   if (!esAdmin) return <p className="p-8">Solo administradores.</p>;
 
   return (
-    <div className="flex min-h-screen bg-zinc-100">
+    <div className="flex min-h-screen flex-col bg-zinc-100 lg:flex-row">
       <Sidebar />
-      <main className="flex-1 p-6">
+      <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
         <PageHeader titulo="Usuarios" descripcion="Solo ADMIN. El backend permite un único administrador." />
         {error && <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-        <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-          <Card>
+        <div className="flex flex-col gap-3 sm:gap-4 lg:grid lg:grid-cols-[1fr_320px]">
+          <Card className="order-last lg:order-none">
             {lista.length === 0 ? <Empty mensaje="Sin usuarios" /> : (
               <ul className="divide-y divide-zinc-100 text-sm">
                 {lista.map((u) => (
-                  <li key={u.id} className="flex items-center justify-between py-2">
-                    <span className="flex items-center gap-2">
+                  <li key={u.id} className="flex flex-col gap-1.5 py-2.5 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
+                    <span className="flex min-w-0 items-center gap-2">
                       <FiUserPlus size={15} className="shrink-0 text-zinc-400" />
-                      {u.nombre} · {u.email}
+                      <span className="truncate">{u.nombre} · {u.email}</span>
                     </span>
-                    <span className="flex gap-2">
+                    <span className="flex shrink-0 gap-1.5">
                       <Badge tono={u.rol === "ADMIN" ? "violet" : "blue"}>{u.rol}</Badge>
                       <Badge tono={u.activo ? "green" : "zinc"}>{u.activo ? "Activo" : "Inactivo"}</Badge>
                     </span>
@@ -73,7 +73,7 @@ export default function UsuariosPage() {
               </ul>
             )}
           </Card>
-          <Card>
+          <Card className="order-first lg:order-none">
             <h2 className="flex items-center gap-2 font-semibold">
               <FiShield size={16} /> Nuevo usuario
             </h2>

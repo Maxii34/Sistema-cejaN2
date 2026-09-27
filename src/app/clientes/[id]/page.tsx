@@ -117,9 +117,9 @@ export default function ClienteDetallePage() {
   if (cargando || !usuario) return <p className="p-8">Cargando...</p>;
 
   return (
-    <div className="flex min-h-screen bg-zinc-100">
+    <div className="flex min-h-screen flex-col bg-zinc-100 lg:flex-row">
       <Sidebar />
-      <main className="flex-1 p-6">
+      <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
         <PageHeader
           titulo={cliente ? `${cliente.nombre} ${cliente.apellido ?? ""}` : "Cliente"}
           descripcion={`Ficha del cliente #${id} y sus equipos`}
@@ -132,7 +132,7 @@ export default function ClienteDetallePage() {
         {error && (
           <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
         )}
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
           <Card>
             <div className="flex items-center justify-between gap-2">
               <h2 className="flex items-center gap-2 font-semibold">
@@ -154,7 +154,7 @@ export default function ClienteDetallePage() {
                 </button>
               )}
             </div>
-            <form onSubmit={(e) => void guardarCliente(e)} className="mt-3 grid grid-cols-2 gap-2">
+            <form onSubmit={(e) => void guardarCliente(e)} className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
               {(
                 [
                   ["nombre", "Nombre *"],
@@ -175,14 +175,14 @@ export default function ClienteDetallePage() {
                 />
               ))}
               <input
-                className={inputCls + " col-span-2" + (!editando ? " bg-zinc-50 text-zinc-600" : "")}
+                className={inputCls + " min-[420px]:col-span-2" + (!editando ? " bg-zinc-50 text-zinc-600" : "")}
                 placeholder="Dirección"
                 value={form.direccion}
                 disabled={!editando}
                 onChange={(e) => setForm({ ...form, direccion: e.target.value })}
               />
               <button
-                className={btnPrimary + " col-span-2 gap-2"}
+                className={btnPrimary + " min-[420px]:col-span-2 gap-2"}
                 disabled={!editando}
               >
                 <FiSave size={15} /> Guardar cambios
@@ -193,13 +193,13 @@ export default function ClienteDetallePage() {
             <h2 className="flex items-center gap-2 font-semibold">
               <FiTool size={16} /> Equipos ({equipos.length})
             </h2>
-            <form onSubmit={(e) => void crearEquipo(e)} className="mt-3 grid grid-cols-2 gap-2">
+            <form onSubmit={(e) => void crearEquipo(e)} className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
               <input className={inputCls} required placeholder="Tipo * ej: Heladera" value={eq.tipo} onChange={(e) => setEq({ ...eq, tipo: e.target.value })} />
               <input className={inputCls} required placeholder="Marca *" value={eq.marca} onChange={(e) => setEq({ ...eq, marca: e.target.value })} />
               <input className={inputCls} required placeholder="Modelo *" value={eq.modelo} onChange={(e) => setEq({ ...eq, modelo: e.target.value })} />
               <input className={inputCls} placeholder="N° serie" value={eq.numeroSerie} onChange={(e) => setEq({ ...eq, numeroSerie: e.target.value })} />
-              <input className={inputCls + " col-span-2"} placeholder="Observaciones" value={eq.observaciones} onChange={(e) => setEq({ ...eq, observaciones: e.target.value })} />
-              <button className={btnSecondary + " col-span-2 gap-2"}>
+              <input className={inputCls + " min-[420px]:col-span-2"} placeholder="Observaciones" value={eq.observaciones} onChange={(e) => setEq({ ...eq, observaciones: e.target.value })} />
+              <button className={btnSecondary + " min-[420px]:col-span-2 gap-2"}>
                 <FiPlus size={15} /> Agregar equipo
               </button>
             </form>

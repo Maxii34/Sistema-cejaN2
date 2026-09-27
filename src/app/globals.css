@@ -14,12 +14,56 @@
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+main {
+  min-width: 0;
+}
+
+/* Targets táctiles y anti-zoom en iOS (inputs a 16px en móvil) */
+button,
+a,
+summary {
+  touch-action: manipulation;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+@media (min-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 14px;
+  }
+}
+
+/* Tablas que quedan en desktop: scroll horizontal suave */
+.tabla-scroll {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* Respeta área segura de iPhone con notch / barra inferior */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Legibilidad: placeholders y textos secundarios con contraste suficiente */

@@ -55,25 +55,25 @@ export default function PagosPage() {
   const total = pagos.reduce((a, p) => a + Number(p.monto), 0);
 
   return (
-    <div className="flex min-h-screen bg-zinc-100">
+    <div className="flex min-h-screen flex-col bg-zinc-100 lg:flex-row">
       <Sidebar />
-      <main className="flex-1 p-6">
+      <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
         <PageHeader titulo="Pagos" descripcion={`Total cobrado: $${total.toFixed(2)}`} />
         {error && <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-        <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-          <Card>
+        <div className="flex flex-col gap-3 sm:gap-4 lg:grid lg:grid-cols-[1fr_320px]">
+          <Card className="order-last lg:order-none">
             {pagos.length === 0 ? <Empty mensaje="Sin pagos" /> : (
               <ul className="divide-y divide-zinc-100 text-sm">
                 {pagos.map((p) => (
-                  <li key={p.id} className="flex justify-between py-2">
-                    <span>Orden #{p.ordenId} · {p.medioPago} · {new Date(p.fecha).toLocaleDateString()}</span>
-                    <b>${Number(p.monto).toFixed(2)}</b>
+                  <li key={p.id} className="flex flex-col gap-0.5 py-2.5 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
+                    <span className="min-w-0 truncate">Orden #{p.ordenId} · {p.medioPago} · {new Date(p.fecha).toLocaleDateString()}</span>
+                    <b className="shrink-0 font-ficha">${Number(p.monto).toFixed(2)}</b>
                   </li>
                 ))}
               </ul>
             )}
           </Card>
-          <Card>
+          <Card className="order-first lg:order-none">
             <h2 className="flex items-center gap-2 font-semibold">
               <FiDollarSign size={16} /> Registrar cobro
             </h2>

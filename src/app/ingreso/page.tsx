@@ -176,9 +176,9 @@ export default function IngresoPage() {
   if (cargando || !usuario) return <p className="p-8">Cargando...</p>;
 
   return (
-    <div className="flex min-h-screen bg-zinc-100">
+    <div className="flex min-h-screen flex-col bg-zinc-100 lg:flex-row">
       <Sidebar />
-      <main className="flex-1 p-6">
+      <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
         <PageHeader
           titulo="Ingreso"
           descripcion="Clientes que dejan equipos y sus órdenes de reparación, todo en un solo lugar."
@@ -195,10 +195,10 @@ export default function IngresoPage() {
         )}
 
         {/* Pestañas */}
-        <div className="mb-4 flex gap-2">
+        <div className="mb-3 grid grid-cols-2 gap-2 sm:mb-4 sm:flex sm:w-auto">
           <button
             onClick={() => setTab("clientes")}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium ${
+            className={`flex min-h-[48px] items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-[15px] sm:text-sm font-medium ${
               tab === "clientes"
                 ? "bg-zinc-900 text-white"
                 : "border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
@@ -208,7 +208,7 @@ export default function IngresoPage() {
           </button>
           <button
             onClick={() => setTab("ordenes")}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium ${
+            className={`flex min-h-[48px] items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-[15px] sm:text-sm font-medium ${
               tab === "ordenes"
                 ? "bg-zinc-900 text-white"
                 : "border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50"
@@ -219,7 +219,7 @@ export default function IngresoPage() {
         </div>
 
         {tab === "clientes" && (
-          <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+          <div className="flex flex-col gap-3 sm:gap-4 lg:grid lg:grid-cols-[1fr_320px]">
             <Card className="shadow-md transition-shadow duration-300 hover:shadow-lg">
               <input
                 className={inputCls + " transition-shadow focus:shadow-md"}
@@ -237,86 +237,142 @@ export default function IngresoPage() {
                   />
                 </div>
               ) : (
-                <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-200 shadow-sm">
-                  <table className="w-full min-w-[620px] text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-600">
-                        <th className="px-4 py-3 font-semibold">Cliente</th>
-                        <th className="px-4 py-3 font-semibold">Contacto</th>
-                        <th className="px-4 py-3 font-semibold">Estado</th>
-                        <th className="px-4 py-3 text-right font-semibold">
-                          Acciones
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {clientesFiltrados.map((c) => (
-                        <tr
-                          key={c.id}
-                          className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50"
-                        >
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-bold text-white">
-                                {(c.nombre[0] ?? "?").toUpperCase()}
-                                {(c.apellido?.[0] ?? "").toUpperCase()}
-                              </span>
-                              <span>
+                <>
+                  {/* Vista cards para móvil */}
+                  <ul className="mt-3 space-y-2 sm:hidden">
+                    {clientesFiltrados.map((c) => (
+                      <li
+                        key={c.id}
+                        className="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-bold text-white">
+                            {(c.nombre[0] ?? "?").toUpperCase()}
+                            {(c.apellido?.[0] ?? "").toUpperCase()}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <Link
+                              href={`/clientes/${c.id}`}
+                              className="block truncate font-medium text-zinc-900"
+                            >
+                              {c.nombre} {c.apellido ?? ""}
+                            </Link>
+                            <span className="block truncate text-xs font-normal text-zinc-600">
+                              {c.dni ? `DNI ${c.dni}` : "Sin DNI"}
+                              {" · "}
+                              {[c.telefono, c.email].filter(Boolean).join(" · ") || "Sin contacto"}
+                            </span>
+                          </span>
+                          <Badge tono={c.activo ? "green" : "zinc"}>
+                            {c.activo ? "Activo" : "Inactivo"}
+                          </Badge>
+                        </div>
+                        <div className="mt-2.5 grid grid-cols-[1fr_auto] gap-2">
+                          <Link
+                            href={`/clientes/${c.id}`}
+                            className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white active:bg-zinc-700"
+                          >
+                            <FiEye size={14} />
+                            Abrir ficha
+                          </Link>
+                          <button
+                            onClick={() =>
+                              void eliminarCliente(
+                                c.id,
+                                `${c.nombre} ${c.apellido ?? ""}`.trim()
+                              )
+                            }
+                            aria-label={`Eliminar a ${c.nombre}`}
+                            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-red-200 bg-white px-3 text-red-600 active:bg-red-50"
+                          >
+                            <FiTrash2 size={16} />
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  {/* Tabla solo en sm+ */}
+                  <div className="tabla-scroll mt-4 hidden overflow-x-auto rounded-xl border border-zinc-200 shadow-sm sm:block">
+                    <table className="w-full min-w-[620px] text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-600">
+                          <th className="px-4 py-3 font-semibold">Cliente</th>
+                          <th className="px-4 py-3 font-semibold">Contacto</th>
+                          <th className="px-4 py-3 font-semibold">Estado</th>
+                          <th className="px-4 py-3 text-right font-semibold">
+                            Acciones
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {clientesFiltrados.map((c) => (
+                          <tr
+                            key={c.id}
+                            className="border-b border-zinc-100 transition-colors last:border-0 hover:bg-zinc-50"
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-bold text-white">
+                                  {(c.nombre[0] ?? "?").toUpperCase()}
+                                  {(c.apellido?.[0] ?? "").toUpperCase()}
+                                </span>
+                                <span>
+                                  <Link
+                                    href={`/clientes/${c.id}`}
+                                    className="font-medium text-zinc-900 hover:underline"
+                                  >
+                                    {c.nombre} {c.apellido ?? ""}
+                                  </Link>
+                                  <span className="block text-xs font-normal text-zinc-600">
+                                    {c.dni ? `DNI ${c.dni}` : "Sin DNI"}
+                                  </span>
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-xs font-normal text-zinc-600">
+                              {[c.telefono, c.email]
+                                .filter(Boolean)
+                                .join(" · ") || "Sin contacto"}
+                            </td>
+                            <td className="px-4 py-3">
+                              <Badge tono={c.activo ? "green" : "zinc"}>
+                                {c.activo ? "Activo" : "Inactivo"}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center justify-end gap-2">
                                 <Link
                                   href={`/clientes/${c.id}`}
-                                  className="font-medium text-zinc-900 hover:underline"
+                                  title="Abrir ficha del cliente"
+                                  className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700"
                                 >
-                                  {c.nombre} {c.apellido ?? ""}
+                                  <FiEye size={13} />
+                                  Abrir
                                 </Link>
-                                <span className="block text-xs font-normal text-zinc-600">
-                                  {c.dni ? `DNI ${c.dni}` : "Sin DNI"}
-                                </span>
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-xs font-normal text-zinc-600">
-                            {[c.telefono, c.email]
-                              .filter(Boolean)
-                              .join(" · ") || "Sin contacto"}
-                          </td>
-                          <td className="px-4 py-3">
-                            <Badge tono={c.activo ? "green" : "zinc"}>
-                              {c.activo ? "Activo" : "Inactivo"}
-                            </Badge>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-end gap-2">
-                              <Link
-                                href={`/clientes/${c.id}`}
-                                title="Abrir ficha del cliente"
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700"
-                              >
-                                <FiEye size={13} />
-                                Abrir
-                              </Link>
-                              <button
-                                onClick={() =>
-                                  void eliminarCliente(
-                                    c.id,
-                                    `${c.nombre} ${c.apellido ?? ""}`.trim()
-                                  )
-                                }
-                                title="Eliminar cliente"
-                                aria-label={`Eliminar a ${c.nombre}`}
-                                className="inline-flex items-center justify-center rounded-lg border border-red-200 bg-white p-2 text-red-600 transition-colors hover:bg-red-50"
-                              >
-                                <FiTrash2 size={14} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                                <button
+                                  onClick={() =>
+                                    void eliminarCliente(
+                                      c.id,
+                                      `${c.nombre} ${c.apellido ?? ""}`.trim()
+                                    )
+                                  }
+                                  title="Eliminar cliente"
+                                  aria-label={`Eliminar a ${c.nombre}`}
+                                  className="inline-flex items-center justify-center rounded-lg border border-red-200 bg-white p-2 text-red-600 transition-colors hover:bg-red-50"
+                                >
+                                  <FiTrash2 size={14} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </Card>
-            <Card className="shadow-md transition-shadow duration-300 hover:shadow-xl">
+            <Card className="order-first shadow-md transition-shadow duration-300 hover:shadow-xl lg:order-none">
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-900 text-white shadow">
                   <FiUserPlus size={18} />
@@ -367,15 +423,15 @@ export default function IngresoPage() {
 
         {tab === "ordenes" && (
           <Card>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <input
-                className={inputCls + " max-w-xs"}
+                className={inputCls + " sm:max-w-xs"}
                 placeholder="Buscar por número, equipo o falla..."
                 value={busquedaO}
                 onChange={(e) => setBusquedaO(e.target.value)}
               />
               <select
-                className={inputCls + " max-w-[220px]"}
+                className={inputCls + " sm:max-w-[220px]"}
                 value={filtro}
                 onChange={(e) => setFiltro(e.target.value)}
               >
@@ -397,66 +453,107 @@ export default function IngresoPage() {
                 />
               </div>
             ) : (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-600">
-                      <th className="py-2 pr-3">N°</th>
-                      <th className="py-2 pr-3">Equipo</th>
-                      <th className="py-2 pr-3">Falla</th>
-                      <th className="py-2 pr-3">Estado</th>
-                      <th className="py-2 pr-3">Pago</th>
-                      <th className="py-2" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ordenesFiltradas.map((o) => (
-                      <tr
-                        key={o.id}
-                        className="border-b border-zinc-100 last:border-0"
-                      >
-                        <td className="py-2 pr-3 font-mono font-medium">
-                          {o.numero}
-                        </td>
-                        <td className="py-2 pr-3">
-                          {o.equipo
-                            ? `${o.equipo.tipo} ${o.equipo.marca} ${o.equipo.modelo}`
-                            : `Equipo #${o.equipoId}`}
-                        </td>
-                        <td className="max-w-[280px] truncate py-2 pr-3 font-normal text-zinc-600">
-                          {o.fallaReportada}
-                        </td>
-                        <td className="py-2 pr-3">
-                          <Badge tono={tonoEstado(o.estado)}>
-                            {ESTADO_ORDEN_LABEL[o.estado]}
-                          </Badge>
-                        </td>
-                        <td className="py-2 pr-3">
-                          <Badge
-                            tono={
-                              o.estadoPago === "PAGADO"
-                                ? "green"
-                                : o.estadoPago === "PARCIAL"
-                                  ? "amber"
-                                  : "zinc"
-                            }
-                          >
-                            {o.estadoPago}
-                          </Badge>
-                        </td>
-                        <td className="py-2 text-right">
-                          <Link
-                            href={`/ordenes/${o.id}`}
-                            className="inline-flex items-center gap-0.5 font-medium text-zinc-900 hover:underline"
-                          >
-                            Abrir <FiChevronRight size={14} />
-                          </Link>
-                        </td>
+              <>
+                {/* Cards móvil */}
+                <ul className="mt-3 space-y-2 sm:hidden">
+                  {ordenesFiltradas.map((o) => (
+                    <li key={o.id} className="rounded-xl border border-zinc-200 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-ficha text-[13px] font-bold text-zinc-900">{o.numero}</span>
+                        <Badge tono={tonoEstado(o.estado)}>
+                          {ESTADO_ORDEN_LABEL[o.estado]}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 truncate text-sm text-zinc-900">
+                        {o.equipo
+                          ? `${o.equipo.tipo} ${o.equipo.marca} ${o.equipo.modelo}`
+                          : `Equipo #${o.equipoId}`}
+                      </p>
+                      <p className="line-clamp-2 text-[13px] text-zinc-600">{o.fallaReportada}</p>
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <Badge
+                          tono={
+                            o.estadoPago === "PAGADO"
+                              ? "green"
+                              : o.estadoPago === "PARCIAL"
+                                ? "amber"
+                                : "zinc"
+                          }
+                        >
+                          {o.estadoPago}
+                        </Badge>
+                        <Link
+                          href={`/ordenes/${o.id}`}
+                          className="inline-flex min-h-[44px] items-center gap-0.5 px-2 font-medium text-zinc-900"
+                        >
+                          Abrir <FiChevronRight size={15} />
+                        </Link>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                {/* Tabla desktop */}
+                <div className="tabla-scroll mt-4 hidden overflow-x-auto sm:block">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-zinc-200 text-xs uppercase text-zinc-600">
+                        <th className="py-2 pr-3">N°</th>
+                        <th className="py-2 pr-3">Equipo</th>
+                        <th className="py-2 pr-3">Falla</th>
+                        <th className="py-2 pr-3">Estado</th>
+                        <th className="py-2 pr-3">Pago</th>
+                        <th className="py-2" />
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {ordenesFiltradas.map((o) => (
+                        <tr
+                          key={o.id}
+                          className="border-b border-zinc-100 last:border-0"
+                        >
+                          <td className="py-2 pr-3 font-mono font-medium">
+                            {o.numero}
+                          </td>
+                          <td className="py-2 pr-3">
+                            {o.equipo
+                              ? `${o.equipo.tipo} ${o.equipo.marca} ${o.equipo.modelo}`
+                              : `Equipo #${o.equipoId}`}
+                          </td>
+                          <td className="max-w-[280px] truncate py-2 pr-3 font-normal text-zinc-600">
+                            {o.fallaReportada}
+                          </td>
+                          <td className="py-2 pr-3">
+                            <Badge tono={tonoEstado(o.estado)}>
+                              {ESTADO_ORDEN_LABEL[o.estado]}
+                            </Badge>
+                          </td>
+                          <td className="py-2 pr-3">
+                            <Badge
+                              tono={
+                                o.estadoPago === "PAGADO"
+                                  ? "green"
+                                  : o.estadoPago === "PARCIAL"
+                                    ? "amber"
+                                    : "zinc"
+                              }
+                            >
+                              {o.estadoPago}
+                            </Badge>
+                          </td>
+                          <td className="py-2 text-right">
+                            <Link
+                              href={`/ordenes/${o.id}`}
+                              className="inline-flex items-center gap-0.5 font-medium text-zinc-900 hover:underline"
+                            >
+                              Abrir <FiChevronRight size={14} />
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </Card>
         )}

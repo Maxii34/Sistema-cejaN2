@@ -120,9 +120,9 @@ export default function HistorialEquiposPage() {
   const totalVisitas = ordenes.length;
 
   return (
-    <div className="flex min-h-screen bg-zinc-100">
+    <div className="flex min-h-screen flex-col bg-zinc-100 lg:flex-row">
       <Sidebar />
-      <main className="flex-1 p-6">
+      <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
         <PageHeader
           titulo="Historial de equipos"
           descripcion={`${equipos.length} aparatos · ${totalVisitas} visitas al taller. Cada tarjeta muestra el equipo con todas sus órdenes.`}
@@ -138,15 +138,15 @@ export default function HistorialEquiposPage() {
           </p>
         )}
 
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-3 flex flex-col gap-2 sm:mb-4 sm:flex-row sm:flex-wrap">
           <input
-            className={inputCls + " max-w-md flex-1"}
+            className={inputCls + " sm:max-w-md sm:flex-1"}
             placeholder="Buscar por tipo, marca, modelo, serie o cliente..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
           <select
-            className={inputCls + " max-w-[200px]"}
+            className={inputCls + " sm:max-w-[200px]"}
             value={filtroVisitas}
             onChange={(e) =>
               setFiltroVisitas(e.target.value as typeof filtroVisitas)
@@ -166,7 +166,7 @@ export default function HistorialEquiposPage() {
             detalle="Primero creá un cliente y agregale equipos desde su ficha."
           />
         ) : (
-          <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid items-start gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filtrados.map((q) => {
               const visitas = historialPorEquipo.get(q.id) ?? [];
               const actual = visitas[0];

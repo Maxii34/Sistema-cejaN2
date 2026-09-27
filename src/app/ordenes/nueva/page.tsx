@@ -106,9 +106,9 @@ export default function NuevaOrdenPage() {
   if (cargando || !usuario) return <p className="p-8">Cargando...</p>;
 
   return (
-    <div className="flex min-h-screen bg-zinc-100">
+    <div className="flex min-h-screen flex-col bg-zinc-100 lg:flex-row">
       <Sidebar />
-      <main className="flex-1 p-6">
+      <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
         <PageHeader
           titulo="Nueva recepción"
           descripcion="Elegí cliente y equipo, describí la falla y el estado físico del aparato."
@@ -121,7 +121,7 @@ export default function NuevaOrdenPage() {
         {error && (
           <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
         )}
-        <form onSubmit={(e) => void guardar(e)} className="grid gap-4 lg:grid-cols-2">
+        <form onSubmit={(e) => void guardar(e)} className="grid gap-3 sm:gap-4 lg:grid-cols-2">
           <Card>
             <h2 className="flex items-center gap-2 font-semibold">
               <FiUser size={16} /> 1 · Cliente y equipo
@@ -157,7 +157,7 @@ export default function NuevaOrdenPage() {
               <input className={inputCls} type="number" min="0" step="0.01" value={costoEstimado} onChange={(e) => setCostoEstimado(e.target.value)} />
             </div>
           </Card>
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-3 sm:space-y-4">
             <Card>
               <h2 className="flex items-center gap-2 font-semibold">
                 <FiCamera size={16} /> 2 · Estado físico y foto
