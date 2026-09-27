@@ -3,8 +3,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiClipboard, FiDollarSign, FiLogIn, FiTool, FiZap } from "react-icons/fi";
+import Swal from "sweetalert2";
 import { useAuth } from "@/context/AuthContext";
 import { Card, inputCls, btnPrimary } from "@/components/ui";
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top",
+  showConfirmButton: false,
+  timer: 2500,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener("mouseenter", Swal.stopTimer);
+    toast.addEventListener("mouseleave", Swal.resumeTimer);
+  },
+});
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -20,9 +33,16 @@ export default function LoginPage() {
     setCargando(true);
     try {
       await login(email.trim(), password);
+      void Toast.fire({
+        icon: "success",
+        title: "Sesión iniciada",
+        text: "Bienvenido al taller.",
+      });
       router.replace("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo iniciar sesión");
+      const mensaje = err instanceof Error ? err.message : "No se pudo iniciar sesión";
+      setError(mensaje);
+      void Toast.fire({ icon: "error", title: "No se pudo ingresar", text: mensaje });
     } finally {
       setCargando(false);
     }
@@ -42,10 +62,10 @@ export default function LoginPage() {
           </span>
           <div className="text-left">
             <p className="text-lg font-extrabold leading-tight text-white">
-              CJ <span className="brand-text">Reparaciones</span>
+              Ceja Adulto <span className="brand-text">N2</span>
             </p>
             <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-              Sistema de taller
+              Taller de reparaciones
             </p>
           </div>
         </div>
@@ -56,7 +76,7 @@ export default function LoginPage() {
             Bienvenido de nuevo
           </h1>
           <p className="mt-1 text-sm text-stone-500">
-            Ingresá con tu usuario del taller (ADMIN o TÉCNICO).
+            Accedé al sistema para gestionar recepciones, equipos y pagos del taller.
           </p>
           <form onSubmit={(e) => void submit(e)} className="mt-5 space-y-3">
             <div>

@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
-  title: "CJ Reparaciones — Sistema de taller",
+  title: "Ceja Adulto N2 — Taller de reparaciones",
   description: "Gestión de clientes, equipos y órdenes de reparación",
 };
 

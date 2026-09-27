@@ -74,7 +74,7 @@ export function Sidebar() {
           <BrandMark />
           <span className="min-w-0">
             <span className="block truncate text-[15px] font-extrabold leading-tight text-white">
-              CJ <span className="brand-text">Reparaciones</span>
+              Ceja Adulto <span className="brand-text">N2</span>
             </span>
             <span className="block text-[11px] font-medium leading-tight text-slate-400">
               Taller · Ingreso y órdenes
@@ -95,9 +95,9 @@ export function Sidebar() {
           <BrandMark size="lg" />
           <div>
             <p className="text-lg font-extrabold leading-tight text-white">
-              CJ <span className="brand-text">Reparaciones</span>
+              Ceja Adulto <span className="brand-text">N2</span>
             </p>
-            <p className="text-xs font-medium text-slate-400">Sistema de taller</p>
+            <p className="text-xs font-medium text-slate-400">Taller de reparaciones</p>
           </div>
         </div>
         <nav className="flex-1 space-y-1 px-3">
@@ -161,7 +161,7 @@ export function Sidebar() {
             <div className="flex items-center gap-2.5 px-4 py-4">
               <BrandMark />
               <p className="min-w-0 flex-1 text-base font-extrabold text-white">
-                CJ <span className="brand-text">Reparaciones</span>
+                Ceja Adulto <span className="brand-text">N2</span>
               </p>
               <button
                 type="button"
