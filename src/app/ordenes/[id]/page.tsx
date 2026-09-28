@@ -16,6 +16,7 @@ import Swal from "sweetalert2";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
+import { FotosOrden } from "@/components/FotosOrden";
 import { Card, PageHeader, Badge, btnPrimary, btnSecondary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
 import { Reveal } from "@/components/motion";
 import type { ApiEnvelope, OrdenReparacion, Usuario } from "@/lib/types";
@@ -137,6 +138,15 @@ export default function OrdenDetallePage() {
     (async () => {
       try {
         const od = await cargar();
+        // Aviso cuando la foto de recepción no se pudo subir sola
+        if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("fotoPendiente") === "1") {
+          void Toast.fire({
+            icon: "info",
+            title: "Foto pendiente",
+            text: "La foto no se pudo subir. Agregala desde Fotos de evidencia.",
+          });
+          router.replace(`/ordenes/${id}`);
+        }
         if (esAdmin) {
           const u = await api.get<ApiEnvelope<Usuario[]>>("/api/usuario");
           setTecnicos(u.data);
@@ -467,6 +477,7 @@ export default function OrdenDetallePage() {
                   {(orden.pagos ?? []).length === 0 && <li className="py-1.5 text-zinc-600">Todavía no hay pagos registrados.</li>}
                 </ul>
               </Card>
+              <FotosOrden ordenId={orden.id} fotos={orden.fotos ?? []} onCambio={() => void cargar()} />
               <Card>
                 <h2 className="flex items-center gap-2 font-bold text-stone-900">
                   <IconTile tono="violet"><FiClock size={16} /></IconTile> Historial de estados

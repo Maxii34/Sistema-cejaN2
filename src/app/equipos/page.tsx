@@ -187,17 +187,19 @@ export default function HistorialEquiposPage() {
                 limite.setDate(limite.getDate() + (ent.garantiaDias ?? 90));
                 return limite.getTime() >= Date.now() ? ent : null;
               })();
+              const portada = actual?.fotos?.[0]?.url ?? fotos[q.id] ?? null;
               return (
                 <Item key={q.id} className="min-w-0">
                 <Card className="flex h-full min-w-0 flex-col overflow-hidden">
                   {/* Foto con contador de visitas superpuesto */}
                   <div className="relative mb-3">
-                    {fotos[q.id] ? (
+                    {portada ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={fotos[q.id]!}
+                        src={portada}
                         alt={`${q.tipo} ${q.marca}`}
                         className="h-36 w-full rounded-xl border border-stone-200 object-cover"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="flex h-36 flex-col items-center justify-center gap-1 rounded-xl bg-gradient-to-br from-stone-100 to-stone-200/70">

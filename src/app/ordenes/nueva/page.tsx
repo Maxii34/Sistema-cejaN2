@@ -158,15 +158,33 @@ function NuevaOrdenForm() {
         esGarantia: modoGarantia,
         ordenOrigenId: modoGarantia && origenGarantia ? origenGarantia.id : null,
       });
-      // La foto queda en localStorage como pendiente (maqueta sin backend)
+      // Si hay foto local, se sube a la orden recién creada (Cloudinary)
+      let fotoPendiente = false;
       if (foto) {
         try {
-          localStorage.setItem(`equipo-img:${equipoId}`, foto);
+          const blob = await (await fetch(foto)).blob();
+          const archivo = new File([blob], `recepcion-${res.data.id}.jpg`, {
+            type: blob.type || "image/jpeg",
+          });
+          await api.postFotos(`/api/orden-reparacion/${res.data.id}/fotos`, [archivo]);
+          try {
+            localStorage.removeItem(`equipo-img:${equipoId}`);
+          } catch {
+            // noop
+          }
         } catch {
-          // noop
+          // La orden ya existe: la foto queda local y se avisa en la ficha
+          try {
+            localStorage.setItem(`equipo-img:${equipoId}`, foto);
+          } catch {
+            // noop
+          }
+          fotoPendiente = true;
         }
       }
-      router.push(`/ordenes/${res.data.id}`);
+      router.push(
+        `/ordenes/${res.data.id}${fotoPendiente ? "?fotoPendiente=1" : ""}`
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo crear la orden");
     } finally {

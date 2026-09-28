@@ -96,6 +96,7 @@ export interface OrdenReparacion {
   pagos?: Pago[];
   repuestosUsados?: RepuestoUsado[];
   historialEstados?: HistorialEstado[];
+  fotos?: FotoOrden[];
 }
 
 export interface Repuesto {
@@ -133,6 +134,14 @@ export interface HistorialEstado {
   fecha: string;
   comentario?: string | null;
   usuario?: Usuario | null;
+}
+
+export interface FotoOrden {
+  id: number;
+  ordenId: number;
+  url: string;
+  publicId: string;
+  fecha?: string;
 }
 
 export interface ApiEnvelope<T> {
