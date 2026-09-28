@@ -162,7 +162,7 @@ export default function ClienteDetallePage() {
           <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
         )}
         <Stagger className="grid gap-3 sm:gap-4 lg:grid-cols-2">
-          <Item><Card>
+          <Item className="min-w-0"><Card>
             <div className="flex items-center gap-2">
               <h2 className="flex min-w-0 flex-1 items-center gap-2 font-bold text-stone-900">
                 <span className="shrink-0">
@@ -276,7 +276,7 @@ export default function ClienteDetallePage() {
             )}
           </Card>
           </Item>
-          <Item><Card>
+          <Item className="min-w-0"><Card>
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="brand"><FiPlus size={16} /></IconTile> Agregar equipo
             </h2>

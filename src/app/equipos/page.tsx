@@ -188,8 +188,8 @@ export default function HistorialEquiposPage() {
                 return limite.getTime() >= Date.now() ? ent : null;
               })();
               return (
-                <Item key={q.id}>
-                <Card className="flex h-full flex-col">
+                <Item key={q.id} className="min-w-0">
+                <Card className="flex h-full min-w-0 flex-col overflow-hidden">
                   {/* Foto con contador de visitas superpuesto */}
                   <div className="relative mb-3">
                     {fotos[q.id] ? (
