@@ -205,7 +205,7 @@ export default function UsuariosPage() {
     <div className="flex min-h-screen flex-col lg:flex-row">
       <Sidebar />
       <main className="min-w-0 flex-1 p-3 pb-28 sm:p-6 lg:pb-6">
-        <PageHeader eyebrow="Administración" titulo="Usuarios" descripcion="Solo ADMIN. El backend permite un único administrador." />
+        <PageHeader eyebrow="Administración" titulo="Usuarios" descripcion="Solo administradores. Puede haber un único administrador." />
         {error && <p className="mb-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-inset ring-red-200">{error}</p>}
         <div className="flex flex-col gap-3 sm:gap-4 lg:grid lg:grid-cols-[1fr_320px]">
           <Card className="order-last lg:order-none">

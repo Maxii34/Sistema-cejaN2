@@ -48,7 +48,7 @@ export default function DashboardPage() {
         });
         setUltimas(lista.slice(0, 5));
       } catch (e) {
-        setError(e instanceof Error ? e.message : "No se pudo cargar el panel (¿backend en :3001?)");
+        setError(e instanceof Error ? e.message : "No se pudo cargar el panel. Revisá la conexión e intentá de nuevo.");
       } finally {
         setCargandoDatos(false);
       }

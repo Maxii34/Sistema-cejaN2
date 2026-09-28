@@ -287,7 +287,7 @@ function NuevaOrdenForm() {
               )}
               <label className="block text-xs font-medium text-zinc-600">Falla reportada *</label>
               <textarea className={inputCls} rows={3} required value={falla} onChange={(e) => setFalla(e.target.value)} placeholder="Ej: No enfría, hace ruido..." />
-              <label className="block text-xs font-medium text-zinc-600">Accesorios incluidos / Otros (3-B)</label>
+              <label className="block text-xs font-medium text-zinc-600">Accesorios que deja el cliente</label>
               <textarea className={inputCls} rows={2} value={accesorios} onChange={(e) => setAccesorios(e.target.value)} placeholder="Ej: Control remoto, cable, funda..." />
               <label className="block text-xs font-medium text-zinc-600">Costo estimado ($)</label>
               <input className={inputCls} type="number" min="0" step="0.01" value={costoEstimado} onChange={(e) => setCostoEstimado(e.target.value)} />

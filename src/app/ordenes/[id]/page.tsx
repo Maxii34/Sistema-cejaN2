@@ -464,7 +464,7 @@ export default function OrdenDetallePage() {
                   {(orden.pagos ?? []).map((p) => (
                     <li key={p.id} className="py-1.5">${Number(p.monto).toFixed(2)} · {p.medioPago} · {new Date(p.fecha).toLocaleDateString()}</li>
                   ))}
-                  {(orden.pagos ?? []).length === 0 && <li className="py-1.5 text-zinc-600">Sin pagos. Cargalos en /pagos.</li>}
+                  {(orden.pagos ?? []).length === 0 && <li className="py-1.5 text-zinc-600">Todavía no hay pagos registrados.</li>}
                 </ul>
               </Card>
               <Card>

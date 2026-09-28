@@ -58,12 +58,11 @@ export function ImageUploader({
   return (
     <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-4">
       <p className="flex items-center gap-1.5 text-sm font-medium text-zinc-800">
-        <FiCamera size={15} /> Foto del equipo{" "}
-        <span className="text-zinc-500">(maqueta)</span>
+        <FiCamera size={15} /> Foto del equipo
       </p>
       <p className="mt-0.5 text-xs font-normal text-zinc-600">
-        El backend aún no acepta imágenes. Se guarda solo como vista previa
-        local pendiente de subir.
+        La foto queda guardada en este dispositivo y se subirá cuando el
+        sistema lo permita.
       </p>
       {preview ? (
         <div className="mt-3">
