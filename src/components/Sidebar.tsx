@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  FiBookOpen,
   FiDollarSign,
   FiHome,
   FiInbox,
+  FiInstagram,
   FiLogOut,
   FiMail,
   FiMenu,
@@ -17,6 +19,22 @@ import {
   FiZap,
 } from "react-icons/fi";
 import { useAuth } from "@/context/AuthContext";
+import { version } from "../../package.json";
+
+const FECHA_ACTUALIZACION = "28/09/2026";
+
+function VersionInfo() {
+  return (
+    <div className="px-3 pb-1 pt-3 text-center">
+      <p className="text-[10px] font-semibold text-slate-500">
+        v{version} · act. {FECHA_ACTUALIZACION}
+      </p>
+      <p className="mt-0.5 flex items-center justify-center gap-1 text-[10px] text-slate-500">
+        Desarrollado por <FiInstagram size={10} className="text-slate-400" /> <span className="font-bold text-slate-300">CodeMax.Dev</span>
+      </p>
+    </div>
+  );
+}
 
 const LINKS = [
   { href: "/", label: "Panel", icon: FiHome },
@@ -172,6 +190,17 @@ export function Sidebar() {
           >
             <FiPlus size={16} strokeWidth={2.5} /> Nueva recepción
           </Link>
+          <Link
+            href="/manual"
+            className={`mt-3 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium transition-all ${
+              isActive(pathname, "/manual")
+                ? "bg-white/10 text-white ring-1 ring-inset ring-white/15"
+                : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+            }`}
+          >
+            <FiBookOpen size={13} /> Manual de uso
+          </Link>
+          <VersionInfo />
         </nav>
         <div className="border-t border-white/10 p-4">
           <UserCard alSalir={() => void logout()} />
@@ -227,6 +256,18 @@ export function Sidebar() {
               >
                 <FiPlus size={19} strokeWidth={2.5} /> Nueva recepción
               </Link>
+              <Link
+                href="/manual"
+                onClick={() => setAbierto(false)}
+                className={`mt-2 flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[13px] font-medium ${
+                  isActive(pathname, "/manual")
+                    ? "bg-white/10 text-white ring-1 ring-inset ring-white/15"
+                    : "text-slate-400 active:bg-white/10"
+                }`}
+              >
+                <FiBookOpen size={14} /> Manual de uso
+              </Link>
+              <VersionInfo />
             </nav>
             <div className="border-t border-white/10 p-4">
               <UserCard
