@@ -9,7 +9,7 @@ import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, PageHeader, btnPrimary, btnSecondary, inputCls, IconTile } from "@/components/ui";
 import { ImageUploader } from "@/components/ImageUploader";
-import type { ApiEnvelope, Cliente, Equipo, Paged } from "@/lib/types";
+import type { ApiEnvelope, Cliente, Equipo, OrdenReparacion, Paged } from "@/lib/types";
 
 // El backend exige al menos 1 condición física, como ahora es solo
 // comentario se envía un valor neutro fijo.
@@ -21,8 +21,10 @@ function NuevaOrdenForm() {
   const searchParams = useSearchParams();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [equipos, setEquipos] = useState<Equipo[]>([]);
+  const [ordenes, setOrdenes] = useState<OrdenReparacion[]>([]);
   const [clienteId, setClienteId] = useState<number | "">("");
   const [equipoId, setEquipoId] = useState<number | "">("");
+  const [modoGarantia, setModoGarantia] = useState(false);
   const [falla, setFalla] = useState("");
   const [accesorios, setAccesorios] = useState("");
   const [detalleCond, setDetalleCond] = useState("");
@@ -38,13 +40,16 @@ function NuevaOrdenForm() {
         // Carga única: clientes y TODOS los equipos (ya traen cliente
         // incluido). El filtrado por cliente se hace en el front para
         // evitar el fetch dependiente que dejaba el select vacío.
-        const [rc, re] = await Promise.all([
+        const [rc, re, ro] = await Promise.all([
           api.get<ApiEnvelope<Cliente[]>>("/api/cliente"),
           api.get<ApiEnvelope<Paged<Equipo> | Equipo[]>>("/api/equipo"),
+          api.get<ApiEnvelope<Paged<OrdenReparacion> | OrdenReparacion[]>>("/api/orden-reparacion"),
         ]);
         setClientes(rc.data);
         const listaEq = Array.isArray(re.data) ? re.data : re.data.data;
         setEquipos(listaEq);
+        const listaOr = Array.isArray(ro.data) ? ro.data : ro.data.data;
+        setOrdenes(listaOr);
         // Preselección desde Historial (?equipoId=): equipo + su cliente
         const pre = searchParams.get("equipoId");
         if (pre) {
@@ -52,6 +57,16 @@ function NuevaOrdenForm() {
           if (q) {
             setEquipoId(q.id);
             setClienteId(q.clienteId);
+            // Modo garantía (?garantia=1) solo si hay origen vigente
+            if (searchParams.get("garantia") === "1") {
+              const ords = listaOr.filter((o) => o.equipoId === q.id);
+              const ent = ords.find((o) => o.estado === "ENTREGADO" && o.fechaEntrega);
+              if (ent?.fechaEntrega) {
+                const limite = new Date(ent.fechaEntrega);
+                limite.setDate(limite.getDate() + (ent.garantiaDias ?? 90));
+                if (limite.getTime() >= Date.now()) setModoGarantia(true);
+              }
+            }
           }
         }
       } catch (e) {
@@ -72,12 +87,30 @@ function NuevaOrdenForm() {
 
   const elegirEquipo = (id: number | "") => {
     setEquipoId(id);
+    setModoGarantia(false);
     // Si el equipo es de otro cliente, se ajusta el cliente solo
     if (id !== "") {
       const q = equipos.find((e) => e.id === id);
       if (q && q.clienteId !== clienteId) setClienteId(q.clienteId);
     }
   };
+
+  // Órdenes del equipo elegido: abierta (bloquea) u origen de garantía
+  const ordenesDelEquipo = useMemo(
+    () => (equipoId === "" ? [] : ordenes.filter((o) => o.equipoId === equipoId)),
+    [ordenes, equipoId]
+  );
+  const ordenAbierta = useMemo(
+    () => ordenesDelEquipo.find((o) => !["ENTREGADO", "CANCELADO"].includes(o.estado)) ?? null,
+    [ordenesDelEquipo]
+  );
+  const origenGarantia = useMemo(() => {
+    const ent = ordenesDelEquipo.find((o) => o.estado === "ENTREGADO" && o.fechaEntrega);
+    if (!ent?.fechaEntrega) return null;
+    const limite = new Date(ent.fechaEntrega);
+    limite.setDate(limite.getDate() + (ent.garantiaDias ?? 90));
+    return limite.getTime() >= Date.now() ? ent : null;
+  }, [ordenesDelEquipo]);
 
   // Equipo elegido con su info completa para confirmar visualmente
   const equipoElegido = useMemo(
@@ -99,6 +132,14 @@ function NuevaOrdenForm() {
       setError("Completá cliente, equipo y falla reportada.");
       return;
     }
+    if (ordenAbierta) {
+      setError(`Este equipo ya tiene la orden ${ordenAbierta.numero} abierta. Abrila para continuar ahí.`);
+      return;
+    }
+    if (modoGarantia && !origenGarantia) {
+      setError("Ya no hay garantía vigente para este equipo. Desactivá el modo garantía.");
+      return;
+    }
     setError(null);
     setGuardando(true);
     try {
@@ -113,6 +154,8 @@ function NuevaOrdenForm() {
         firmaTecnicoRecepcion: false,
         tecnicoId: usuario?.id ?? null,
         creadoPorId: usuario?.id ?? null,
+        esGarantia: modoGarantia,
+        ordenOrigenId: modoGarantia && origenGarantia ? origenGarantia.id : null,
       });
       // La foto queda en localStorage como pendiente (maqueta sin backend)
       if (foto) {
@@ -206,6 +249,41 @@ function NuevaOrdenForm() {
                   </dl>
                 </div>
               )}
+              {ordenAbierta && (
+                <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm ring-1 ring-inset ring-amber-200">
+                  <p className="font-bold text-amber-900">
+                    Este equipo ya ingresó: orden {ordenAbierta.numero}
+                  </p>
+                  <p className="mt-0.5 text-[13px] text-amber-800">
+                    Está abierta y no se puede crear otra recepción. Continuá en la orden existente.
+                  </p>
+                  <Link
+                    href={`/ordenes/${ordenAbierta.id}`}
+                    className="mt-2 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white active:bg-amber-700"
+                  >
+                    Abrir {ordenAbierta.numero}
+                  </Link>
+                </div>
+              )}
+              {!ordenAbierta && origenGarantia && (
+                <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm ring-1 ring-inset ring-emerald-200">
+                  <p className="font-bold text-emerald-900">
+                    Garantía vigente de {origenGarantia.numero}
+                  </p>
+                  <p className="mt-0.5 text-[13px] text-emerald-800">
+                    Entregada el {origenGarantia.fechaEntrega ? new Date(origenGarantia.fechaEntrega).toLocaleDateString("es-AR") : "—"}.
+                  </p>
+                  <label className="mt-2 flex min-h-[44px] cursor-pointer items-center gap-2.5 font-semibold text-emerald-900">
+                    <input
+                      type="checkbox"
+                      className="h-5 w-5 shrink-0 accent-emerald-700"
+                      checked={modoGarantia}
+                      onChange={(e) => setModoGarantia(e.target.checked)}
+                    />
+                    Ingresar por garantía
+                  </label>
+                </div>
+              )}
               <label className="block text-xs font-medium text-zinc-600">Falla reportada *</label>
               <textarea className={inputCls} rows={3} required value={falla} onChange={(e) => setFalla(e.target.value)} placeholder="Ej: No enfría, hace ruido..." />
               <label className="block text-xs font-medium text-zinc-600">Accesorios incluidos / Otros (3-B)</label>
@@ -226,9 +304,9 @@ function NuevaOrdenForm() {
               <div className="mt-3">
                 <ImageUploader equipoKey={equipoId ? `nuevo-${equipoId}` : "nuevo"} value={foto} onChange={setFoto} />
               </div>
-              <button className={btnPrimary + " mt-4 w-full gap-2"} disabled={guardando}>
+              <button className={btnPrimary + " mt-4 w-full gap-2"} disabled={guardando || !!ordenAbierta}>
                 <FiSave size={15} />
-                {guardando ? "Guardando..." : "Crear orden de reparación"}
+                {guardando ? "Guardando..." : modoGarantia ? "Crear ingreso por garantía" : "Crear orden de reparación"}
               </button>
             </Card>
           </div>

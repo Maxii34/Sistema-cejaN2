@@ -174,6 +174,14 @@ export default function HistorialEquiposPage() {
             {filtrados.map((q) => {
               const visitas = historialPorEquipo.get(q.id) ?? [];
               const actual = visitas[0];
+              const abierta = visitas.find((o) => !["ENTREGADO", "CANCELADO"].includes(o.estado)) ?? null;
+              const garantia = (() => {
+                const ent = visitas.find((o) => o.estado === "ENTREGADO" && o.fechaEntrega);
+                if (!ent?.fechaEntrega) return null;
+                const limite = new Date(ent.fechaEntrega);
+                limite.setDate(limite.getDate() + (ent.garantiaDias ?? 90));
+                return limite.getTime() >= Date.now() ? ent : null;
+              })();
               return (
                 <Card key={q.id} className="flex flex-col">
                   {/* Foto con contador de visitas superpuesto */}
@@ -245,18 +253,41 @@ export default function HistorialEquiposPage() {
                     <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-stone-400">
                       <FiClipboard size={13} /> Historial
                     </p>
-                    <div className="mt-2 flex items-center justify-between gap-2 rounded-xl bg-blue-50/70 px-2.5 py-2 ring-1 ring-inset ring-blue-200/60">
-                      <span className="text-xs font-medium text-blue-900">
-                        {visitas.length === 0 ? "Sin ingresos todavía" : "Ingresar este equipo de nuevo"}
+                    <div className={`mt-2 flex items-center justify-between gap-2 rounded-xl px-2.5 py-2 ring-1 ring-inset ${
+                      abierta
+                        ? "bg-amber-50/80 ring-amber-200/70"
+                        : garantia
+                          ? "bg-emerald-50/80 ring-emerald-200/70"
+                          : "bg-blue-50/70 ring-blue-200/60"
+                    }`}>
+                      <span className={`text-xs font-medium ${abierta ? "text-amber-900" : garantia ? "text-emerald-900" : "text-blue-900"}`}>
+                        {abierta
+                          ? `En taller: ${abierta.numero}`
+                          : garantia
+                            ? `Garantía vigente (${garantia.numero})`
+                            : visitas.length === 0
+                              ? "Sin ingresos todavía"
+                              : "Ingresar este equipo de nuevo"}
                       </span>
-                      <Link
-                        href={`/ordenes/nueva?equipoId=${q.id}`}
-                        title={`Crear recepción de ${q.tipo} ${q.marca}`}
-                        aria-label={`Crear recepción de ${q.tipo} ${q.marca}`}
-                        className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg bg-blue-800 text-white active:bg-blue-900"
-                      >
-                        <FiPlus size={16} />
-                      </Link>
+                      {abierta ? (
+                        <Link
+                          href={`/ordenes/${abierta.id}`}
+                          title={`Abrir orden ${abierta.numero}`}
+                          aria-label={`Abrir orden ${abierta.numero}`}
+                          className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg bg-amber-600 text-white active:bg-amber-700"
+                        >
+                          <FiEye size={16} />
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/ordenes/nueva?equipoId=${q.id}${garantia ? "&garantia=1" : ""}`}
+                          title={garantia ? `Ingreso por garantía de ${q.tipo} ${q.marca}` : `Crear recepción de ${q.tipo} ${q.marca}`}
+                          aria-label={garantia ? `Ingreso por garantía de ${q.tipo} ${q.marca}` : `Crear recepción de ${q.tipo} ${q.marca}`}
+                          className={`inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg text-white ${garantia ? "bg-emerald-700 active:bg-emerald-800" : "bg-blue-800 active:bg-blue-900"}`}
+                        >
+                          <FiPlus size={16} />
+                        </Link>
+                      )}
                     </div>
                     {visitas.length === 0 ? null : (
                       <ol className="mt-2 space-y-1.5">

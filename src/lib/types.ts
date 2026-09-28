@@ -89,6 +89,8 @@ export interface OrdenReparacion {
   creadoPorId?: number | null;
   tecnicoId?: number | null;
   tecnico?: Usuario | null;
+  esGarantia?: boolean;
+  ordenOrigenId?: number | null;
   createdAt?: string;
   updatedAt?: string;
   pagos?: Pago[];
