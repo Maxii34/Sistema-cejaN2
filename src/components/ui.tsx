@@ -81,6 +81,36 @@ export function Badge({
   );
 }
 
+export function Spinner({
+  tamano = "md",
+  className = "",
+}: {
+  tamano?: "sm" | "md" | "lg";
+  className?: string;
+}) {
+  const medidas = {
+    sm: "h-4 w-4 border-2",
+    md: "h-8 w-8 border-[3px]",
+    lg: "h-12 w-12 border-4",
+  };
+  return (
+    <span
+      role="status"
+      aria-label="Cargando"
+      className={`inline-block animate-spin rounded-full border-stone-200 border-t-blue-800 ${medidas[tamano]} ${className}`}
+    />
+  );
+}
+
+export function CargandoPagina({ texto = "Cargando..." }: { texto?: string }) {
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-3 p-8 pb-28">
+      <Spinner tamano="lg" />
+      <p className="text-sm font-medium text-stone-500">{texto}</p>
+    </div>
+  );
+}
+
 export function Empty({
   mensaje,
   detalle,

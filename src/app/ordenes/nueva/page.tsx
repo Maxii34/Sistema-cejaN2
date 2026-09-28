@@ -7,7 +7,7 @@ import { FiArrowLeft, FiCamera, FiPlus, FiSave, FiUser } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
-import { Card, PageHeader, btnPrimary, btnSecondary, inputCls, IconTile } from "@/components/ui";
+import { Card, PageHeader, btnPrimary, btnSecondary, inputCls, IconTile, CargandoPagina } from "@/components/ui";
 import { ImageUploader } from "@/components/ImageUploader";
 import type { ApiEnvelope, Cliente, Equipo, OrdenReparacion, Paged } from "@/lib/types";
 
@@ -173,7 +173,7 @@ function NuevaOrdenForm() {
     }
   };
 
-  if (cargando || !usuario) return <p className="p-8">Cargando...</p>;
+  if (cargando || !usuario) return <CargandoPagina />;
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-100 lg:flex-row">
@@ -318,7 +318,7 @@ function NuevaOrdenForm() {
 
 export default function NuevaOrdenPage() {
   return (
-    <Suspense fallback={<p className="p-8">Cargando...</p>}>
+    <Suspense fallback={<CargandoPagina />}>
       <NuevaOrdenForm />
     </Suspense>
   );

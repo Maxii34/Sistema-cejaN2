@@ -23,6 +23,8 @@ import {
   Empty,
   btnPrimary,
   inputCls,
+  Spinner,
+  CargandoPagina,
 } from "@/components/ui";
 import { ImageUploader } from "@/components/ImageUploader";
 import type {
@@ -118,7 +120,7 @@ export default function HistorialEquiposPage() {
     });
   }, [equipos, historialPorEquipo, busqueda, filtroVisitas]);
 
-  if (cargando || !usuario) return <p className="p-8">Cargando...</p>;
+  if (cargando || !usuario) return <CargandoPagina />;
 
   const totalVisitas = ordenes.length;
 
@@ -163,7 +165,9 @@ export default function HistorialEquiposPage() {
         </div>
 
         {cargandoLista ? (
-          <p className="text-sm font-normal text-zinc-600">Cargando...</p>
+          <div className="flex items-center justify-center gap-2 py-8 text-sm font-medium text-stone-500">
+            <Spinner tamano="md" /> Cargando equipos...
+          </div>
         ) : filtrados.length === 0 ? (
           <Empty
             mensaje="Sin equipos"

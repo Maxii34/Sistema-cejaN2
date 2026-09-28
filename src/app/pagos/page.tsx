@@ -5,7 +5,7 @@ import { FiDollarSign, FiPlus } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
-import { Card, PageHeader, Empty, btnPrimary, inputCls, IconTile } from "@/components/ui";
+import { Card, PageHeader, Empty, btnPrimary, inputCls, IconTile, CargandoPagina } from "@/components/ui";
 import type { ApiEnvelope, MedioPago, OrdenReparacion, Pago, Paged } from "@/lib/types";
 
 const MEDIOS: MedioPago[] = ["EFECTIVO", "TRANSFERENCIA", "TARJETA_DEBITO", "TARJETA_CREDITO", "MERCADO_PAGO", "OTRO"];
@@ -50,7 +50,7 @@ export default function PagosPage() {
     }
   };
 
-  if (cargando || !usuario) return <p className="p-8">Cargando...</p>;
+  if (cargando || !usuario) return <CargandoPagina />;
 
   const total = pagos.reduce((a, p) => a + Number(p.monto), 0);
 

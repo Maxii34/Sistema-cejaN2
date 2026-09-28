@@ -22,6 +22,8 @@ import {
   btnPrimary,
   inputCls,
   IconTile,
+  Spinner,
+  CargandoPagina,
 } from "@/components/ui";
 import type { ApiEnvelope, Cliente } from "@/lib/types";
 
@@ -119,7 +121,7 @@ export default function IngresoPage() {
     [clientes, busquedaC]
   );
 
-  if (cargando || !usuario) return <p className="p-8">Cargando...</p>;
+  if (cargando || !usuario) return <CargandoPagina />;
 
   const acciones = (c: Cliente) => (
     <div className="flex shrink-0 items-center justify-end gap-1.5">
@@ -179,7 +181,9 @@ export default function IngresoPage() {
               <FiUsers size={13} /> {clientesFiltrados.length} cliente{clientesFiltrados.length !== 1 ? "s" : ""}
             </p>
             {cargandoC ? (
-              <p className="mt-4 text-sm font-normal text-stone-500">Cargando...</p>
+              <div className="mt-4 flex items-center justify-center gap-2 py-8 text-sm font-medium text-stone-500">
+                <Spinner tamano="md" /> Cargando clientes...
+              </div>
             ) : clientesFiltrados.length === 0 ? (
               <div className="mt-4">
                 <Empty

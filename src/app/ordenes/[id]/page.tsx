@@ -13,7 +13,7 @@ import {
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
-import { Card, PageHeader, Badge, btnPrimary, btnSecondary, inputCls, IconTile } from "@/components/ui";
+import { Card, PageHeader, Badge, btnPrimary, btnSecondary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
 import type { ApiEnvelope, EstadoOrden, OrdenReparacion, Usuario } from "@/lib/types";
 import { ESTADO_ORDEN_LABEL, CONDICION_LABEL } from "@/lib/types";
 
@@ -114,7 +114,7 @@ export default function OrdenDetallePage() {
     }
   };
 
-  if (cargando || !usuario) return <p className="p-8">Cargando...</p>;
+  if (cargando || !usuario) return <CargandoPagina />;
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-100 lg:flex-row">
@@ -148,7 +148,9 @@ export default function OrdenDetallePage() {
         />
         {error && <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
         {!orden ? (
-          <p className="text-sm text-zinc-600">Cargando orden...</p>
+          <div className="flex items-center justify-center gap-2 py-8 text-sm font-medium text-stone-500">
+            <Spinner tamano="md" /> Cargando orden...
+          </div>
         ) : (
           <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
             <div className="min-w-0 space-y-3 sm:space-y-4">

@@ -15,7 +15,7 @@ import {
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
-import { Card, Badge, btnPrimary, IconTile } from "@/components/ui";
+import { Card, Badge, btnPrimary, IconTile, CargandoPagina } from "@/components/ui";
 import type { ApiEnvelope, Cliente, OrdenReparacion, Paged } from "@/lib/types";
 
 const STATS = [
@@ -51,7 +51,7 @@ export default function DashboardPage() {
     })();
   }, [usuario]);
 
-  if (cargando || !usuario) return <p className="p-8">Cargando...</p>;
+  if (cargando || !usuario) return <CargandoPagina />;
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">

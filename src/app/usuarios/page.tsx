@@ -15,7 +15,7 @@ import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Modal } from "@/components/Modal";
-import { Card, PageHeader, Badge, Empty, btnPrimary, btnSecondary, inputCls, IconTile } from "@/components/ui";
+import { Card, PageHeader, Badge, Empty, btnPrimary, btnSecondary, inputCls, IconTile, CargandoPagina } from "@/components/ui";
 import type { ApiEnvelope, RolUsuario, Usuario } from "@/lib/types";
 
 const Toast = Swal.mixin({
@@ -157,7 +157,7 @@ export default function UsuariosPage() {
     }
   };
 
-  if (cargando || !usuario) return <p className="p-8">Cargando...</p>;
+  if (cargando || !usuario) return <CargandoPagina />;
   if (!esAdmin) return <p className="p-8">Solo administradores.</p>;
 
   const esYo = (u: Usuario) => u.id === usuario.id;

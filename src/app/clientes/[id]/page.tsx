@@ -16,7 +16,7 @@ import Swal from "sweetalert2";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
-import { Card, PageHeader, Empty, Badge, btnPrimary, btnSecondary, inputCls, IconTile } from "@/components/ui";
+import { Card, PageHeader, Empty, Badge, btnPrimary, btnSecondary, inputCls, IconTile, CargandoPagina } from "@/components/ui";
 import type { ApiEnvelope, Cliente, Equipo, EstadoOrden, OrdenReparacion, Paged } from "@/lib/types";
 import { ESTADO_ORDEN_LABEL } from "@/lib/types";
 
@@ -141,7 +141,7 @@ export default function ClienteDetallePage() {
     }
   };
 
-  if (cargando || !usuario) return <p className="p-8">Cargando...</p>;
+  if (cargando || !usuario) return <CargandoPagina />;
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-100 lg:flex-row">
