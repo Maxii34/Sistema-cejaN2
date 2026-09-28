@@ -4,10 +4,13 @@ import { useState } from "react";
 import { FiAlertTriangle, FiCamera, FiUpload, FiX } from "react-icons/fi";
 
 /**
- * Maqueta de subida de imagen por equipo.
- * El backend AÚN no tiene endpoint de upload: guarda preview local
- * (object URL + base64 en localStorage) y marca como "pendiente de subir".
+ * Foto temporal por equipo (recepción).
+ * Guarda preview local (base64 en localStorage); al crear la orden se sube
+ * sola a Cloudinary. Acepta lo mismo que el servidor: JPEG, PNG o WEBP
+ * de hasta 2 MB.
  */
+const TIPOS_VALIDOS = ["image/jpeg", "image/png", "image/webp"];
+const MAX_PESO = 2 * 1024 * 1024;
 export function ImageUploader({
   equipoKey,
   value,
@@ -23,12 +26,12 @@ export function ImageUploader({
   const handleFile = (file: File | undefined) => {
     setError(null);
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("El archivo debe ser una imagen.");
+    if (!TIPOS_VALIDOS.includes(file.type)) {
+      setError("Solo se permiten fotos JPEG, PNG o WEBP.");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Máximo 5 MB por imagen.");
+    if (file.size > MAX_PESO) {
+      setError("Máximo 2 MB por imagen.");
       return;
     }
     const reader = new FileReader();
@@ -90,10 +93,10 @@ export function ImageUploader({
           <span className="flex items-center gap-1.5 text-sm font-medium text-zinc-700">
             <FiUpload size={15} /> Arrastrá o hacé clic para subir
           </span>
-          <span className="mt-1 text-xs text-zinc-600">PNG / JPG · máx 5 MB</span>
+          <span className="mt-1 text-xs text-zinc-600">JPEG / PNG / WEBP · máx 2 MB</span>
           <input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             className="hidden"
             onChange={(e) => handleFile(e.target.files?.[0])}
           />
