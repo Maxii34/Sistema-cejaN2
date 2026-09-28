@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiClipboard, FiDollarSign, FiLogIn, FiTool, FiZap } from "react-icons/fi";
+import { FiClipboard, FiDollarSign, FiEye, FiEyeOff, FiLogIn, FiTool, FiZap } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { useAuth } from "@/context/AuthContext";
 import { Card, inputCls, btnPrimary } from "@/components/ui";
@@ -24,6 +24,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [verPassword, setVerPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
 
@@ -98,15 +99,26 @@ export default function LoginPage() {
               <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
                 Contraseña
               </label>
-              <input
-                className={inputCls}
-                type="password"
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••"
-              />
+              <div className="flex gap-2">
+                <input
+                  className={inputCls}
+                  type={verPassword ? "text" : "password"}
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerPassword((v) => !v)}
+                  aria-label={verPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  title={verPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  className="inline-flex min-h-[44px] min-w-[48px] shrink-0 items-center justify-center rounded-xl border border-stone-300 bg-white text-stone-500 shadow-sm active:bg-stone-100"
+                >
+                  {verPassword ? <FiEyeOff size={19} /> : <FiEye size={19} />}
+                </button>
+              </div>
             </div>
             {error && (
               <p className="rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-200">

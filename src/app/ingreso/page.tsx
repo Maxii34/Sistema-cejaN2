@@ -27,6 +27,18 @@ import {
 } from "@/components/ui";
 import type { ApiEnvelope, Cliente } from "@/lib/types";
 
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top",
+  showConfirmButton: false,
+  timer: 2500,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener("mouseenter", Swal.stopTimer);
+    toast.addEventListener("mouseleave", Swal.resumeTimer);
+  },
+});
+
 export default function IngresoPage() {
   const { usuario, cargando } = useRequireAuth();
   const [error, setError] = useState<string | null>(null);
@@ -69,17 +81,11 @@ export default function IngresoPage() {
       setTelefono("");
       setDni("");
       await cargarClientes();
-      void Swal.fire({
-        icon: "success",
-        title: "Cliente creado",
-        text: "El cliente se guardó correctamente.",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      void Toast.fire({ icon: "success", title: "Cliente creado", text: "El cliente se guardó correctamente." });
     } catch (e) {
       const mensaje = e instanceof Error ? e.message : "No se pudo crear";
       setError(mensaje);
-      void Swal.fire({ icon: "error", title: "Error", text: mensaje });
+      void Toast.fire({ icon: "error", title: "No se pudo crear", text: mensaje });
     }
   };
 
@@ -97,17 +103,11 @@ export default function IngresoPage() {
     try {
       await api.del(`/api/cliente/${id}`);
       await cargarClientes();
-      void Swal.fire({
-        icon: "success",
-        title: "Eliminado",
-        text: "El cliente fue eliminado.",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      void Toast.fire({ icon: "success", title: "Cliente eliminado", text: `"${nombreCliente}" fue eliminado.` });
     } catch (e) {
       const mensaje = e instanceof Error ? e.message : "No se pudo eliminar";
       setError(mensaje);
-      void Swal.fire({ icon: "error", title: "Error", text: mensaje });
+      void Toast.fire({ icon: "error", title: "No se pudo eliminar", text: mensaje });
     }
   };
 
