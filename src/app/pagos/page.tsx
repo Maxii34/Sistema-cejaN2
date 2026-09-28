@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { FiDollarSign, FiPlus } from "react-icons/fi";
+import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { FiArrowLeft, FiDollarSign, FiPlus } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
@@ -23,8 +25,9 @@ const Toast = Swal.mixin({
   },
 });
 
-export default function PagosPage() {
+function PagosForm() {
   const { usuario, cargando } = useRequireAuth();
+  const searchParams = useSearchParams();
   const [pagos, setPagos] = useState<Pago[]>([]);
   const [ordenes, setOrdenes] = useState<OrdenReparacion[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -33,14 +36,40 @@ export default function PagosPage() {
   const [medio, setMedio] = useState<MedioPago>("EFECTIVO");
   const [cargandoLista, setCargandoLista] = useState(true);
   const [guardando, setGuardando] = useState(false);
+  const [vinoDeOrden, setVinoDeOrden] = useState(false);
+
+  // Elige orden y autocompleta el monto con su saldo pendiente
+  const elegirOrden = (id: string, listaO: OrdenReparacion[], listaP: Pago[]) => {
+    setOrdenId(id);
+    if (!id) {
+      setMonto("");
+      return;
+    }
+    const o = listaO.find((x) => x.id === Number(id));
+    if (o?.precioFinal == null) {
+      setMonto("");
+      return;
+    }
+    const cob = listaP.filter((p) => p.ordenId === o.id).reduce((a, p) => a + Number(p.monto), 0);
+    const saldo = Math.round((Number(o.precioFinal) - cob) * 100) / 100;
+    setMonto(saldo > 0 ? saldo.toFixed(2) : "");
+  };
 
   const cargar = async () => {
     setCargandoLista(true);
     try {
       const p = await api.get<ApiEnvelope<Paged<Pago> | Pago[]>>("/api/pago");
-      setPagos(Array.isArray(p.data) ? p.data : p.data.data);
+      const listaP = Array.isArray(p.data) ? p.data : p.data.data;
+      setPagos(listaP);
       const o = await api.get<ApiEnvelope<Paged<OrdenReparacion> | OrdenReparacion[]>>("/api/orden-reparacion");
-      setOrdenes(Array.isArray(o.data) ? o.data : o.data.data);
+      const listaO = Array.isArray(o.data) ? o.data : o.data.data;
+      setOrdenes(listaO);
+      // Preselección desde la ficha (?ordenId=): orden + monto con saldo
+      const pre = searchParams.get("ordenId");
+      if (pre && listaO.some((x) => x.id === Number(pre))) {
+        elegirOrden(pre, listaO, listaP);
+        setVinoDeOrden(true);
+      }
     } finally {
       setCargandoLista(false);
     }
@@ -123,23 +152,7 @@ export default function PagosPage() {
             <form onSubmit={(e) => void crear(e)} className="mt-2 space-y-2">
               <div>
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Orden *</label>
-                <select className={inputCls} required value={ordenId} onChange={(e) => {
-                  const id = e.target.value;
-                  setOrdenId(id);
-                  // Autocompleta el monto con el saldo pendiente de la orden
-                  if (!id) {
-                    setMonto("");
-                    return;
-                  }
-                  const o = ordenes.find((x) => x.id === Number(id));
-                  if (o?.precioFinal == null) {
-                    setMonto("");
-                    return;
-                  }
-                  const cob = pagos.filter((p) => p.ordenId === o.id).reduce((a, p) => a + Number(p.monto), 0);
-                  const saldo = Math.round((Number(o.precioFinal) - cob) * 100) / 100;
-                  setMonto(saldo > 0 ? saldo.toFixed(2) : "");
-                }}>
+                <select className={inputCls} required value={ordenId} onChange={(e) => elegirOrden(e.target.value, ordenes, pagos)}>
                   <option value="">Seleccionar orden...</option>
                   {ordenes.map((o) => <option key={o.id} value={o.id}>{o.numero} · ${o.precioFinal != null ? Number(o.precioFinal).toFixed(2) : "s/p"}</option>)}
                 </select>
@@ -191,10 +204,26 @@ export default function PagosPage() {
               <button className={btnPrimary + " w-full gap-2"} disabled={guardando}>
                 <FiPlus size={15} /> {guardando ? "Registrando..." : "Registrar"}
               </button>
+              {vinoDeOrden && ordenElegida && (
+                <Link
+                  href={`/ordenes/${ordenElegida.id}`}
+                  className="mt-2 inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 active:bg-stone-100"
+                >
+                  <FiArrowLeft size={15} /> Volver a {ordenElegida.numero}
+                </Link>
+              )}
             </form>
           </Card>
         </div>
       </main>
     </div>
+  );
+}
+
+export default function PagosPage() {
+  return (
+    <Suspense fallback={<CargandoPagina />}>
+      <PagosForm />
+    </Suspense>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
   FiArrowLeft,
@@ -413,6 +414,30 @@ export default function OrdenDetallePage() {
                           <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Precio final ($) <Req /></label>
                           <input className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={precio} onChange={(e) => setPrecio(e.target.value)} />
                         </div>
+                        {(() => {
+                          const cobrado = (orden.pagos ?? []).reduce((a, p) => a + Number(p.monto), 0);
+                          const precioRef = orden.precioFinal != null ? Number(orden.precioFinal) : null;
+                          const saldo = precioRef != null ? Math.round((precioRef - cobrado) * 100) / 100 : null;
+                          return (
+                            <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-sm ring-1 ring-inset ring-blue-200/60">
+                              <p className="text-[13px] text-blue-900">
+                                Cobrado <b className="font-ficha">${cobrado.toFixed(2)}</b>
+                                {precioRef != null ? <> de <b className="font-ficha">${precioRef.toFixed(2)}</b></> : " (sin precio final guardado)"}
+                                {saldo != null && saldo > 0 && <> · Saldo <b className="font-ficha">${saldo.toFixed(2)}</b></>}
+                                {saldo != null && saldo <= 0 && <> · <b>Pagado ✓</b></>}
+                              </p>
+                              <p className="mt-1 text-xs text-blue-800">
+                                El cobro se registra en Pagos: al guardar el precio, tocá Ir a cobrar para que el monto quede reflejado como pagado.
+                              </p>
+                              <Link
+                                href={`/pagos?ordenId=${orden.id}`}
+                                className="mt-2 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-blue-800 px-4 py-2 text-sm font-semibold text-white active:bg-blue-900"
+                              >
+                                <FiDollarSign size={15} /> Ir a cobrar esta orden
+                              </Link>
+                            </div>
+                          );
+                        })()}
                         <label className="flex min-h-[44px] items-center gap-2.5 text-[15px] sm:text-sm">
                           <input type="checkbox" className="h-5 w-5 shrink-0 accent-blue-800" checked={conformidad} onChange={(e) => setConformidad(e.target.checked)} />
                           Cliente conforme / equipo entregado

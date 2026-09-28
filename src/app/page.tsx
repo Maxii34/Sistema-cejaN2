@@ -77,8 +77,8 @@ export default function DashboardPage() {
                 ? `Tenés ${stats.pendientes} recepción${stats.pendientes > 1 ? "es" : ""} activa${stats.pendientes > 1 ? "s" : ""} en el banco de trabajo.`
                 : "Sin recepciones activas. El banco está libre para el próximo equipo."}
             </p>
-            <Link href="/ordenes/nueva" className={btnPrimary + " mt-3 w-full sm:w-auto"}>
-              <FiPlus size={17} strokeWidth={2.5} /> Nueva recepción
+            <Link href="/ingreso" className={btnPrimary + " mt-3 w-full sm:w-auto"}>
+              <FiPlus size={17} strokeWidth={2.5} /> Nuevo cliente
             </Link>
           </div>
         </section>
