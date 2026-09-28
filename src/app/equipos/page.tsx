@@ -27,6 +27,7 @@ import {
   CargandoPagina,
 } from "@/components/ui";
 import { ImageUploader } from "@/components/ImageUploader";
+import { Stagger, Item } from "@/components/motion";
 import type {
   ApiEnvelope,
   Equipo,
@@ -174,7 +175,7 @@ export default function HistorialEquiposPage() {
             detalle="Primero creá un cliente y agregale equipos desde su ficha."
           />
         ) : (
-          <div className="grid items-start gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Stagger className="grid items-start gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filtrados.map((q) => {
               const visitas = historialPorEquipo.get(q.id) ?? [];
               const actual = visitas[0];
@@ -187,7 +188,8 @@ export default function HistorialEquiposPage() {
                 return limite.getTime() >= Date.now() ? ent : null;
               })();
               return (
-                <Card key={q.id} className="flex flex-col">
+                <Item key={q.id}>
+                <Card className="flex h-full flex-col">
                   {/* Foto con contador de visitas superpuesto */}
                   <div className="relative mb-3">
                     {fotos[q.id] ? (
@@ -347,9 +349,10 @@ export default function HistorialEquiposPage() {
                     </div>
                   </details>
                 </Card>
+                </Item>
               );
             })}
-          </div>
+          </Stagger>
         )}
       </main>
     </div>

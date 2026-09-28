@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, PageHeader, Empty, btnPrimary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
+import { Lista, ItemLi, Reveal } from "@/components/motion";
 import type { ApiEnvelope, MedioPago, OrdenReparacion, Pago, Paged } from "@/lib/types";
 
 const MEDIOS: MedioPago[] = ["EFECTIVO", "TRANSFERENCIA", "TARJETA_DEBITO", "TARJETA_CREDITO", "MERCADO_PAGO", "OTRO"];
@@ -135,17 +136,18 @@ function PagosForm() {
                 <Spinner tamano="md" /> Cargando pagos...
               </div>
             ) : pagos.length === 0 ? <Empty mensaje="Sin pagos" /> : (
-              <ul className="divide-y divide-zinc-100 text-sm">
+              <Lista className="divide-y divide-zinc-100 text-sm">
                 {pagos.map((p) => (
-                  <li key={p.id} className="flex flex-col gap-0.5 py-2.5 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
+                  <ItemLi key={p.id} className="flex flex-col gap-0.5 py-2.5 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                     <span className="min-w-0 truncate">Orden #{p.ordenId} · {p.medioPago} · {new Date(p.fecha).toLocaleDateString()}</span>
                     <b className="shrink-0 font-ficha">${Number(p.monto).toFixed(2)}</b>
-                  </li>
+                  </ItemLi>
                 ))}
-              </ul>
+              </Lista>
             )}
           </Card>
-          <Card className="order-first lg:order-none">
+          <Reveal className="order-first lg:order-none">
+          <Card>
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="green"><FiDollarSign size={16} /></IconTile> Registrar cobro
             </h2>
@@ -214,6 +216,7 @@ function PagosForm() {
               )}
             </form>
           </Card>
+          </Reveal>
         </div>
       </main>
     </div>

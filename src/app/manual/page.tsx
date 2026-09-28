@@ -15,6 +15,7 @@ import {
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, PageHeader, IconTile, CargandoPagina } from "@/components/ui";
+import { Reveal } from "@/components/motion";
 
 function Paso({ n, titulo, texto }: { n: number; titulo: string; texto: string }) {
   return (
@@ -45,7 +46,7 @@ export default function ManualPage() {
           descripcion="Cómo trabaja el taller día a día, explicado paso a paso y sin tecnicismos."
         />
 
-        <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
+        <Reveal className="grid gap-3 sm:gap-4 lg:grid-cols-2">
           <Card>
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="brand"><FiRefreshCw size={16} /></IconTile> El recorrido de un equipo
@@ -129,7 +130,7 @@ export default function ManualPage() {
               <FiBookOpen size={14} className="shrink-0 text-blue-700" /> Si algo no te deja avanzar, leé el mensaje en pantalla: siempre dice qué falta completar.
             </p>
           </Card>
-        </div>
+        </Reveal>
       </main>
     </div>
   );

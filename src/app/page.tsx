@@ -16,6 +16,7 @@ import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, Badge, btnPrimary, IconTile, Spinner, CargandoPagina } from "@/components/ui";
+import { Stagger, Item, Lista, ItemLi } from "@/components/motion";
 import type { ApiEnvelope, Cliente, OrdenReparacion, Paged } from "@/lib/types";
 
 const STATS = [
@@ -85,9 +86,10 @@ export default function DashboardPage() {
 
         {error && <p className="mb-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-inset ring-red-200">{error}</p>}
 
-        <div className="grid grid-cols-3 gap-2 sm:gap-4">
-          {STATS.map((s, i) => (
-            <Link key={s.label} href={s.href} className={`min-w-0 rise rise-${i + 1}`}>
+        <Stagger className="grid grid-cols-3 gap-2 sm:gap-4">
+          {STATS.map((s) => (
+            <Item key={s.label} className="min-w-0">
+              <Link href={s.href} className="block min-w-0">
               <Card className="card-lift h-full px-3 py-3 sm:p-5">
                 <span className="hidden sm:block">
                   <IconTile tono={s.tono}>
@@ -106,9 +108,10 @@ export default function DashboardPage() {
                   {stats[s.key as keyof typeof stats]}
                 </p>
               </Card>
-            </Link>
+              </Link>
+            </Item>
           ))}
-        </div>
+        </Stagger>
 
         <Card className="rise rise-3 mt-3 sm:mt-4">
           <h2 className="flex items-center gap-2 font-bold text-stone-900">
@@ -122,7 +125,7 @@ export default function DashboardPage() {
               <Spinner tamano="md" /> Cargando órdenes...
             </div>
           ) : (
-          <ul className="tabla-scroll mt-3 grid max-h-[62dvh] gap-2 overflow-y-auto pb-1 text-sm sm:max-h-none sm:grid-cols-2 sm:overflow-visible sm:pb-0 xl:grid-cols-4">
+          <Lista className="tabla-scroll mt-3 grid max-h-[62dvh] gap-2 overflow-y-auto pb-1 text-sm sm:max-h-none sm:grid-cols-2 sm:overflow-visible sm:pb-0 xl:grid-cols-4">
             {ultimas.map((o) => {
               const cliente = o.equipo?.cliente
                 ? `${o.equipo.cliente.nombre} ${o.equipo.cliente.apellido ?? ""}`.trim()
@@ -141,7 +144,7 @@ export default function DashboardPage() {
                   minute: "2-digit",
                 });
               return (
-                <li key={o.id} className="rounded-xl border border-stone-200/80 bg-stone-50/50 p-3">
+                <ItemLi key={o.id} className="rounded-xl border border-stone-200/80 bg-stone-50/50 p-3">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-ficha text-[13px] font-bold text-stone-900">{o.numero}</span>
                     <Badge tono="violet">{o.estado}</Badge>
@@ -180,11 +183,11 @@ export default function DashboardPage() {
                   <Link href={`/ordenes/${o.id}`} className="mt-2 flex min-h-[40px] items-center justify-center gap-0.5 rounded-lg bg-blue-800 text-[13px] font-semibold text-white active:bg-blue-900">
                     Abrir orden <FiChevronRight size={14} />
                   </Link>
-                </li>
+                </ItemLi>
               );
             })}
             {ultimas.length === 0 && <p className="py-2 text-stone-500">Sin órdenes todavía.</p>}
-          </ul>
+          </Lista>
           )}
         </Card>
       </main>

@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, PageHeader, btnPrimary, btnSecondary, inputCls, IconTile, CargandoPagina } from "@/components/ui";
+import { Reveal } from "@/components/motion";
 import { ImageUploader } from "@/components/ImageUploader";
 import type { ApiEnvelope, Cliente, Equipo, OrdenReparacion, Paged } from "@/lib/types";
 
@@ -193,7 +194,7 @@ function NuevaOrdenForm() {
           <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
         )}
         <form onSubmit={(e) => void guardar(e)} className="grid gap-3 sm:gap-4 lg:grid-cols-2">
-          <Card>
+          <Reveal><Card>
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="blue"><FiUser size={16} /></IconTile> 1 · Cliente y equipo
             </h2>
@@ -292,7 +293,8 @@ function NuevaOrdenForm() {
               <input className={inputCls} type="number" min="0" step="0.01" value={costoEstimado} onChange={(e) => setCostoEstimado(e.target.value)} />
             </div>
           </Card>
-          <div className="min-w-0 space-y-3 sm:space-y-4">
+          </Reveal>
+          <Reveal delay={0.08} className="min-w-0 space-y-3 sm:space-y-4">
             <Card>
               <h2 className="flex items-center gap-2 font-bold text-stone-900">
                 <IconTile tono="brand"><FiCamera size={16} /></IconTile> 2 · Estado físico y foto
@@ -309,7 +311,7 @@ function NuevaOrdenForm() {
                 {guardando ? "Guardando..." : modoGarantia ? "Crear ingreso por garantía" : "Crear orden de reparación"}
               </button>
             </Card>
-          </div>
+          </Reveal>
         </form>
       </main>
     </div>

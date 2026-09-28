@@ -17,6 +17,7 @@ import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, PageHeader, Empty, Badge, btnPrimary, btnSecondary, inputCls, IconTile, CargandoPagina } from "@/components/ui";
+import { Stagger, Item, Reveal } from "@/components/motion";
 import type { ApiEnvelope, Cliente, Equipo, EstadoOrden, OrdenReparacion, Paged } from "@/lib/types";
 import { ESTADO_ORDEN_LABEL } from "@/lib/types";
 
@@ -160,8 +161,8 @@ export default function ClienteDetallePage() {
         {error && (
           <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
         )}
-        <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
-          <Card>
+        <Stagger className="grid gap-3 sm:gap-4 lg:grid-cols-2">
+          <Item><Card>
             <div className="flex items-center gap-2">
               <h2 className="flex min-w-0 flex-1 items-center gap-2 font-bold text-stone-900">
                 <span className="shrink-0">
@@ -274,7 +275,8 @@ export default function ClienteDetallePage() {
             </form>
             )}
           </Card>
-          <Card>
+          </Item>
+          <Item><Card>
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="brand"><FiPlus size={16} /></IconTile> Agregar equipo
             </h2>
@@ -304,9 +306,10 @@ export default function ClienteDetallePage() {
               </button>
             </form>
           </Card>
-        </div>
+          </Item>
+        </Stagger>
 
-        <Card className="mt-3 sm:mt-4">
+        <Reveal className="mt-3 sm:mt-4"><Card>
           <h2 className="flex items-center gap-2 font-bold text-stone-900">
             <IconTile tono="blue"><FiTool size={16} /></IconTile> Equipos del cliente ({equipos.length})
           </h2>
@@ -363,6 +366,7 @@ export default function ClienteDetallePage() {
             </div>
           )}
         </Card>
+        </Reveal>
       </main>
     </div>
   );

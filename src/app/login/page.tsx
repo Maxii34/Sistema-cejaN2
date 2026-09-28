@@ -6,6 +6,7 @@ import { FiClipboard, FiDollarSign, FiEye, FiEyeOff, FiLogIn, FiTool, FiZap } fr
 import Swal from "sweetalert2";
 import { useAuth } from "@/context/AuthContext";
 import { Card, inputCls, btnPrimary } from "@/components/ui";
+import { Reveal } from "@/components/motion";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -56,7 +57,7 @@ export default function LoginPage() {
       <div className="absolute -right-16 bottom-1/4 h-72 w-72 rounded-full bg-cyan-500/15 blur-3xl" aria-hidden />
       <div className="absolute left-1/2 top-0 h-40 w-[36rem] -translate-x-1/2 rounded-full bg-blue-400/10 blur-3xl" aria-hidden />
 
-      <div className="relative w-full max-w-sm">
+      <Reveal className="relative w-full max-w-sm" y={20}>
         <div className="mb-4 flex items-center justify-center gap-2.5">
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-900 text-white shadow-[0_12px_28px_-10px_rgba(30,64,175,0.7)]">
             <FiZap size={24} strokeWidth={2.5} />
@@ -147,7 +148,7 @@ export default function LoginPage() {
             </div>
           ))}
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

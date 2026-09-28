@@ -18,6 +18,7 @@ import {
   FiX,
   FiZap,
 } from "react-icons/fi";
+import { AnimatePresence, motion } from "motion/react";
 import { useAuth } from "@/context/AuthContext";
 import { version } from "../../package.json";
 
@@ -208,14 +209,25 @@ export function Sidebar() {
       </aside>
 
       {/* Overlay + drawer móvil */}
+      <AnimatePresence>
       {abierto && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div
+          <motion.div
             className="absolute inset-0 bg-stone-950/60 backdrop-blur-sm"
             onClick={() => setAbierto(false)}
             aria-hidden
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           />
-          <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-xs flex-col bg-gradient-to-b from-[#0c1428] via-[#111d3d] to-[#0c1428] text-zinc-200 shadow-2xl">
+          <motion.div
+            className="absolute inset-y-0 left-0 flex w-[86%] max-w-xs flex-col bg-gradient-to-b from-[#0c1428] via-[#111d3d] to-[#0c1428] text-zinc-200 shadow-2xl"
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          >
             <div className="flex items-center gap-2.5 px-4 py-4">
               <BrandMark />
               <p className="min-w-0 flex-1 text-base font-extrabold text-white">
@@ -278,9 +290,10 @@ export function Sidebar() {
                 }}
               />
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
+      </AnimatePresence>
 
       {/* Barra inferior móvil */}
       <nav

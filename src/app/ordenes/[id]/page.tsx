@@ -17,6 +17,7 @@ import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, PageHeader, Badge, btnPrimary, btnSecondary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
+import { Reveal } from "@/components/motion";
 import type { ApiEnvelope, OrdenReparacion, Usuario } from "@/lib/types";
 import { ESTADO_ORDEN_LABEL, CONDICION_LABEL } from "@/lib/types";
 
@@ -285,7 +286,7 @@ export default function OrdenDetallePage() {
           </div>
         ) : (
           <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
-            <div className="min-w-0 space-y-3 sm:space-y-4">
+            <Reveal className="min-w-0 space-y-3 sm:space-y-4">
               <Card>
                 <div className="flex flex-wrap gap-2">
                   <Badge tono="blue">{ESTADO_ORDEN_LABEL[orden.estado]}</Badge>
@@ -450,8 +451,8 @@ export default function OrdenDetallePage() {
                   </>
                 );
               })()}
-            </div>
-            <div className="min-w-0 space-y-3 sm:space-y-4">
+            </Reveal>
+            <Reveal delay={0.08} className="min-w-0 space-y-3 sm:space-y-4">
               <Card>
                 <h2 className="flex items-center gap-2 font-bold text-stone-900">
                   <IconTile tono="green"><FiDollarSign size={16} /></IconTile> Pagos
@@ -479,7 +480,7 @@ export default function OrdenDetallePage() {
                   {(orden.historialEstados ?? []).length === 0 && <li className="text-zinc-600">Sin historial registrado.</li>}
                 </ul>
               </Card>
-            </div>
+            </Reveal>
           </div>
         )}
       </main>

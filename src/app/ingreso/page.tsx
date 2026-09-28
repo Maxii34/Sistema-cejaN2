@@ -26,6 +26,7 @@ import {
   CargandoPagina,
 } from "@/components/ui";
 import type { ApiEnvelope, Cliente } from "@/lib/types";
+import { Reveal } from "@/components/motion";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -192,7 +193,7 @@ export default function IngresoPage() {
                 />
               </div>
             ) : (
-              <div className="tabla-scroll -mx-4 mt-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+              <Reveal className="tabla-scroll -mx-4 mt-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
                 <table className="w-full min-w-[620px] border-collapse text-left text-sm">
                   <thead>
                     <tr className="border-y border-stone-200 bg-stone-50 text-[11px] uppercase tracking-wide text-stone-500">
@@ -235,12 +236,12 @@ export default function IngresoPage() {
                         <td className="whitespace-nowrap px-3 py-2.5">{acciones(c)}</td>
                       </tr>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                    </tbody>
+                  </table>
+              </Reveal>
             )}
           </Card>
-          <Card className="order-first lg:order-none">
+          <Reveal className="order-first lg:order-none" delay={0.08}><Card>
             <div className="flex items-center gap-3">
               <IconTile tono="brand">
                 <FiUserPlus size={18} />
@@ -278,6 +279,7 @@ export default function IngresoPage() {
               </button>
             </form>
           </Card>
+          </Reveal>
         </div>
 
         {/* Acceso a órdenes desde Ingreso (viven en el Panel) */}

@@ -14,7 +14,9 @@ import Swal from "sweetalert2";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
+import { AnimatePresence } from "motion/react";
 import { Modal } from "@/components/Modal";
+import { Lista, ItemLi, Reveal } from "@/components/motion";
 import { Card, PageHeader, Badge, Empty, btnPrimary, btnSecondary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
 import type { ApiEnvelope, RolUsuario, Usuario } from "@/lib/types";
 
@@ -214,9 +216,9 @@ export default function UsuariosPage() {
             ) : lista.length === 0 ? <Empty mensaje="Sin usuarios" /> : (
               <>
                 {/* Cards en móvil: todo en una sola fila */}
-                <ul className="space-y-2 sm:hidden">
+                <Lista className="space-y-2 sm:hidden">
                   {lista.map((u) => (
-                    <li key={u.id} className="flex items-center gap-2 overflow-hidden rounded-xl border border-stone-200 p-2.5">
+                    <ItemLi key={u.id} className="flex items-center gap-2 overflow-hidden rounded-xl border border-stone-200 p-2.5">
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-800 text-sm font-extrabold text-white">
                         {(u.nombre[0] ?? "?").toUpperCase()}
                       </span>
@@ -231,11 +233,11 @@ export default function UsuariosPage() {
                         </span>
                       </span>
                       {acciones(u)}
-                    </li>
+                    </ItemLi>
                   ))}
-                </ul>
+                </Lista>
                 {/* Tabla en sm+ */}
-                <div className="tabla-scroll hidden overflow-x-auto sm:block">
+                <Reveal className="tabla-scroll hidden overflow-x-auto sm:block">
                   <table className="w-full min-w-[560px] text-left text-sm">
                     <thead>
                       <tr className="border-b border-stone-200 text-xs uppercase tracking-wide text-stone-500">
@@ -272,11 +274,11 @@ export default function UsuariosPage() {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                </Reveal>
               </>
             )}
           </Card>
-          <Card className="order-first lg:order-none">
+          <Reveal className="order-first lg:order-none" delay={0.08}><Card>
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="violet"><FiShield size={16} /></IconTile> Nuevo usuario
             </h2>
@@ -293,9 +295,11 @@ export default function UsuariosPage() {
               </button>
             </form>
           </Card>
+          </Reveal>
         </div>
       </main>
 
+      <AnimatePresence>
       {editando && (
         <Modal titulo={`Editar: ${editando.nombre}`} onClose={() => setEditando(null)}>
           <form onSubmit={(e) => void guardarEdicion(e)} className="space-y-2">
@@ -340,6 +344,7 @@ export default function UsuariosPage() {
           </form>
         </Modal>
       )}
+      </AnimatePresence>
     </div>
   );
 }
