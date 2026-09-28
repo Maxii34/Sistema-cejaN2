@@ -15,7 +15,7 @@ import {
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
-import { Card, Badge, btnPrimary, IconTile, CargandoPagina } from "@/components/ui";
+import { Card, Badge, btnPrimary, IconTile, Spinner, CargandoPagina } from "@/components/ui";
 import type { ApiEnvelope, Cliente, OrdenReparacion, Paged } from "@/lib/types";
 
 const STATS = [
@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ ordenes: 0, clientes: 0, pendientes: 0 });
   const [ultimas, setUltimas] = useState<OrdenReparacion[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [cargandoDatos, setCargandoDatos] = useState(true);
 
   useEffect(() => {
     if (!usuario) return;
@@ -47,6 +48,8 @@ export default function DashboardPage() {
         setUltimas(lista.slice(0, 5));
       } catch (e) {
         setError(e instanceof Error ? e.message : "No se pudo cargar el panel (¿backend en :3001?)");
+      } finally {
+        setCargandoDatos(false);
       }
     })();
   }, [usuario]);
@@ -114,7 +117,12 @@ export default function DashboardPage() {
             </IconTile>
             Últimas órdenes
           </h2>
-          <ul className="mt-3 space-y-2 text-sm">
+          {cargandoDatos ? (
+            <div className="mt-3 flex items-center justify-center gap-2 py-8 text-sm font-medium text-stone-500">
+              <Spinner tamano="md" /> Cargando órdenes...
+            </div>
+          ) : (
+          <ul className="tabla-scroll mt-3 grid max-h-[62dvh] gap-2 overflow-y-auto pb-1 text-sm sm:max-h-none sm:grid-cols-2 sm:overflow-visible sm:pb-0 xl:grid-cols-4">
             {ultimas.map((o) => {
               const cliente = o.equipo?.cliente
                 ? `${o.equipo.cliente.nombre} ${o.equipo.cliente.apellido ?? ""}`.trim()
@@ -177,6 +185,7 @@ export default function DashboardPage() {
             })}
             {ultimas.length === 0 && <p className="py-2 text-stone-500">Sin órdenes todavía.</p>}
           </ul>
+          )}
         </Card>
       </main>
     </div>

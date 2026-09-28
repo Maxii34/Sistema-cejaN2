@@ -8,6 +8,7 @@ import {
   FiHome,
   FiInbox,
   FiLogOut,
+  FiMail,
   FiMenu,
   FiPlus,
   FiSettings,
@@ -47,6 +48,53 @@ function BrandMark({ size = "md" }: { size?: "md" | "lg" }) {
     >
       <FiZap size={size === "lg" ? 22 : 18} strokeWidth={2.5} />
     </span>
+  );
+}
+
+function UserCard({ alSalir, compacto = false }: { alSalir: () => void; compacto?: boolean }) {
+  const { usuario, esAdmin } = useAuth();
+  const inicial = (usuario?.nombre?.[0] ?? "C").toUpperCase();
+  return (
+    <div className="rounded-2xl bg-white/5 p-3 ring-1 ring-inset ring-white/10">
+      <div className="flex items-center gap-2.5">
+        <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-extrabold text-blue-900">
+          {inicial}
+          <span
+            title="En línea"
+            className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-[#131f3a]"
+          />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate text-sm font-bold text-white">
+              {usuario?.nombre ?? "—"}
+            </span>
+            <span
+              className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold tracking-wide ring-1 ring-inset ${
+                esAdmin
+                  ? "bg-amber-400/15 text-amber-300 ring-amber-400/30"
+                  : "bg-blue-400/15 text-blue-300 ring-blue-400/30"
+              }`}
+            >
+              {usuario?.rol ?? "—"}
+            </span>
+          </p>
+          <p className="mt-0.5 flex min-w-0 items-center gap-1 text-xs text-slate-400">
+            <FiMail size={11} className="shrink-0" />
+            <span className="truncate">{usuario?.email ?? ""}</span>
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={alSalir}
+        className={`mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl bg-red-500/10 px-3 font-semibold text-red-200 ring-1 ring-inset ring-red-400/20 hover:bg-red-500/20 ${
+          compacto ? "min-h-[48px] py-2.5 text-[15px]" : "min-h-[44px] py-2 text-sm"
+        }`}
+      >
+        <FiLogOut size={compacto ? 16 : 15} />
+        Cerrar sesión
+      </button>
+    </div>
   );
 }
 
@@ -126,26 +174,7 @@ export function Sidebar() {
           </Link>
         </nav>
         <div className="border-t border-white/10 p-4">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-extrabold text-blue-900">
-              {inicial}
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-white">
-                {usuario?.nombre ?? "—"}
-              </p>
-              <p className="truncate text-xs text-slate-400">
-                {usuario?.email} · {usuario?.rol}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => void logout()}
-            className="mt-3 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold text-white hover:bg-white/15"
-          >
-            <FiLogOut size={15} />
-            Cerrar sesión
-          </button>
+          <UserCard alSalir={() => void logout()} />
         </div>
       </aside>
 
@@ -200,22 +229,13 @@ export function Sidebar() {
               </Link>
             </nav>
             <div className="border-t border-white/10 p-4">
-              <p className="truncate text-sm font-semibold text-white">
-                {usuario?.nombre ?? "—"}
-              </p>
-              <p className="truncate text-xs text-slate-400">
-                {usuario?.email} · {usuario?.rol}
-              </p>
-              <button
-                onClick={() => {
+              <UserCard
+                compacto
+                alSalir={() => {
                   setAbierto(false);
                   void logout();
                 }}
-                className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2.5 text-[15px] font-semibold text-white active:bg-white/15"
-              >
-                <FiLogOut size={16} />
-                Cerrar sesión
-              </button>
+              />
             </div>
           </div>
         </div>

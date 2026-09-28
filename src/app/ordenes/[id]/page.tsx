@@ -4,17 +4,19 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   FiArrowLeft,
+  FiCheck,
   FiClock,
   FiDollarSign,
+  FiLock,
   FiPrinter,
   FiSave,
-  FiTool,
 } from "react-icons/fi";
+import Swal from "sweetalert2";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, PageHeader, Badge, btnPrimary, btnSecondary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
-import type { ApiEnvelope, EstadoOrden, OrdenReparacion, Usuario } from "@/lib/types";
+import type { ApiEnvelope, OrdenReparacion, Usuario } from "@/lib/types";
 import { ESTADO_ORDEN_LABEL, CONDICION_LABEL } from "@/lib/types";
 
 function TagOpcional() {
@@ -33,26 +35,86 @@ function Req() {
   );
 }
 
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top",
+  showConfirmButton: false,
+  timer: 2500,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener("mouseenter", Swal.stopTimer);
+    toast.addEventListener("mouseleave", Swal.resumeTimer);
+  },
+});
+
+type FaseKey = "diagnostico" | "autorizacion" | "reparacion" | "cierre";
+
+function FaseCard({
+  paso,
+  titulo,
+  estado,
+  resumen,
+  children,
+}: {
+  paso: number;
+  titulo: string;
+  estado: "lista" | "actual" | "bloqueada";
+  resumen?: React.ReactNode;
+  children?: React.ReactNode;
+}) {
+  return (
+    <Card className={estado === "bloqueada" ? "opacity-70" : ""}>
+      <div className="flex items-center gap-2.5">
+        <span
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${
+            estado === "lista"
+              ? "bg-emerald-600 text-white"
+              : estado === "actual"
+                ? "bg-blue-800 text-white"
+                : "bg-stone-200 text-stone-500"
+          }`}
+        >
+          {estado === "lista" ? <FiCheck size={16} /> : estado === "bloqueada" ? <FiLock size={14} /> : paso}
+        </span>
+        <h2 className="min-w-0 flex-1 truncate font-bold text-stone-900">
+          {paso}. {titulo}
+        </h2>
+        <Badge tono={estado === "lista" ? "green" : estado === "actual" ? "blue" : "zinc"}>
+          {estado === "lista" ? "Lista" : estado === "actual" ? "Actual" : "Bloqueada"}
+        </Badge>
+      </div>
+      {estado === "actual" && children && <div className="mt-3">{children}</div>}
+      {estado === "lista" && resumen && (
+        <div className="mt-2 rounded-xl bg-stone-50 px-3 py-2 text-[13px] text-stone-600 ring-1 ring-inset ring-stone-200/60">
+          {resumen}
+        </div>
+      )}
+      {estado === "bloqueada" && (
+        <p className="mt-2 text-xs text-stone-400">Se desbloquea al completar la fase anterior.</p>
+      )}
+    </Card>
+  );
+}
+
 export default function OrdenDetallePage() {
   const params = useParams<{ id: string }>();
   const id = Number(params.id);
-  const { usuario, cargando } = useRequireAuth();
+  const { usuario, cargando, esAdmin } = useRequireAuth();
   const router = useRouter();
   const [orden, setOrden] = useState<OrdenReparacion | null>(null);
   const [tecnicos, setTecnicos] = useState<Usuario[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // edición técnica
+  // campos por fase
   const [diag, setDiag] = useState("");
   const [pruebas, setPruebas] = useState("");
   const [reco, setReco] = useState("");
   const [reparacion, setReparacion] = useState("");
   const [mano, setMano] = useState("");
   const [precio, setPrecio] = useState("");
-  const [estado, setEstado] = useState<EstadoOrden>("RECIBIDO");
   const [tecnicoId, setTecnicoId] = useState<string>("");
-  const [autorizado, setAutorizado] = useState(false);
-  const [conformidad, setConformidad] = useState(false);
+  const [conformidad, setConformidad] = useState(true);
+  const [faseEnCurso, setFaseEnCurso] = useState<FaseKey | null>(null);
 
   const cargar = async () => {
     const res = await api.get<ApiEnvelope<OrdenReparacion>>(`/api/orden-reparacion/${id}`);
@@ -63,19 +125,23 @@ export default function OrdenDetallePage() {
     setReparacion(res.data.reparacionRealizada ?? "");
     setMano(String(res.data.manoDeObra ?? 0));
     setPrecio(res.data.precioFinal != null ? String(res.data.precioFinal) : "");
-    setEstado(res.data.estado);
     setTecnicoId(res.data.tecnicoId ? String(res.data.tecnicoId) : "");
-    setAutorizado(res.data.autorizadoCliente);
     setConformidad(res.data.conformidadEntregaCliente);
+    return res.data;
   };
 
   useEffect(() => {
     if (!usuario || !id) return;
     (async () => {
       try {
-        await cargar();
-        const u = await api.get<ApiEnvelope<Usuario[]>>("/api/usuario");
-        setTecnicos(u.data);
+        const od = await cargar();
+        if (esAdmin) {
+          const u = await api.get<ApiEnvelope<Usuario[]>>("/api/usuario");
+          setTecnicos(u.data);
+        } else if (!od.tecnicoId) {
+          // El técnico se autoasigna: no necesita el listado (solo ADMIN)
+          setTecnicoId(String(usuario.id));
+        }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar orden");
       }
@@ -83,34 +149,99 @@ export default function OrdenDetallePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [usuario, id]);
 
-  const guardar = async (e: React.FormEvent) => {
+  const trasGuardar = async (titulo: string, texto: string) => {
+    await cargar();
+    void Toast.fire({ icon: "success", title: titulo, text: texto });
+  };
+
+  const fallaGuardar = (e: unknown, titulo = "No se pudo guardar") => {
+    const mensaje = e instanceof Error ? e.message : titulo;
+    setError(mensaje);
+    void Toast.fire({ icon: "error", title: titulo, text: mensaje });
+  };
+
+  const guardarDiagnostico = async (e: React.FormEvent) => {
     e.preventDefault();
-    const faltantes: string[] = [];
-    if (!diag.trim()) faltantes.push("Diagnóstico");
-    if (!reparacion.trim()) faltantes.push("Reparación realizada");
-    if (!precio.trim() || Number.isNaN(Number(precio))) faltantes.push("Precio final");
-    if (!tecnicoId) faltantes.push("Técnico a cargo");
-    if (faltantes.length > 0) {
-      setError(`Completá los campos obligatorios: ${faltantes.join(", ")}.`);
+    if (!diag.trim()) {
+      setError("El diagnóstico es obligatorio.");
+      return;
+    }
+    if (!tecnicoId) {
+      setError("Asigná un técnico a cargo.");
       return;
     }
     setError(null);
+    setFaseEnCurso("diagnostico");
     try {
-      await api.put(`/api/orden-reparacion/${id}`, {
+      await api.patch(`/api/orden-reparacion/${id}/diagnostico`, {
         diagnostico: diag.trim(),
         pruebasRealizadas: pruebas.trim() || null,
-        recomendaciones: reco.trim() || null,
+        tecnicoId: Number(tecnicoId),
+      });
+      await trasGuardar("Diagnóstico guardado", "La orden pasó a En diagnóstico.");
+    } catch (e) {
+      fallaGuardar(e);
+    } finally {
+      setFaseEnCurso(null);
+    }
+  };
+
+  const guardarAutorizacion = async (decision: "AUTORIZADO" | "ESPERA_REPUESTO") => {
+    setError(null);
+    setFaseEnCurso("autorizacion");
+    try {
+      await api.patch(`/api/orden-reparacion/${id}/autorizacion`, { decision });
+      await trasGuardar(
+        decision === "AUTORIZADO" ? "Cliente autorizó" : "A la espera de repuesto",
+        decision === "AUTORIZADO" ? "La orden pasó a En reparación." : "La orden quedó Esperando repuesto."
+      );
+    } catch (e) {
+      fallaGuardar(e);
+    } finally {
+      setFaseEnCurso(null);
+    }
+  };
+
+  const guardarReparacion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reparacion.trim()) {
+      setError("La reparación realizada es obligatoria.");
+      return;
+    }
+    setError(null);
+    setFaseEnCurso("reparacion");
+    try {
+      await api.patch(`/api/orden-reparacion/${id}/reparacion`, {
         reparacionRealizada: reparacion.trim(),
         manoDeObra: mano ? Number(mano) : 0,
+        recomendaciones: reco.trim() || null,
+      });
+      await trasGuardar("Reparación guardada", "La orden quedó Lista.");
+    } catch (e) {
+      fallaGuardar(e);
+    } finally {
+      setFaseEnCurso(null);
+    }
+  };
+
+  const guardarCierre = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!precio.trim() || Number.isNaN(Number(precio))) {
+      setError("El precio final es obligatorio.");
+      return;
+    }
+    setError(null);
+    setFaseEnCurso("cierre");
+    try {
+      await api.patch(`/api/orden-reparacion/${id}/cierre`, {
         precioFinal: Number(precio),
-        estado,
-        tecnicoId: Number(tecnicoId),
-        autorizadoCliente: autorizado,
         conformidadEntregaCliente: conformidad,
       });
-      await cargar();
+      await trasGuardar("Orden entregada", "La orden quedó Entregada.");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo guardar");
+      fallaGuardar(e);
+    } finally {
+      setFaseEnCurso(null);
     }
   };
 
@@ -169,58 +300,131 @@ export default function OrdenDetallePage() {
                   <p><b>Firmas recepción:</b> cliente {orden.firmaClienteRecepcion ? "✓" : "✗"} · técnico {orden.firmaTecnicoRecepcion ? "✓" : "✗"}</p>
                 </dl>
               </Card>
-              <Card>
-                <h2 className="flex items-center gap-2 font-bold text-stone-900">
-                  <IconTile tono="blue"><FiTool size={16} /></IconTile> Diagnóstico y reparación
-                </h2>
-                <p className="mt-1 text-xs text-stone-500">Los campos marcados con <span className="font-bold text-red-600">*</span> son obligatorios.</p>
-                <form onSubmit={(e) => void guardar(e)} className="mt-3 space-y-2">
-                  <div>
-                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Diagnóstico <Req /></label>
-                    <textarea className={inputCls} rows={2} placeholder="Ej: Placa con soldadura fría en la fuente..." value={diag} onChange={(e) => setDiag(e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Pruebas realizadas <TagOpcional /></label>
-                    <textarea className={inputCls} rows={2} placeholder="Ej: Medición de tensión, prueba de encendido..." value={pruebas} onChange={(e) => setPruebas(e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Recomendaciones <TagOpcional /></label>
-                    <textarea className={inputCls} rows={2} placeholder="Ej: Cambiar el cable de alimentación..." value={reco} onChange={(e) => setReco(e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Reparación realizada <Req /></label>
-                    <textarea className={inputCls} rows={2} placeholder="Ej: Se resoldó la fuente y se cambió el fusible..." value={reparacion} onChange={(e) => setReparacion(e.target.value)} />
-                  </div>
-                  <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Mano de obra ($) <TagOpcional /></label>
-                      <input className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={mano} onChange={(e) => setMano(e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Precio final ($) <Req /></label>
-                      <input className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={precio} onChange={(e) => setPrecio(e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Estado <Req /></label>
-                      <select className={inputCls} value={estado} onChange={(e) => setEstado(e.target.value as EstadoOrden)}>
-                        {Object.entries(ESTADO_ORDEN_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Técnico a cargo <Req /></label>
-                      <select className={inputCls} value={tecnicoId} onChange={(e) => setTecnicoId(e.target.value)}>
-                        <option value="">Seleccionar técnico...</option>
-                        {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nombre} ({t.rol})</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <label className="flex min-h-[44px] items-center gap-2.5 text-[15px] sm:text-sm"><input type="checkbox" className="h-5 w-5 shrink-0 accent-zinc-900" checked={autorizado} onChange={(e) => setAutorizado(e.target.checked)} /> Autorizado por cliente</label>
-                  <label className="flex min-h-[44px] items-center gap-2.5 text-[15px] sm:text-sm"><input type="checkbox" className="h-5 w-5 shrink-0 accent-zinc-900" checked={conformidad} onChange={(e) => setConformidad(e.target.checked)} /> Conformidad de entrega</label>
-                  <button className={btnPrimary + " w-full gap-2"}>
-                    <FiSave size={15} /> Guardar avance
-                  </button>
-                </form>
-              </Card>
+              {(() => {
+                const idx = ["EN_DIAGNOSTICO", "ESPERANDO_REPUESTO"].includes(orden.estado)
+                  ? 1
+                  : orden.estado === "EN_REPARACION"
+                    ? 2
+                    : orden.estado === "LISTO"
+                      ? 3
+                      : orden.estado === "RECIBIDO"
+                        ? 0
+                        : 4;
+                const ef = (i: number): "lista" | "actual" | "bloqueada" =>
+                  idx > i || idx === 4 ? "lista" : idx === i ? "actual" : "bloqueada";
+                const tecNombre = orden.tecnico?.nombre ?? (tecnicoId && usuario && Number(tecnicoId) === usuario.id ? usuario.nombre : null);
+                return (
+                  <>
+                    <FaseCard
+                      paso={1}
+                      titulo="Diagnóstico"
+                      estado={ef(0)}
+                      resumen={orden.diagnostico ? <><b className="text-stone-800">{orden.diagnostico}</b>{orden.pruebasRealizadas ? ` · ${orden.pruebasRealizadas}` : ""}{tecNombre ? ` · Téc: ${tecNombre}` : ""}</> : "Sin diagnóstico cargado."}
+                    >
+                      <form onSubmit={(e) => void guardarDiagnostico(e)} className="space-y-2">
+                        <div>
+                          <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Diagnóstico <Req /></label>
+                          <textarea className={inputCls} rows={2} placeholder="Ej: Placa con soldadura fría en la fuente..." value={diag} onChange={(e) => setDiag(e.target.value)} />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Pruebas realizadas <TagOpcional /></label>
+                          <textarea className={inputCls} rows={2} placeholder="Ej: Medición de tensión, prueba de encendido..." value={pruebas} onChange={(e) => setPruebas(e.target.value)} />
+                        </div>
+                        {esAdmin ? (
+                          <div>
+                            <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Técnico a cargo <Req /></label>
+                            <select className={inputCls} value={tecnicoId} onChange={(e) => setTecnicoId(e.target.value)}>
+                              <option value="">Seleccionar técnico...</option>
+                              {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nombre} ({t.rol})</option>)}
+                            </select>
+                          </div>
+                        ) : (
+                          <p className="rounded-xl bg-blue-50 px-3 py-2 text-sm text-blue-900 ring-1 ring-inset ring-blue-200">
+                            Te asignás esta orden: <b>{usuario.nombre}</b>
+                          </p>
+                        )}
+                        <button className={btnPrimary + " w-full gap-2"} disabled={faseEnCurso !== null}>
+                          <FiSave size={15} /> {faseEnCurso === "diagnostico" ? "Guardando..." : "Guardar diagnóstico"}
+                        </button>
+                      </form>
+                    </FaseCard>
+
+                    <FaseCard
+                      paso={2}
+                      titulo="Autorización del cliente"
+                      estado={ef(1)}
+                      resumen={orden.autorizadoCliente ? <><b className="text-stone-800">Autorizado</b>{orden.fechaAutorizacion ? ` · ${new Date(orden.fechaAutorizacion).toLocaleDateString("es-AR")}` : ""}</> : orden.estado === "ESPERANDO_REPUESTO" ? "A la espera de repuesto." : "Sin autorización."}
+                    >
+                      <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={() => void guardarAutorizacion("AUTORIZADO")}
+                          disabled={faseEnCurso !== null}
+                          className={btnPrimary + " gap-2"}
+                        >
+                          <FiCheck size={16} /> {faseEnCurso === "autorizacion" ? "Guardando..." : "Cliente autoriza"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void guardarAutorizacion("ESPERA_REPUESTO")}
+                          disabled={faseEnCurso !== null}
+                          className={btnSecondary + " gap-2"}
+                        >
+                          <FiClock size={15} /> Espera repuesto
+                        </button>
+                      </div>
+                    </FaseCard>
+
+                    <FaseCard
+                      paso={3}
+                      titulo="Reparación"
+                      estado={ef(2)}
+                      resumen={orden.reparacionRealizada ? <><b className="text-stone-800">{orden.reparacionRealizada}</b>{` · Mano $${Number(orden.manoDeObra ?? 0).toFixed(2)}`}{orden.recomendaciones ? ` · ${orden.recomendaciones}` : ""}</> : "Sin reparación cargada."}
+                    >
+                      <form onSubmit={(e) => void guardarReparacion(e)} className="space-y-2">
+                        <div>
+                          <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Reparación realizada <Req /></label>
+                          <textarea className={inputCls} rows={2} placeholder="Ej: Se resoldó la fuente y se cambió el fusible..." value={reparacion} onChange={(e) => setReparacion(e.target.value)} />
+                        </div>
+                        <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+                          <div>
+                            <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Mano de obra ($) <TagOpcional /></label>
+                            <input className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={mano} onChange={(e) => setMano(e.target.value)} />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Recomendaciones <TagOpcional /></label>
+                            <textarea className={inputCls} rows={1} placeholder="Ej: Cambiar el cable..." value={reco} onChange={(e) => setReco(e.target.value)} />
+                          </div>
+                        </div>
+                        <button className={btnPrimary + " w-full gap-2"} disabled={faseEnCurso !== null}>
+                          <FiSave size={15} /> {faseEnCurso === "reparacion" ? "Guardando..." : "Guardar reparación"}
+                        </button>
+                      </form>
+                    </FaseCard>
+
+                    <FaseCard
+                      paso={4}
+                      titulo="Cierre y entrega"
+                      estado={ef(3)}
+                      resumen={orden.precioFinal != null ? <><b className="text-stone-800">${Number(orden.precioFinal).toFixed(2)}</b>{orden.conformidadEntregaCliente ? " · Conforme" : ""}{orden.fechaEntrega ? ` · ${new Date(orden.fechaEntrega).toLocaleDateString("es-AR")}` : ""}</> : "Sin precio cargado."}
+                    >
+                      <form onSubmit={(e) => void guardarCierre(e)} className="space-y-2">
+                        <div>
+                          <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Precio final ($) <Req /></label>
+                          <input className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={precio} onChange={(e) => setPrecio(e.target.value)} />
+                        </div>
+                        <label className="flex min-h-[44px] items-center gap-2.5 text-[15px] sm:text-sm">
+                          <input type="checkbox" className="h-5 w-5 shrink-0 accent-blue-800" checked={conformidad} onChange={(e) => setConformidad(e.target.checked)} />
+                          Cliente conforme / equipo entregado
+                        </label>
+                        <button className={btnPrimary + " w-full gap-2"} disabled={faseEnCurso !== null}>
+                          <FiSave size={15} /> {faseEnCurso === "cierre" ? "Guardando..." : "Cerrar y entregar"}
+                        </button>
+                      </form>
+                    </FaseCard>
+                  </>
+                );
+              })()}
             </div>
             <div className="min-w-0 space-y-3 sm:space-y-4">
               <Card>

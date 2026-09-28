@@ -15,7 +15,7 @@ import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Modal } from "@/components/Modal";
-import { Card, PageHeader, Badge, Empty, btnPrimary, btnSecondary, inputCls, IconTile, CargandoPagina } from "@/components/ui";
+import { Card, PageHeader, Badge, Empty, btnPrimary, btnSecondary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
 import type { ApiEnvelope, RolUsuario, Usuario } from "@/lib/types";
 
 const Toast = Swal.mixin({
@@ -35,6 +35,7 @@ export default function UsuariosPage() {
   const router = useRouter();
   const [lista, setLista] = useState<Usuario[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [cargandoLista, setCargandoLista] = useState(true);
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,8 +47,13 @@ export default function UsuariosPage() {
   const [guardandoEdit, setGuardandoEdit] = useState(false);
 
   const cargar = async () => {
-    const res = await api.get<ApiEnvelope<Usuario[]>>("/api/usuario");
-    setLista(res.data);
+    setCargandoLista(true);
+    try {
+      const res = await api.get<ApiEnvelope<Usuario[]>>("/api/usuario");
+      setLista(res.data);
+    } finally {
+      setCargandoLista(false);
+    }
   };
 
   useEffect(() => {
@@ -201,7 +207,11 @@ export default function UsuariosPage() {
         {error && <p className="mb-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-inset ring-red-200">{error}</p>}
         <div className="flex flex-col gap-3 sm:gap-4 lg:grid lg:grid-cols-[1fr_320px]">
           <Card className="order-last lg:order-none">
-            {lista.length === 0 ? <Empty mensaje="Sin usuarios" /> : (
+            {cargandoLista ? (
+              <div className="flex items-center justify-center gap-2 py-8 text-sm font-medium text-stone-500">
+                <Spinner tamano="md" /> Cargando usuarios...
+              </div>
+            ) : lista.length === 0 ? <Empty mensaje="Sin usuarios" /> : (
               <>
                 {/* Cards en móvil: todo en una sola fila */}
                 <ul className="space-y-2 sm:hidden">
