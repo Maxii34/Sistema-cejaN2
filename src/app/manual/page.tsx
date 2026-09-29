@@ -43,7 +43,7 @@ export default function ManualPage() {
         <PageHeader
           eyebrow="Ayuda"
           titulo="Manual de uso"
-          descripcion="Cómo trabaja el taller día a día, explicado paso a paso y sin tecnicismos."
+          descripcion="Cómo trabaja el taller día a día, explicado paso a paso."
         />
 
         <Reveal className="grid gap-3 sm:gap-4 lg:grid-cols-2">
