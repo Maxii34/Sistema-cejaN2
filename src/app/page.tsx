@@ -7,23 +7,86 @@ import {
   FiClipboard,
   FiClock,
   FiPlus,
+  FiSearch,
   FiTool,
   FiUser,
   FiUsers,
+  FiX,
   FiZap,
 } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
-import { Card, Badge, btnPrimary, IconTile, Spinner, CargandoPagina } from "@/components/ui";
+import { Card, Badge, btnPrimary, inputCls, Spinner, CargandoPagina } from "@/components/ui";
 import { Stagger, Item, Lista, ItemLi } from "@/components/motion";
 import type { ApiEnvelope, Cliente, OrdenReparacion, Paged } from "@/lib/types";
 
 const STATS = [
-  { label: "Órdenes", key: "ordenes", href: "/ingreso", icon: FiClipboard, tono: "blue" as const },
-  { label: "Activas", key: "pendientes", href: "/ingreso", icon: FiClock, tono: "brand" as const },
-  { label: "Clientes", key: "clientes", href: "/ingreso", icon: FiUsers, tono: "green" as const },
+  { label: "Órdenes", key: "ordenes", href: "/ingreso", icon: FiClipboard, icono: "bg-blue-600 shadow-[0_6px_12px_-8px_rgba(37,99,235,0.7)]" },
+  { label: "Activas", key: "pendientes", href: "/ingreso", icon: FiClock, icono: "bg-blue-800 shadow-[0_6px_12px_-8px_rgba(30,64,175,0.7)]" },
+  { label: "Clientes", key: "clientes", href: "/ingreso", icon: FiUsers, icono: "bg-emerald-700 shadow-[0_6px_12px_-8px_rgba(4,120,87,0.7)]" },
 ];
+
+function OrdenTarjeta({ o }: { o: OrdenReparacion }) {
+  const cliente = o.equipo?.cliente
+    ? `${o.equipo.cliente.nombre} ${o.equipo.cliente.apellido ?? ""}`.trim()
+    : null;
+  const ultimoMov =
+    o.updatedAt ??
+    (o.historialEstados ?? []).reduce<string | null>(
+      (acc, h) => (!acc || new Date(h.fecha) > new Date(acc) ? h.fecha : acc),
+      null
+    );
+  const fechaHora = (f: string) =>
+    new Date(f).toLocaleString("es-AR", {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  return (
+    <ItemLi className="rounded-xl border border-stone-200/80 bg-stone-50/50 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-ficha text-[13px] font-bold text-stone-900">{o.numero}</span>
+        <Badge tono="violet">{o.estado}</Badge>
+      </div>
+      <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-stone-600">{o.fallaReportada}</p>
+      <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-stone-200/70 pt-2 text-xs">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <FiUser size={13} className="shrink-0 text-blue-700" />
+          <span className="min-w-0">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">Cliente</span>
+            <span className="block truncate font-semibold text-stone-800">{cliente ?? "—"}</span>
+          </span>
+        </div>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <FiTool size={13} className="shrink-0 text-blue-700" />
+          <span className="min-w-0">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">Técnico</span>
+            <span className="block truncate font-semibold text-stone-800">{o.tecnico?.nombre ?? "Sin asignar"}</span>
+          </span>
+        </div>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <FiClock size={13} className="shrink-0 text-blue-700" />
+          <span className="min-w-0">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">Ingreso</span>
+            <span className="font-ficha block truncate font-semibold text-stone-800">{fechaHora(o.fechaIngreso)}</span>
+          </span>
+        </div>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <FiClock size={13} className="shrink-0 text-blue-700" />
+          <span className="min-w-0">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">Actualizado</span>
+            <span className="font-ficha block truncate font-semibold text-stone-800">{ultimoMov ? fechaHora(ultimoMov) : "—"}</span>
+          </span>
+        </div>
+      </dl>
+      <Link href={`/ordenes/${o.id}`} className="mt-2 flex min-h-[40px] items-center justify-center gap-0.5 rounded-lg bg-blue-800 text-[13px] font-semibold text-white active:bg-blue-900">
+        Abrir orden <FiChevronRight size={14} />
+      </Link>
+    </ItemLi>
+  );
+}
 
 export default function DashboardPage() {
   const { usuario, cargando } = useRequireAuth();
@@ -32,28 +95,66 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [cargandoDatos, setCargandoDatos] = useState(true);
 
+  // Filtros: manejan lo que muestra "Últimas órdenes"
+  const [busqueda, setBusqueda] = useState("");
+  const [busquedaDeb, setBusquedaDeb] = useState("");
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
+  const hayFiltros = busquedaDeb.trim() !== "" || fechaDesde !== "" || fechaHasta !== "";
+
   useEffect(() => {
     if (!usuario) return;
     (async () => {
       try {
-        const [o, c] = await Promise.all([
-          api.get<ApiEnvelope<Paged<OrdenReparacion> | OrdenReparacion[]>>("/api/orden-reparacion"),
-          api.get<ApiEnvelope<Cliente[]>>("/api/cliente"),
-        ]);
-        const lista = Array.isArray(o.data) ? o.data : o.data.data;
-        setStats({
-          ordenes: lista.length,
-          clientes: c.data.length,
-          pendientes: lista.filter((x) => !["ENTREGADO", "CANCELADO"].includes(x.estado)).length,
-        });
-        setUltimas(lista.slice(0, 5));
+        const c = await api.get<ApiEnvelope<Cliente[]>>("/api/cliente");
+        setStats((s) => ({ ...s, clientes: c.data.length }));
       } catch (e) {
         setError(e instanceof Error ? e.message : "No se pudo cargar el panel. Revisá la conexión e intentá de nuevo.");
-      } finally {
-        setCargandoDatos(false);
       }
     })();
   }, [usuario]);
+
+  // Debounce del texto (evita un request por tecla)
+  useEffect(() => {
+    const t = setTimeout(() => setBusquedaDeb(busqueda), 350);
+    return () => clearTimeout(t);
+  }, [busqueda]);
+
+  // Lista de órdenes: sin filtros trae las últimas; con filtros, el resultado del backend
+  useEffect(() => {
+    if (!usuario) return;
+    setCargandoDatos(true);
+    const params = new URLSearchParams({ limit: "100" });
+    if (busquedaDeb.trim()) params.set("search", busquedaDeb.trim());
+    if (fechaDesde) params.set("fechaDesde", fechaDesde);
+    if (fechaHasta) params.set("fechaHasta", fechaHasta);
+    api
+      .get<ApiEnvelope<Paged<OrdenReparacion> | OrdenReparacion[]>>(`/api/orden-reparacion?${params}`)
+      .then((o) => {
+        const esPagina = !Array.isArray(o.data) && "meta" in o.data;
+        const lista = Array.isArray(o.data) ? o.data : o.data.data;
+        setStats((s) => ({
+          ...s,
+          ordenes: hayFiltros ? s.ordenes : esPagina ? (o.data as Paged<OrdenReparacion>).meta.total : lista.length,
+          pendientes: hayFiltros
+            ? s.pendientes
+            : lista.filter((x) => !["ENTREGADO", "CANCELADO"].includes(x.estado)).length,
+        }));
+        setUltimas(hayFiltros ? lista : lista.slice(0, 5));
+      })
+      .catch((e) => {
+        setError(e instanceof Error ? e.message : "No se pudo cargar el panel. Revisá la conexión e intentá de nuevo.");
+      })
+      .finally(() => setCargandoDatos(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usuario, busquedaDeb, fechaDesde, fechaHasta]);
+
+  const limpiarFiltros = () => {
+    setBusqueda("");
+    setBusquedaDeb("");
+    setFechaDesde("");
+    setFechaHasta("");
+  };
 
   if (cargando || !usuario) return <CargandoPagina />;
 
@@ -90,103 +191,105 @@ export default function DashboardPage() {
           {STATS.map((s) => (
             <Item key={s.label} className="min-w-0">
               <Link href={s.href} className="block min-w-0">
-              <Card className="card-lift h-full px-3 py-3 sm:p-5">
-                <span className="hidden sm:block">
-                  <IconTile tono={s.tono}>
-                    <s.icon size={18} />
-                  </IconTile>
-                </span>
-                <span className="sm:hidden">
-                  <IconTile tono={s.tono}>
-                    <s.icon size={16} />
-                  </IconTile>
-                </span>
-                <p className="mt-2 truncate text-[10px] font-bold uppercase tracking-wider text-stone-500 sm:text-xs">
-                  {s.label}
-                </p>
-                <p className="font-ficha text-2xl font-extrabold text-stone-900 sm:text-3xl">
-                  {stats[s.key as keyof typeof stats]}
-                </p>
+              <Card className="card-lift h-full px-2.5 py-2 sm:px-4 sm:py-3">
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white sm:h-9 sm:w-9 sm:rounded-xl ${s.icono}`}>
+                    <s.icon size={15} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="font-ficha block text-lg font-extrabold leading-none text-stone-900 sm:text-2xl">
+                      {stats[s.key as keyof typeof stats]}
+                    </span>
+                    <span className="mt-1 block truncate text-[10px] font-bold uppercase tracking-wider text-stone-500 sm:text-[11px]">
+                      {s.label}
+                    </span>
+                  </span>
+                </div>
               </Card>
               </Link>
             </Item>
           ))}
         </Stagger>
 
+        <Card className="rise rise-2 mt-3 sm:mt-4">
+          <h2 className="flex items-center gap-2 font-bold text-stone-900">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white shadow-[0_6px_12px_-8px_rgba(37,99,235,0.7)] sm:h-9 sm:w-9 sm:rounded-xl">
+              <FiSearch size={15} />
+            </span>
+            <span className="min-w-0 flex-1">
+              Buscar órdenes
+              <span className="block text-xs font-normal text-stone-500">
+                Por N° de orden, cliente o técnico + fecha de ingreso
+              </span>
+            </span>
+            {hayFiltros && (
+              <button
+                type="button"
+                onClick={limpiarFiltros}
+                className="inline-flex min-h-[36px] shrink-0 items-center gap-1 rounded-lg border border-stone-300 bg-white px-2.5 text-xs font-semibold text-stone-600 shadow-sm active:bg-stone-100"
+              >
+                <FiX size={14} /> Limpiar
+              </button>
+            )}
+          </h2>
+          <div className="mt-3 grid grid-cols-1 gap-2 lg:grid-cols-[1fr_170px_170px]">
+            <div className="relative">
+              <FiSearch size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+              <input
+                className={inputCls + " pl-9"}
+                placeholder="N° de orden, cliente o técnico..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Desde</label>
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={fechaDesde}
+                  max={fechaHasta || undefined}
+                  onChange={(e) => setFechaDesde(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Hasta</label>
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={fechaHasta}
+                  min={fechaDesde || undefined}
+                  onChange={(e) => setFechaHasta(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </Card>
+
         <Card className="rise rise-3 mt-3 sm:mt-4">
           <h2 className="flex items-center gap-2 font-bold text-stone-900">
-            <IconTile tono="brand">
-              <FiTool size={16} />
-            </IconTile>
-            Últimas órdenes
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-800 text-white shadow-[0_6px_12px_-8px_rgba(30,64,175,0.7)] sm:h-9 sm:w-9 sm:rounded-xl">
+              <FiTool size={15} />
+            </span>
+            <span className="min-w-0 flex-1">
+              {hayFiltros ? `Órdenes encontradas (${ultimas.length})` : "Últimas órdenes"}
+            </span>
           </h2>
           {cargandoDatos ? (
             <div className="mt-3 flex items-center justify-center gap-2 py-8 text-sm font-medium text-stone-500">
-              <Spinner tamano="md" /> Cargando órdenes...
+              <Spinner tamano="md" /> {hayFiltros ? "Buscando órdenes..." : "Cargando órdenes..."}
             </div>
           ) : (
           <Lista className="tabla-scroll mt-3 grid max-h-[62dvh] gap-2 overflow-y-auto pb-1 text-sm sm:max-h-none sm:grid-cols-2 sm:overflow-visible sm:pb-0 xl:grid-cols-4">
-            {ultimas.map((o) => {
-              const cliente = o.equipo?.cliente
-                ? `${o.equipo.cliente.nombre} ${o.equipo.cliente.apellido ?? ""}`.trim()
-                : null;
-              const ultimoMov =
-                o.updatedAt ??
-                (o.historialEstados ?? []).reduce<string | null>(
-                  (acc, h) => (!acc || new Date(h.fecha) > new Date(acc) ? h.fecha : acc),
-                  null
-                );
-              const fechaHora = (f: string) =>
-                new Date(f).toLocaleString("es-AR", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                });
-              return (
-                <ItemLi key={o.id} className="rounded-xl border border-stone-200/80 bg-stone-50/50 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-ficha text-[13px] font-bold text-stone-900">{o.numero}</span>
-                    <Badge tono="violet">{o.estado}</Badge>
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-stone-600">{o.fallaReportada}</p>
-                  <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-stone-200/70 pt-2 text-xs">
-                    <div className="flex min-w-0 items-center gap-1.5">
-                      <FiUser size={13} className="shrink-0 text-blue-700" />
-                      <span className="min-w-0">
-                        <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">Cliente</span>
-                        <span className="block truncate font-semibold text-stone-800">{cliente ?? "—"}</span>
-                      </span>
-                    </div>
-                    <div className="flex min-w-0 items-center gap-1.5">
-                      <FiTool size={13} className="shrink-0 text-blue-700" />
-                      <span className="min-w-0">
-                        <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">Técnico</span>
-                        <span className="block truncate font-semibold text-stone-800">{o.tecnico?.nombre ?? "Sin asignar"}</span>
-                      </span>
-                    </div>
-                    <div className="flex min-w-0 items-center gap-1.5">
-                      <FiClock size={13} className="shrink-0 text-blue-700" />
-                      <span className="min-w-0">
-                        <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">Ingreso</span>
-                        <span className="font-ficha block truncate font-semibold text-stone-800">{fechaHora(o.fechaIngreso)}</span>
-                      </span>
-                    </div>
-                    <div className="flex min-w-0 items-center gap-1.5">
-                      <FiClock size={13} className="shrink-0 text-blue-700" />
-                      <span className="min-w-0">
-                        <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">Actualizado</span>
-                        <span className="font-ficha block truncate font-semibold text-stone-800">{ultimoMov ? fechaHora(ultimoMov) : "—"}</span>
-                      </span>
-                    </div>
-                  </dl>
-                  <Link href={`/ordenes/${o.id}`} className="mt-2 flex min-h-[40px] items-center justify-center gap-0.5 rounded-lg bg-blue-800 text-[13px] font-semibold text-white active:bg-blue-900">
-                    Abrir orden <FiChevronRight size={14} />
-                  </Link>
-                </ItemLi>
-              );
-            })}
-            {ultimas.length === 0 && <p className="py-2 text-stone-500">Sin órdenes todavía.</p>}
+            {ultimas.map((o) => (
+              <OrdenTarjeta key={o.id} o={o} />
+            ))}
+            {ultimas.length === 0 && (
+              <p className="py-2 text-stone-500">
+                {hayFiltros ? "Sin resultados para esos filtros." : "Sin órdenes todavía."}
+              </p>
+            )}
           </Lista>
           )}
         </Card>

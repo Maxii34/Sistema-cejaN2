@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  FiCamera,
-  FiChevronDown,
   FiClipboard,
   FiEye,
   FiPlus,
@@ -26,7 +24,6 @@ import {
   Spinner,
   CargandoPagina,
 } from "@/components/ui";
-import { ImageUploader } from "@/components/ImageUploader";
 import { Stagger, Item } from "@/components/motion";
 import type {
   ApiEnvelope,
@@ -55,7 +52,6 @@ export default function HistorialEquiposPage() {
   >("TODOS");
   const [error, setError] = useState<string | null>(null);
   const [cargandoLista, setCargandoLista] = useState(true);
-  const [fotos, setFotos] = useState<Record<number, string | null>>({});
 
   useEffect(() => {
     if (!usuario) return;
@@ -71,16 +67,6 @@ export default function HistorialEquiposPage() {
         ]);
         setEquipos(eq.data);
         setOrdenes(Array.isArray(od.data) ? od.data : od.data.data);
-        const map: Record<number, string | null> = {};
-        for (const q of eq.data) {
-          try {
-            const v = localStorage.getItem(`equipo-img:${q.id}`);
-            if (v) map[q.id] = v;
-          } catch {
-            // noop
-          }
-        }
-        setFotos(map);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar el historial");
       } finally {
@@ -187,7 +173,7 @@ export default function HistorialEquiposPage() {
                 limite.setDate(limite.getDate() + (ent.garantiaDias ?? 90));
                 return limite.getTime() >= Date.now() ? ent : null;
               })();
-              const portada = actual?.fotos?.[0]?.url ?? fotos[q.id] ?? null;
+              const portada = actual?.fotos?.[0]?.url ?? null;
               return (
                 <Item key={q.id} className="min-w-0">
                 <Card className="flex h-full min-w-0 flex-col overflow-hidden">
@@ -332,24 +318,6 @@ export default function HistorialEquiposPage() {
                       </ol>
                     )}
                   </div>
-
-                  <details className="group mt-2.5">
-                    <summary className="flex min-h-[40px] cursor-pointer list-none items-center justify-between rounded-xl px-1 text-xs font-semibold text-stone-500 active:bg-stone-50 [&::-webkit-details-marker]:hidden">
-                      <span className="flex items-center gap-1.5">
-                        <FiCamera size={14} className="text-blue-700" /> Foto del equipo
-                      </span>
-                      <FiChevronDown size={15} className="transition-transform group-open:rotate-180" />
-                    </summary>
-                    <div className="mt-1.5">
-                      <ImageUploader
-                        equipoKey={String(q.id)}
-                        value={fotos[q.id] ?? null}
-                        onChange={(v) =>
-                          setFotos((p) => ({ ...p, [q.id]: v }))
-                        }
-                      />
-                    </div>
-                  </details>
                 </Card>
                 </Item>
               );

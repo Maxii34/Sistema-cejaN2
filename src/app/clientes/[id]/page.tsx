@@ -174,7 +174,7 @@ export default function ClienteDetallePage() {
                 <button
                   onClick={() => setEditando(true)}
                   aria-label="Editar datos del cliente"
-                  className="inline-flex min-h-[40px] shrink-0 items-center justify-center gap-1.5 rounded-xl border border-stone-300 bg-white px-3 text-xs font-semibold text-stone-700 shadow-sm active:bg-stone-100"
+                  className="inline-flex min-h-[40px] shrink-0 items-center justify-center gap-1.5 rounded-lg bg-blue-800 px-3 py-1.5 text-xs font-semibold text-white active:bg-blue-900"
                 >
                   <FiEdit size={14} />
                   <span className="hidden min-[420px]:inline">Editar datos</span>
@@ -183,7 +183,7 @@ export default function ClienteDetallePage() {
                 <button
                   onClick={cancelarEdicion}
                   aria-label="Cancelar edición"
-                  className="inline-flex min-h-[40px] shrink-0 items-center justify-center gap-1.5 rounded-xl border border-stone-300 bg-white px-3 text-xs font-semibold text-stone-700 shadow-sm active:bg-stone-100"
+                  className="inline-flex min-h-[40px] shrink-0 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 active:bg-red-50"
                 >
                   <FiX size={14} />
                   <span className="hidden min-[420px]:inline">Cancelar</span>
@@ -209,7 +209,7 @@ export default function ClienteDetallePage() {
                   type="button"
                   onClick={() => setVerTodos((v) => !v)}
                   aria-expanded={verTodos}
-                  className={btnSecondary + " mt-3 w-full gap-2"}
+                  className={btnPrimary + " mt-3 w-full gap-2"}
                 >
                   {verTodos ? "Ocultar datos" : "Ver datos"}
                   <FiChevronDown size={15} className={`transition-transform ${verTodos ? "rotate-180" : ""}`} />
@@ -301,7 +301,7 @@ export default function ClienteDetallePage() {
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Observaciones</label>
                 <input className={inputCls} placeholder="Observaciones" value={eq.observaciones} onChange={(e) => setEq({ ...eq, observaciones: e.target.value })} />
               </div>
-              <button className={btnSecondary + " min-[420px]:col-span-2 gap-2"}>
+              <button className={btnPrimary + " min-[420px]:col-span-2 gap-2"}>
                 <FiPlus size={15} /> Agregar equipo
               </button>
             </form>
