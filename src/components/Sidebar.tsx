@@ -157,7 +157,7 @@ export function Sidebar() {
       </header>
 
       {/* Sidebar escritorio */}
-      <aside className="hidden w-64 shrink-0 flex-col bg-gradient-to-b from-[#0c1428] via-[#111d3d] to-[#0c1428] text-zinc-200 lg:flex">
+      <aside className="hidden w-64 shrink-0 flex-col bg-gradient-to-b from-[#0c1428] via-[#111d3d] to-[#0c1428] text-zinc-200 lg:sticky lg:top-0 lg:flex lg:h-screen">
         <div className="flex items-center gap-3 px-5 pb-5 pt-6">
           <BrandMark size="lg" />
           <div>
@@ -167,7 +167,7 @@ export function Sidebar() {
             <p className="text-xs font-medium text-slate-400">Taller de reparaciones</p>
           </div>
         </div>
-        <nav className="flex-1 space-y-1 px-3">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3">
           {links.map((l) => {
             const activo = isActive(pathname, l.href);
             return (
@@ -201,10 +201,10 @@ export function Sidebar() {
           >
             <FiBookOpen size={13} /> Manual de uso
           </Link>
-          <VersionInfo />
         </nav>
         <div className="border-t border-white/10 p-4">
           <UserCard alSalir={() => void logout()} />
+          <VersionInfo />
         </div>
       </aside>
 

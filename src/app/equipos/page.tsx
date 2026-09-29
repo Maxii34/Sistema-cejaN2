@@ -3,9 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  FiChevronDown,
+  FiChevronUp,
   FiClipboard,
   FiEye,
   FiPlus,
+  FiSearch,
   FiTag,
   FiTool,
   FiUser,
@@ -52,6 +55,7 @@ export default function HistorialEquiposPage() {
   >("TODOS");
   const [error, setError] = useState<string | null>(null);
   const [cargandoLista, setCargandoLista] = useState(true);
+  const [historialAbierto, setHistorialAbierto] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     if (!usuario) return;
@@ -131,25 +135,40 @@ export default function HistorialEquiposPage() {
           </p>
         )}
 
-        <div className="mb-3 flex flex-col gap-2 sm:mb-4 sm:flex-row sm:flex-wrap">
-          <input
-            className={inputCls + " sm:max-w-md sm:flex-1"}
-            placeholder="Buscar por tipo, marca, modelo, serie o cliente..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
-          <select
-            className={inputCls + " sm:max-w-[200px]"}
-            value={filtroVisitas}
-            onChange={(e) =>
-              setFiltroVisitas(e.target.value as typeof filtroVisitas)
-            }
-          >
-            <option value="TODOS">Todos</option>
-            <option value="CON_VISITAS">Con visitas</option>
-            <option value="SIN_VISITAS">Sin visitas</option>
-          </select>
-        </div>
+        <Card className="mb-3 sm:mb-4">
+          <h2 className="flex items-center gap-2 font-bold text-stone-900">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white shadow-[0_6px_12px_-8px_rgba(37,99,235,0.7)] sm:h-9 sm:w-9 sm:rounded-xl">
+              <FiSearch size={15} />
+            </span>
+            <span className="min-w-0 flex-1">
+              Buscar equipos
+              <span className="block text-xs font-normal text-stone-500">
+                Por tipo, marca, modelo, serie o cliente + visitas
+              </span>
+            </span>
+          </h2>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <input
+              className={inputCls + " sm:min-w-0 sm:flex-1"}
+              placeholder="Buscar por tipo, marca, modelo, serie o cliente..."
+              aria-label="Buscar equipos"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+            />
+            <select
+              className={inputCls + " sm:w-[200px] sm:shrink-0"}
+              aria-label="Filtrar por visitas"
+              value={filtroVisitas}
+              onChange={(e) =>
+                setFiltroVisitas(e.target.value as typeof filtroVisitas)
+              }
+            >
+              <option value="TODOS">Todos</option>
+              <option value="CON_VISITAS">Con visitas</option>
+              <option value="SIN_VISITAS">Sin visitas</option>
+            </select>
+          </div>
+        </Card>
 
         {cargandoLista ? (
           <div className="flex items-center justify-center gap-2 py-8 text-sm font-medium text-stone-500">
@@ -161,7 +180,7 @@ export default function HistorialEquiposPage() {
             detalle="Primero creá un cliente y agregale equipos desde su ficha."
           />
         ) : (
-          <Stagger className="grid items-start gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Stagger className="grid items-start gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtrados.map((q) => {
               const visitas = historialPorEquipo.get(q.id) ?? [];
               const actual = visitas[0];
@@ -174,9 +193,10 @@ export default function HistorialEquiposPage() {
                 return limite.getTime() >= Date.now() ? ent : null;
               })();
               const portada = actual?.fotos?.[0]?.url ?? null;
+              const abierto = !!historialAbierto[q.id];
               return (
-                <Item key={q.id} className="min-w-0">
-                <Card className="flex h-full min-w-0 flex-col overflow-hidden">
+                <Item key={q.id} className={abierto ? "relative z-30 min-w-0" : "relative z-0 min-w-0"}>
+                <Card className="flex h-full min-w-0 flex-col overflow-visible shadow-sm transition-all duration-200 sm:hover:-translate-y-1 sm:hover:border-blue-200 sm:hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.35)]">
                   {/* Foto con contador de visitas superpuesto */}
                   <div className="relative mb-3">
                     {portada ? (
@@ -242,80 +262,108 @@ export default function HistorialEquiposPage() {
                     </p>
                   )}
 
-                  {/* Historial */}
-                  <div className="mt-3 border-t border-stone-200/70 pt-2.5">
-                    <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-stone-400">
-                      <FiClipboard size={13} /> Historial
-                    </p>
-                    <div className={`mt-2 flex items-center justify-between gap-2 rounded-xl px-2.5 py-2 ring-1 ring-inset ${
-                      abierta
-                        ? "bg-amber-50/80 ring-amber-200/70"
-                        : garantia
-                          ? "bg-emerald-50/80 ring-emerald-200/70"
-                          : "bg-blue-50/70 ring-blue-200/60"
-                    }`}>
-                      <span className={`text-xs font-medium ${abierta ? "text-amber-900" : garantia ? "text-emerald-900" : "text-blue-900"}`}>
-                        {abierta
-                          ? `En taller: ${abierta.numero}`
-                          : garantia
-                            ? `Garantía vigente (${garantia.numero})`
-                            : visitas.length === 0
-                              ? "Sin ingresos todavía"
-                              : "Ingresar este equipo de nuevo"}
+                  {/* Historial colapsable flotante (no altera alturas) */}
+                  <div className="relative mt-3 border-t border-stone-200/70 pt-2.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setHistorialAbierto((s) => ({ ...s, [q.id]: !s[q.id] }))
+                      }
+                      aria-expanded={abierto}
+                          className="flex min-h-[36px] w-full items-center justify-between gap-2 rounded-lg border border-blue-200/70 bg-blue-50/70 px-2.5 text-[11px] font-bold uppercase tracking-wider text-blue-900 transition-colors active:bg-blue-100 sm:hover:border-blue-300 sm:hover:bg-blue-100"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <FiClipboard size={13} /> Historial ({visitas.length})
                       </span>
-                      {abierta ? (
-                        <Link
-                          href={`/ordenes/${abierta.id}`}
-                          title={`Abrir orden ${abierta.numero}`}
-                          aria-label={`Abrir orden ${abierta.numero}`}
-                          className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg bg-amber-600 text-white active:bg-amber-700"
-                        >
-                          <FiEye size={16} />
-                        </Link>
-                      ) : (
-                        <Link
-                          href={`/ordenes/nueva?equipoId=${q.id}${garantia ? "&garantia=1" : ""}`}
-                          title={garantia ? `Ingreso por garantía de ${q.tipo} ${q.marca}` : `Crear recepción de ${q.tipo} ${q.marca}`}
-                          aria-label={garantia ? `Ingreso por garantía de ${q.tipo} ${q.marca}` : `Crear recepción de ${q.tipo} ${q.marca}`}
-                          className={`inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg text-white ${garantia ? "bg-emerald-700 active:bg-emerald-800" : "bg-blue-800 active:bg-blue-900"}`}
-                        >
-                          <FiPlus size={16} />
-                        </Link>
-                      )}
-                    </div>
-                    {visitas.length === 0 ? null : (
-                      <ol className="mt-2 space-y-1.5">
-                        {visitas.map((o) => (
-                          <li
-                            key={o.id}
-                            className="flex items-center gap-2 rounded-xl bg-stone-50 px-2.5 py-2 text-xs ring-1 ring-inset ring-stone-200/60"
-                          >
-                            <span className="min-w-0 flex-1">
-                              <span className="flex items-center justify-between gap-2">
-                                <span className="font-ficha truncate font-bold text-stone-900">
-                                  {o.numero}
-                                </span>
-                                <span className="shrink-0 text-stone-400">
-                                  {new Date(o.fechaIngreso).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" })}
-                                </span>
-                              </span>
-                              <span className="mt-0.5 block">
-                                <Badge tono={tonoEstado(o.estado)}>
-                                  {ESTADO_ORDEN_LABEL[o.estado]}
-                                </Badge>
-                              </span>
+                      {abierto ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
+                    </button>
+                    {abierto && (
+                      <div className="absolute inset-x-0 top-full z-20 mt-1 rounded-xl border border-stone-200 bg-white p-2 shadow-[0_18px_36px_-18px_rgba(30,64,175,0.35)]">
+                        {visitas.length === 0 ? (
+                          <div className="flex items-center justify-between gap-2 rounded-xl bg-blue-50/70 px-2.5 py-2 ring-1 ring-inset ring-blue-200/60">
+                            <span className="text-xs font-medium text-blue-900">
+                              Sin ingresos todavía
                             </span>
                             <Link
-                              href={`/ordenes/${o.id}`}
-                              title={`Abrir orden ${o.numero}`}
-                              aria-label={`Abrir orden ${o.numero}`}
-                              className="inline-flex min-h-[36px] min-w-[36px] shrink-0 items-center justify-center rounded-lg border border-stone-300 bg-white text-blue-700 shadow-sm active:bg-blue-50"
+                              href={`/ordenes/nueva?equipoId=${q.id}`}
+                              title={`Crear recepción de ${q.tipo} ${q.marca}`}
+                              aria-label={`Crear recepción de ${q.tipo} ${q.marca}`}
+                              className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg bg-blue-800 text-white active:bg-blue-900"
                             >
-                              <FiEye size={15} />
+                              <FiPlus size={16} />
                             </Link>
-                          </li>
-                        ))}
-                      </ol>
+                          </div>
+                        ) : (
+                          <>
+                            <div className={`flex items-center justify-between gap-2 rounded-xl px-2.5 py-2 ring-1 ring-inset ${
+                              abierta
+                                ? "bg-amber-50/80 ring-amber-200/70"
+                                : garantia
+                                  ? "bg-emerald-50/80 ring-emerald-200/70"
+                                  : "bg-blue-50/70 ring-blue-200/60"
+                            }`}>
+                              <span className={`text-xs font-medium ${abierta ? "text-amber-900" : garantia ? "text-emerald-900" : "text-blue-900"}`}>
+                                {abierta
+                                  ? `En taller: ${abierta.numero}`
+                                  : garantia
+                                    ? `Garantía vigente (${garantia.numero})`
+                                    : "Ingresar este equipo de nuevo"}
+                              </span>
+                              {abierta ? (
+                                <Link
+                                  href={`/ordenes/${abierta.id}`}
+                                  title={`Abrir orden ${abierta.numero}`}
+                                  aria-label={`Abrir orden ${abierta.numero}`}
+                                  className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg bg-amber-600 text-white active:bg-amber-700"
+                                >
+                                  <FiEye size={16} />
+                                </Link>
+                              ) : (
+                                <Link
+                                  href={`/ordenes/nueva?equipoId=${q.id}${garantia ? "&garantia=1" : ""}`}
+                                  title={garantia ? `Ingreso por garantía de ${q.tipo} ${q.marca}` : `Crear recepción de ${q.tipo} ${q.marca}`}
+                                  aria-label={garantia ? `Ingreso por garantía de ${q.tipo} ${q.marca}` : `Crear recepción de ${q.tipo} ${q.marca}`}
+                                  className={`inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg text-white ${garantia ? "bg-emerald-700 active:bg-emerald-800" : "bg-blue-800 active:bg-blue-900"}`}
+                                >
+                                  <FiPlus size={16} />
+                                </Link>
+                              )}
+                            </div>
+                            <ol className="tabla-scroll mt-2 max-h-48 space-y-1.5 overflow-y-auto pr-0.5">
+                              {visitas.map((o) => (
+                                <li
+                                  key={o.id}
+                                  className="flex items-center gap-2 rounded-xl bg-stone-50 px-2.5 py-2 text-xs ring-1 ring-inset ring-stone-200/60"
+                                >
+                                  <span className="min-w-0 flex-1">
+                                    <span className="flex items-center justify-between gap-2">
+                                      <span className="font-ficha truncate font-bold text-stone-900">
+                                        {o.numero}
+                                      </span>
+                                      <span className="shrink-0 text-stone-400">
+                                        {new Date(o.fechaIngreso).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" })}
+                                      </span>
+                                    </span>
+                                    <span className="mt-0.5 block">
+                                      <Badge tono={tonoEstado(o.estado)}>
+                                        {ESTADO_ORDEN_LABEL[o.estado]}
+                                      </Badge>
+                                    </span>
+                                  </span>
+                                  <Link
+                                    href={`/ordenes/${o.id}`}
+                                    title={`Abrir orden ${o.numero}`}
+                                    aria-label={`Abrir orden ${o.numero}`}
+                                    className="inline-flex min-h-[36px] min-w-[36px] shrink-0 items-center justify-center rounded-lg border border-stone-300 bg-white text-blue-700 shadow-sm active:bg-blue-50"
+                                  >
+                                    <FiEye size={15} />
+                                  </Link>
+                                </li>
+                              ))}
+                            </ol>
+                          </>
+                        )}
+                      </div>
                     )}
                   </div>
                 </Card>

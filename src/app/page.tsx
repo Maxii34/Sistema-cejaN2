@@ -45,12 +45,12 @@ function OrdenTarjeta({ o }: { o: OrdenReparacion }) {
       minute: "2-digit",
     });
   return (
-    <ItemLi className="rounded-xl border border-stone-200/80 bg-stone-50/50 p-3">
+    <ItemLi className="flex h-full flex-col rounded-xl border border-stone-200/80 bg-stone-50/50 p-3 shadow-sm transition-all duration-200 sm:hover:-translate-y-1 sm:hover:border-blue-200 sm:hover:bg-white sm:hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.35)]">
       <div className="flex items-center justify-between gap-2">
         <span className="font-ficha text-[13px] font-bold text-stone-900">{o.numero}</span>
         <Badge tono="violet">{o.estado}</Badge>
       </div>
-      <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-stone-600">{o.fallaReportada}</p>
+      <p className="mt-1 line-clamp-2 min-h-[2.6em] text-[13px] leading-snug text-stone-600">{o.fallaReportada}</p>
       <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-stone-200/70 pt-2 text-xs">
         <div className="flex min-w-0 items-center gap-1.5">
           <FiUser size={13} className="shrink-0 text-blue-700" />
@@ -81,9 +81,11 @@ function OrdenTarjeta({ o }: { o: OrdenReparacion }) {
           </span>
         </div>
       </dl>
-      <Link href={`/ordenes/${o.id}`} className="mt-2 flex min-h-[40px] items-center justify-center gap-0.5 rounded-lg bg-blue-800 text-[13px] font-semibold text-white active:bg-blue-900">
-        Abrir orden <FiChevronRight size={14} />
-      </Link>
+      <div className="mt-auto pt-2">
+        <Link href={`/ordenes/${o.id}`} className="flex min-h-[40px] items-center justify-center gap-0.5 rounded-lg bg-blue-800 text-[13px] font-semibold text-white transition-colors active:bg-blue-900 sm:hover:bg-blue-700">
+          Abrir orden <FiChevronRight size={14} />
+        </Link>
+      </div>
     </ItemLi>
   );
 }
@@ -232,37 +234,41 @@ export default function DashboardPage() {
               </button>
             )}
           </h2>
-          <div className="mt-3 grid grid-cols-1 gap-2 lg:grid-cols-[1fr_170px_170px]">
-            <div className="relative">
-              <FiSearch size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+          <div className="mt-3 grid grid-cols-2 items-end gap-2 lg:grid-cols-[1fr_170px_170px]">
+            <div className="col-span-2 lg:col-span-1">
+              <label htmlFor="buscar-ordenes" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Buscar</label>
+              <div className="relative">
+                <FiSearch size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input
+                  id="buscar-ordenes"
+                  className={inputCls + " pl-9"}
+                  placeholder="N° de orden, cliente o técnico..."
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="fecha-desde" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Desde</label>
               <input
-                className={inputCls + " pl-9"}
-                placeholder="N° de orden, cliente o técnico..."
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
+                id="fecha-desde"
+                type="date"
+                className={inputCls}
+                value={fechaDesde}
+                max={fechaHasta || undefined}
+                onChange={(e) => setFechaDesde(e.target.value)}
               />
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Desde</label>
-                <input
-                  type="date"
-                  className={inputCls}
-                  value={fechaDesde}
-                  max={fechaHasta || undefined}
-                  onChange={(e) => setFechaDesde(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Hasta</label>
-                <input
-                  type="date"
-                  className={inputCls}
-                  value={fechaHasta}
-                  min={fechaDesde || undefined}
-                  onChange={(e) => setFechaHasta(e.target.value)}
-                />
-              </div>
+            <div>
+              <label htmlFor="fecha-hasta" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Hasta</label>
+              <input
+                id="fecha-hasta"
+                type="date"
+                className={inputCls}
+                value={fechaHasta}
+                min={fechaDesde || undefined}
+                onChange={(e) => setFechaHasta(e.target.value)}
+              />
             </div>
           </div>
         </Card>
@@ -281,7 +287,7 @@ export default function DashboardPage() {
               <Spinner tamano="md" /> {hayFiltros ? "Buscando órdenes..." : "Cargando órdenes..."}
             </div>
           ) : (
-          <Lista className="tabla-scroll mt-3 grid max-h-[62dvh] gap-2 overflow-y-auto pb-1 text-sm sm:max-h-none sm:grid-cols-2 sm:overflow-visible sm:pb-0 xl:grid-cols-4">
+          <Lista className="tabla-scroll mt-3 grid max-h-[62dvh] items-stretch gap-2 overflow-y-auto pb-1 text-sm sm:max-h-none sm:grid-cols-2 sm:overflow-visible sm:pb-0 xl:grid-cols-4">
             {ultimas.map((o) => (
               <OrdenTarjeta key={o.id} o={o} />
             ))}
