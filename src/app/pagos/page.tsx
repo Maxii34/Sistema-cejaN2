@@ -154,15 +154,15 @@ function PagosForm() {
         <PageHeader eyebrow="Caja del taller" titulo="Pagos" descripcion="Historial de caja y registro de cobros." />
         {error && <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
-        <Stagger className="mb-3 grid grid-cols-3 gap-2 sm:mb-4 sm:gap-4">
-          <Item className="min-w-0">
-            <Card className="h-full px-2.5 py-2 sm:px-4 sm:py-3">
+        <Stagger className="mb-3 grid grid-cols-2 gap-2 sm:mb-4 sm:grid-cols-3 sm:gap-4">
+          <Item className="col-span-2 min-w-0 sm:col-span-1">
+            <Card className="h-full px-3 py-2.5 sm:px-4 sm:py-3">
               <div className="flex items-center gap-2 sm:gap-2.5">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-700 text-white shadow-[0_6px_12px_-8px_rgba(4,120,87,0.7)] sm:h-9 sm:w-9 sm:rounded-xl">
                   <FiDollarSign size={15} />
                 </span>
                 <span className="min-w-0">
-                  <span className="font-ficha block truncate text-base font-extrabold leading-none text-stone-900 sm:text-2xl">
+                  <span className="font-ficha block truncate text-xl font-extrabold leading-none text-stone-900 sm:text-2xl">
                     ${total.toFixed(2)}
                   </span>
                   <span className="mt-1 block truncate text-[10px] font-bold uppercase tracking-wider text-stone-500 sm:text-[11px]">
@@ -238,7 +238,7 @@ function PagosForm() {
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-700 text-white">
                         <FiDollarSign size={15} />
                       </span>
-                      <span className="min-w-0 flex-1">
+                      <span className="min-w-0 flex-1 pr-1 sm:pr-0">
                         <span className="flex min-w-0 items-center gap-2">
                           <span className="font-ficha truncate font-bold text-stone-900">
                             {orden?.numero ?? `Orden #${p.ordenId}`}
@@ -247,16 +247,16 @@ function PagosForm() {
                             <Badge tono="green">{MEDIO_LABEL[p.medioPago]}</Badge>
                           </span>
                         </span>
-                        <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs text-stone-500">
-                          <FiCalendar size={12} className="shrink-0" />
-                          <span className="shrink-0">
+                        <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-stone-500">
+                          <span className="inline-flex shrink-0 items-center gap-1">
+                            <FiCalendar size={12} />
                             {new Date(p.fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit" })}
                           </span>
                           {cliente && (
                             <span className="min-w-0 truncate">· {cliente}</span>
                           )}
-                          <span className="shrink-0 min-[420px]:hidden">
-                            · <FiCreditCard size={12} className="mr-0.5 inline" />{MEDIO_LABEL[p.medioPago]}
+                          <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap min-[420px]:hidden">
+                            · <FiCreditCard size={12} />{MEDIO_LABEL[p.medioPago]}
                           </span>
                         </span>
                       </span>
