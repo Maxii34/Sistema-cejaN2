@@ -29,6 +29,9 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  /* Reserva el espacio de la barra de scroll: abrir/cerrar modales
+     ya no corre el layout (iconos del sidebar) a los costados. */
+  scrollbar-gutter: stable;
 }
 
 body {
