@@ -1,31 +1,51 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { FiX } from "react-icons/fi";
+
+/**
+ * Pila de modales abiertos. El scroll del fondo se libera recién cuando se
+ * cierra el último, y Escape cierra solo el de arriba (no todos a la vez).
+ */
+const pilaModales: Array<() => void> = [];
 
 export function Modal({
   titulo,
   onClose,
   children,
   ancho = "max-w-lg",
+  lineaSuperior = true,
 }: {
   titulo: string;
   onClose: () => void;
   children: React.ReactNode;
   ancho?: string;
+  /** Oculta la línea azul superior (útil en visores de fotos). */
+  lineaSuperior?: boolean;
 }) {
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  useEffect(() => {
+    const cerrar = () => onCloseRef.current();
+    pilaModales.push(cerrar);
+    document.body.style.overflow = "hidden";
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && pilaModales[pilaModales.length - 1] === cerrar) {
+        cerrar();
+      }
     };
     document.addEventListener("keydown", handler);
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", handler);
-      document.body.style.overflow = "";
+      const i = pilaModales.lastIndexOf(cerrar);
+      if (i >= 0) pilaModales.splice(i, 1);
+      if (pilaModales.length === 0) document.body.style.overflow = "";
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <motion.div
@@ -46,8 +66,10 @@ export function Modal({
         exit={{ opacity: 0, y: 32, scale: 0.98 }}
         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-blue-800" aria-hidden />
-        <div className="mb-4 flex items-center justify-between gap-2 pt-1">
+        {lineaSuperior && (
+          <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-blue-800" aria-hidden />
+        )}
+        <div className={`flex items-center justify-between gap-2 ${lineaSuperior ? "mb-4 pt-1" : "mb-3"}`}>
           <h2 className="min-w-0 truncate text-lg font-bold text-zinc-900">{titulo}</h2>
           <button
             onClick={onClose}
