@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { FiX } from "react-icons/fi";
+
+/**
+ * Pila de modales abiertos. El scroll del fondo se libera recién cuando se
+ * cierra el último, y Escape cierra solo el de arriba (no todos a la vez).
+ */
+const pilaModales: Array<() => void> = [];
 
 export function Modal({
   titulo,
@@ -18,17 +24,28 @@ export function Modal({
   /** Oculta la línea azul superior (útil en visores de fotos). */
   lineaSuperior?: boolean;
 }) {
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  useEffect(() => {
+    const cerrar = () => onCloseRef.current();
+    pilaModales.push(cerrar);
+    document.body.style.overflow = "hidden";
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && pilaModales[pilaModales.length - 1] === cerrar) {
+        cerrar();
+      }
     };
     document.addEventListener("keydown", handler);
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", handler);
-      document.body.style.overflow = "";
+      const i = pilaModales.lastIndexOf(cerrar);
+      if (i >= 0) pilaModales.splice(i, 1);
+      if (pilaModales.length === 0) document.body.style.overflow = "";
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <motion.div
