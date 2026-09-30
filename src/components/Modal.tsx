@@ -9,11 +9,14 @@ export function Modal({
   onClose,
   children,
   ancho = "max-w-lg",
+  lineaSuperior = true,
 }: {
   titulo: string;
   onClose: () => void;
   children: React.ReactNode;
   ancho?: string;
+  /** Oculta la línea azul superior (útil en visores de fotos). */
+  lineaSuperior?: boolean;
 }) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -46,8 +49,10 @@ export function Modal({
         exit={{ opacity: 0, y: 32, scale: 0.98 }}
         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-blue-800" aria-hidden />
-        <div className="mb-4 flex items-center justify-between gap-2 pt-1">
+        {lineaSuperior && (
+          <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-blue-800" aria-hidden />
+        )}
+        <div className={`flex items-center justify-between gap-2 ${lineaSuperior ? "mb-4 pt-1" : "mb-3"}`}>
           <h2 className="min-w-0 truncate text-lg font-bold text-zinc-900">{titulo}</h2>
           <button
             onClick={onClose}

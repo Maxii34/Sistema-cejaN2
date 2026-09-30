@@ -477,7 +477,16 @@ export default function OrdenDetallePage() {
                   {(orden.pagos ?? []).length === 0 && <li className="py-1.5 text-zinc-600">Todavía no hay pagos registrados.</li>}
                 </ul>
               </Card>
-              <FotosOrden ordenId={orden.id} fotos={orden.fotos ?? []} onCambio={() => void cargar()} />
+              <FotosOrden
+                ordenId={orden.id}
+                fotos={orden.fotos ?? []}
+                onCambio={() => void cargar()}
+                nombreCliente={
+                  orden.equipo?.cliente
+                    ? `${orden.equipo.cliente.nombre} ${orden.equipo.cliente.apellido ?? ""}`.trim()
+                    : undefined
+                }
+              />
               <Card>
                 <h2 className="flex items-center gap-2 font-bold text-stone-900">
                   <IconTile tono="violet"><FiClock size={16} /></IconTile> Historial de estados
