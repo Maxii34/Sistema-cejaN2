@@ -27,6 +27,7 @@ import {
   Spinner,
   CargandoPagina,
 } from "@/components/ui";
+import { motion } from "motion/react";
 import { Stagger, Item } from "@/components/motion";
 import type {
   ApiEnvelope,
@@ -195,7 +196,7 @@ export default function HistorialEquiposPage() {
               const portada = actual?.fotos?.[0]?.url ?? null;
               const abierto = !!historialAbierto[q.id];
               return (
-                <Item key={q.id} className={abierto ? "relative z-30 min-w-0" : "relative z-0 min-w-0"}>
+                <Item key={q.id} className="min-w-0">
                 <Card className="flex h-full min-w-0 flex-col overflow-visible shadow-sm transition-all duration-200 sm:hover:-translate-y-1 sm:hover:border-blue-200 sm:hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.35)]">
                   {/* Foto con contador de visitas superpuesto */}
                   <div className="relative mb-3">
@@ -262,8 +263,8 @@ export default function HistorialEquiposPage() {
                     </p>
                   )}
 
-                  {/* Historial colapsable flotante (no altera alturas) */}
-                  <div className="relative mt-3 border-t border-stone-200/70 pt-2.5">
+                  {/* Historial colapsable en flujo: empuja el contenido de abajo */}
+                  <div className="mt-3 border-t border-stone-200/70 pt-2.5">
                     <button
                       type="button"
                       onClick={() =>
@@ -278,7 +279,12 @@ export default function HistorialEquiposPage() {
                       {abierto ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
                     </button>
                     {abierto && (
-                      <div className="absolute inset-x-0 top-full z-20 mt-1 rounded-xl border border-stone-200 bg-white p-2 shadow-[0_18px_36px_-18px_rgba(30,64,175,0.35)]">
+                      <motion.div
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                        className="mt-2 rounded-xl border border-stone-200 bg-white p-2 shadow-[0_18px_36px_-18px_rgba(30,64,175,0.35)]"
+                      >
                         {visitas.length === 0 ? (
                           <div className="flex items-center justify-between gap-2 rounded-xl bg-blue-50/70 px-2.5 py-2 ring-1 ring-inset ring-blue-200/60">
                             <span className="text-xs font-medium text-blue-900">
@@ -363,7 +369,7 @@ export default function HistorialEquiposPage() {
                             </ol>
                           </>
                         )}
-                      </div>
+                      </motion.div>
                     )}
                   </div>
                 </Card>

@@ -19,7 +19,7 @@ import { Reveal } from "@/components/motion";
 
 function Paso({ n, titulo, texto }: { n: number; titulo: string; texto: string }) {
   return (
-    <li className="flex gap-3">
+    <li className="flex gap-3 border-b border-dashed border-stone-200 pb-3 last:border-0 last:pb-0">
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-800 text-[13px] font-extrabold text-white">
         {n}
       </span>
@@ -46,8 +46,8 @@ export default function ManualPage() {
           descripcion="Cómo trabaja el taller día a día, explicado paso a paso."
         />
 
-        <Reveal className="grid gap-3 sm:gap-4 lg:grid-cols-2">
-          <Card>
+        <Reveal className="columns-1 gap-3 sm:gap-4 lg:columns-2">
+          <Card className="mb-3 break-inside-avoid shadow-md transition-all duration-200 sm:mb-4 sm:hover:-translate-y-1 sm:hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.4)]">
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="brand"><FiRefreshCw size={16} /></IconTile> El recorrido de un equipo
             </h2>
@@ -62,11 +62,11 @@ export default function ManualPage() {
             </ol>
           </Card>
 
-          <Card>
+          <Card className="mb-3 break-inside-avoid shadow-md transition-all duration-200 sm:mb-4 sm:hover:-translate-y-1 sm:hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.4)]">
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="blue"><FiTool size={16} /></IconTile> Fases de una orden
             </h2>
-            <p className="mt-2 text-sm text-stone-500">
+            <p className="mt-2 border-b border-dashed border-stone-200 pb-2 text-sm text-stone-500">
               La ficha de cada orden se completa por etapas: solo se habilita la fase que corresponde al estado actual. Las anteriores quedan guardadas y visibles, las siguientes bloqueadas hasta que avances.
             </p>
             <ul className="mt-3 space-y-2 text-sm">
@@ -77,7 +77,7 @@ export default function ManualPage() {
             </ul>
           </Card>
 
-          <Card>
+          <Card className="mb-3 break-inside-avoid shadow-md transition-all duration-200 sm:mb-4 sm:hover:-translate-y-1 sm:hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.4)]">
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="green"><FiDollarSign size={16} /></IconTile> Cobros
             </h2>
@@ -91,11 +91,11 @@ export default function ManualPage() {
             </p>
           </Card>
 
-          <Card>
+          <Card className="mb-3 break-inside-avoid shadow-md transition-all duration-200 sm:mb-4 sm:hover:-translate-y-1 sm:hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.4)]">
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="violet"><FiClipboard size={16} /></IconTile> Garantías y reingresos
             </h2>
-            <p className="mt-2 text-sm text-stone-500">
+            <p className="mt-2 border-b border-dashed border-stone-200 pb-2 text-sm text-stone-500">
               Si un equipo vuelve porque falló lo mismo dentro de la garantía (90 días desde la entrega):
             </p>
             <ol className="mt-3 space-y-3">
@@ -105,26 +105,26 @@ export default function ManualPage() {
             </ol>
           </Card>
 
-          <Card>
+          <Card className="mb-3 break-inside-avoid shadow-md transition-all duration-200 sm:mb-4 sm:hover:-translate-y-1 sm:hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.4)]">
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="blue"><FiUsers size={16} /></IconTile> Clientes y equipos
             </h2>
             <ul className="mt-3 space-y-2 text-sm text-stone-600">
-              <li className="flex gap-2"><FiCheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600" /> En <b>Ingreso</b> están todos los clientes: buscá por nombre, DNI o teléfono, abrí la ficha o eliminá.</li>
-              <li className="flex gap-2"><FiCheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600" /> En la <b>ficha del cliente</b> ves sus datos y su tabla de equipos con serie, fecha de ingreso y estado.</li>
-              <li className="flex gap-2"><FiCheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600" /> En <b>Historial de equipos</b> ves cada aparato con foto, cliente y todas sus visitas al taller.</li>
+              <li className="flex gap-2 border-b border-dashed border-stone-200/80 pb-2 last:border-0 last:pb-0"><FiCheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600" /> En <b>Ingreso</b> están todos los clientes: buscá por nombre, DNI o teléfono, abrí la ficha o eliminá.</li>
+              <li className="flex gap-2 border-b border-dashed border-stone-200/80 pb-2 last:border-0 last:pb-0"><FiCheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600" /> En la <b>ficha del cliente</b> ves sus datos y su tabla de equipos con serie, fecha de ingreso y estado.</li>
+              <li className="flex gap-2 border-b border-dashed border-stone-200/80 pb-2 last:border-0 last:pb-0"><FiCheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600" /> En <b>Historial de equipos</b> ves cada aparato con foto, cliente y todas sus visitas al taller.</li>
             </ul>
           </Card>
 
-          <Card>
+          <Card className="mb-3 break-inside-avoid shadow-md transition-all duration-200 sm:mb-4 sm:hover:-translate-y-1 sm:hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.4)]">
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="brand"><FiUser size={16} /></IconTile> Roles y accesos rápidos
             </h2>
             <ul className="mt-3 space-y-2 text-sm text-stone-600">
-              <li className="flex gap-2"><FiCheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600" /> Hay dos roles: <b>ADMIN</b> (todo, incluso Usuarios) y <b>TÉCNICO</b> (trabajo diario del taller).</li>
-              <li className="flex gap-2"><FiCheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600" /> El botón <b>+</b> de abajo abre siempre una nueva recepción.</li>
-              <li className="flex gap-2"><FiCheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600" /> En el <b>Panel</b> ves el resumen y las últimas órdenes con cliente, técnico y horarios.</li>
-              <li className="flex gap-2"><FiPlus size={15} className="mt-0.5 shrink-0 text-emerald-600" /> ¿Dudas? Este manual está siempre al final del menú lateral: <Link href="/manual" className="font-semibold text-blue-800 hover:underline">Manual de uso</Link>.</li>
+              <li className="flex gap-2 border-b border-dashed border-stone-200/80 pb-2 last:border-0 last:pb-0"><FiCheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600" /> Hay dos roles: <b>ADMIN</b> (todo, incluso Usuarios) y <b>TÉCNICO</b> (trabajo diario del taller).</li>
+              <li className="flex gap-2 border-b border-dashed border-stone-200/80 pb-2 last:border-0 last:pb-0"><FiCheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600" /> El botón <b>+</b> de abajo abre siempre una nueva recepción.</li>
+              <li className="flex gap-2 border-b border-dashed border-stone-200/80 pb-2 last:border-0 last:pb-0"><FiCheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600" /> En el <b>Panel</b> ves el resumen y las últimas órdenes con cliente, técnico y horarios.</li>
+              <li className="flex gap-2 border-b border-dashed border-stone-200/80 pb-2 last:border-0 last:pb-0"><FiPlus size={15} className="mt-0.5 shrink-0 text-emerald-600" /> ¿Dudas? Este manual está siempre al final del menú lateral: <Link href="/manual" className="font-semibold text-blue-800 hover:underline">Manual de uso</Link>.</li>
             </ul>
             <p className="mt-3 flex items-center gap-2 rounded-xl bg-stone-50 px-3 py-2 text-[13px] text-stone-500 ring-1 ring-inset ring-stone-200/60">
               <FiBookOpen size={14} className="shrink-0 text-blue-700" /> Si algo no te deja avanzar, leé el mensaje en pantalla: siempre dice qué falta completar.
