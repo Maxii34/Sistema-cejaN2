@@ -188,6 +188,10 @@ export default function UsuariosPage() {
   };
 
   const eliminar = async (u: Usuario) => {
+    if (!u.activo) {
+      void Toast.fire({ icon: "info", title: "Usuario ya desactivado", text: `"${u.nombre}" ya está desactivado. Reactivalo para volver a gestionarlo.` });
+      return;
+    }
     const confirm = await Swal.fire({
       icon: "warning",
       title: "¿Eliminar usuario?",
@@ -218,9 +222,10 @@ export default function UsuariosPage() {
     <div className="flex shrink-0 items-center justify-end gap-1.5">
       <button
         onClick={() => abrirEdicion(u)}
-        title="Editar usuario"
+        title={u.activo ? "Editar usuario" : "Usuario desactivado — reactivalo para editar"}
         aria-label={`Editar a ${u.nombre}`}
-        className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg border border-stone-300 bg-white px-2 text-blue-700 shadow-sm transition-all hover:-translate-y-px hover:border-blue-300 hover:shadow-md active:translate-y-0 active:bg-blue-50 sm:min-h-[40px] sm:min-w-[40px] sm:px-2.5"
+        disabled={!u.activo}
+        className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg border border-stone-300 bg-white px-2 text-blue-700 shadow-sm transition-all hover:-translate-y-px hover:border-blue-300 hover:shadow-md active:translate-y-0 active:bg-blue-50 disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:shadow-sm sm:min-h-[40px] sm:min-w-[40px] sm:px-2.5"
       >
         <FiEdit size={15} />
       </button>
@@ -235,9 +240,9 @@ export default function UsuariosPage() {
       </button>
       <button
         onClick={() => void eliminar(u)}
-        title="Eliminar usuario"
+        title={esYo(u) ? "No podés eliminarte a vos mismo" : u.activo ? "Eliminar usuario" : "Usuario ya desactivado"}
         aria-label={`Eliminar a ${u.nombre}`}
-        disabled={esYo(u)}
+        disabled={esYo(u) || !u.activo}
         className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg border border-red-200 bg-white px-2 text-red-600 shadow-sm transition-all hover:-translate-y-px hover:border-red-300 hover:shadow-md active:translate-y-0 active:bg-red-50 disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:shadow-sm sm:min-h-[40px] sm:min-w-[40px] sm:px-2.5"
       >
         <FiTrash2 size={15} />
