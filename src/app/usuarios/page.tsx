@@ -65,12 +65,10 @@ export default function UsuariosPage() {
   const [formEdit, setFormEdit] = useState({ nombre: "", email: "", rol: "TECNICO" as RolUsuario });
   const [guardandoEdit, setGuardandoEdit] = useState(false);
 
-  // Cambio de clave — SOLO VISUAL, no se envía al backend
+  // Restablecer clave (solo ADMIN): nueva + repetir, va a PUT /:id/password
   const [cambiarClave, setCambiarClave] = useState(false);
-  const [claveActual, setClaveActual] = useState("");
   const [claveNueva, setClaveNueva] = useState("");
   const [claveRepetir, setClaveRepetir] = useState("");
-  const [verActual, setVerActual] = useState(false);
   const [verNueva, setVerNueva] = useState(false);
   const [verRepetir, setVerRepetir] = useState(false);
 
@@ -126,12 +124,10 @@ export default function UsuariosPage() {
   const abrirEdicion = (u: Usuario) => {
     setFormEdit({ nombre: u.nombre, email: u.email, rol: u.rol });
     setEditando(u);
-    // resetea la sección visual de clave
+    // resetea la sección de clave
     setCambiarClave(false);
-    setClaveActual("");
     setClaveNueva("");
     setClaveRepetir("");
-    setVerActual(false);
     setVerNueva(false);
     setVerRepetir(false);
   };
@@ -139,6 +135,16 @@ export default function UsuariosPage() {
   const guardarEdicion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editando) return;
+    if (cambiarClave) {
+      if (claveNueva.length < 6) {
+        void Toast.fire({ icon: "error", title: "Clave muy corta", text: "La nueva clave debe tener al menos 6 caracteres." });
+        return;
+      }
+      if (claveNueva !== claveRepetir) {
+        void Toast.fire({ icon: "error", title: "No coinciden", text: "La nueva clave y su repetición no coinciden." });
+        return;
+      }
+    }
     setGuardandoEdit(true);
     try {
       await api.put(`/api/usuario/${editando.id}`, {
@@ -146,9 +152,18 @@ export default function UsuariosPage() {
         email: formEdit.email.trim(),
         rol: formEdit.rol,
       });
+      let claveOk = false;
+      if (cambiarClave) {
+        await api.put(`/api/usuario/${editando.id}/password`, { password: claveNueva });
+        claveOk = true;
+      }
       setEditando(null);
       await cargar();
-      void Toast.fire({ icon: "success", title: "Usuario actualizado", text: "Los datos se guardaron correctamente." });
+      void Toast.fire({
+        icon: "success",
+        title: "Usuario actualizado",
+        text: claveOk ? "Datos y contraseña guardados correctamente." : "Los datos se guardaron correctamente.",
+      });
     } catch (e) {
       const mensaje = e instanceof Error ? e.message : "No se pudo actualizar";
       setError(mensaje);
@@ -458,7 +473,7 @@ export default function UsuariosPage() {
                 <span className="mt-0.5 block">{ROL_INFO[formEdit.rol].detalle}</span>
               </p>
             </div>
-            {/* Cambio de clave — SOLO VISUAL, no conectado al backend */}
+            {/* Restablecer contraseña (solo ADMIN) */}
             <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-3">
               <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5">
                 <input
@@ -471,32 +486,9 @@ export default function UsuariosPage() {
                   <FiLock size={14} className="shrink-0 text-blue-800" />
                   Cambiar contraseña
                 </span>
-                <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800 ring-1 ring-inset ring-amber-200">
-                  Solo visual
-                </span>
               </label>
               {cambiarClave && (
                 <div className="mt-2 space-y-2 border-t border-stone-200/70 pt-2">
-                  <div>
-                    <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Clave actual</label>
-                    <div className="relative">
-                      <input
-                        className={inputCls + " pr-11"}
-                        type={verActual ? "text" : "password"}
-                        placeholder="Escribí la clave actual"
-                        value={claveActual}
-                        onChange={(e) => setClaveActual(e.target.value)}
-                      />
-                      <button
-                        type="button"
-                        aria-label={verActual ? "Ocultar clave actual" : "Mostrar clave actual"}
-                        onClick={() => setVerActual((v) => !v)}
-                        className="absolute inset-y-0 right-1 flex w-9 items-center justify-center rounded-lg text-stone-400 hover:text-stone-700"
-                      >
-                        {verActual ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-                      </button>
-                    </div>
-                  </div>
                   <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
                     <div>
                       <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nueva clave</label>
@@ -547,8 +539,8 @@ export default function UsuariosPage() {
                       ? <p className="text-xs font-semibold text-emerald-700">Las claves nuevas coinciden ✓</p>
                       : <p className="text-xs font-semibold text-red-600">Las claves nuevas no coinciden.</p>
                   )}
-                  <p className="rounded-lg bg-amber-50 px-2.5 py-1.5 text-[11px] leading-snug text-amber-800 ring-1 ring-inset ring-amber-200/70">
-                    Vista previa sin efecto: al guardar solo se envían nombre, email y rol. La clave no cambia.
+                  <p className="rounded-lg bg-blue-50 px-2.5 py-1.5 text-[11px] leading-snug text-blue-800 ring-1 ring-inset ring-blue-200/70">
+                    Como administrador, fijás una nueva contraseña sin necesidad de la anterior. El usuario deberá ingresar con la nueva.
                   </p>
                 </div>
               )}
@@ -557,7 +549,7 @@ export default function UsuariosPage() {
               <button type="button" className={btnSecondary} onClick={() => setEditando(null)}>
                 Cancelar
               </button>
-              <button className={btnPrimary} disabled={guardandoEdit}>
+              <button className={btnPrimary} disabled={guardandoEdit || (cambiarClave && (claveNueva.length < 6 || claveNueva !== claveRepetir))}>
                 <FiEdit size={15} /> {guardandoEdit ? "Guardando..." : "Guardar"}
               </button>
             </div>
