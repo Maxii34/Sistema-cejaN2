@@ -63,6 +63,19 @@ function PagosForm() {
     }, 0);
   }, [ordenes, pagos]);
 
+  // Solo órdenes por cobrar: con precio, saldo > 0 y no canceladas.
+  // El historial y las cards usan `ordenes` completo; esto filtra solo el selector.
+  const ordenesCobrables = useMemo(() => {
+    const cobrado = new Map<number, number>();
+    for (const p of pagos) cobrado.set(p.ordenId, (cobrado.get(p.ordenId) ?? 0) + Number(p.monto));
+    return ordenes.filter((o) => {
+      if (o.precioFinal == null) return false;
+      if (o.estado === "CANCELADO") return false;
+      const saldo = Math.round((Number(o.precioFinal) - (cobrado.get(o.id) ?? 0)) * 100) / 100;
+      return saldo > 0;
+    });
+  }, [ordenes, pagos]);
+
   // Elige orden y autocompleta el monto con su saldo pendiente
   const elegirOrden = (id: string, listaO: OrdenReparacion[], listaP: Pago[]) => {
     setOrdenId(id);
@@ -109,6 +122,29 @@ function PagosForm() {
   const crear = async (e: React.FormEvent) => {
     e.preventDefault();
     if (guardando) return;
+    // Bloqueo frontend: no llamar a la API si la orden no tiene precio final
+    // (el backend responde 400 en ese caso).
+    const ordenACobrar = ordenes.find((o) => o.id === Number(ordenId)) ?? null;
+    if (!ordenACobrar || ordenACobrar.precioFinal == null) {
+      const mensaje = "Esta orden aún no tiene precio final. Volvé a la ficha y guardá el cierre antes de cobrar.";
+      setError(mensaje);
+      void Toast.fire({ icon: "warning", title: "Falta el precio final", text: mensaje });
+      return;
+    }
+    if (ordenACobrar.estado === "CANCELADO") {
+      const mensaje = "Esta orden está cancelada y no se puede cobrar.";
+      setError(mensaje);
+      void Toast.fire({ icon: "warning", title: "Orden cancelada", text: mensaje });
+      return;
+    }
+    const yaCobrado = pagos.filter((p) => p.ordenId === ordenACobrar.id).reduce((a, p) => a + Number(p.monto), 0);
+    const saldoActual = Math.round((Number(ordenACobrar.precioFinal) - yaCobrado) * 100) / 100;
+    if (saldoActual <= 0) {
+      const mensaje = "Esta orden ya está pagada.";
+      setError(mensaje);
+      void Toast.fire({ icon: "info", title: "Sin saldo", text: mensaje });
+      return;
+    }
     setError(null);
     setGuardando(true);
     try {
@@ -146,6 +182,9 @@ function PagosForm() {
     : 0;
   const precioOrden = ordenElegida?.precioFinal != null ? Number(ordenElegida.precioFinal) : null;
   const saldoOrden = precioOrden != null ? Math.round((precioOrden - cobradoOrden) * 100) / 100 : null;
+  const esCancelada = ordenElegida?.estado === "CANCELADO";
+  const yaPagada = precioOrden != null && saldoOrden != null && saldoOrden <= 0;
+  const esCobrable = ordenElegida != null && precioOrden != null && saldoOrden != null && saldoOrden > 0 && !esCancelada;
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-100 lg:flex-row">
@@ -287,8 +326,35 @@ function PagosForm() {
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Orden *</label>
                 <select className={inputCls} required value={ordenId} onChange={(e) => elegirOrden(e.target.value, ordenes, pagos)}>
                   <option value="">Seleccionar orden...</option>
-                  {ordenes.map((o) => <option key={o.id} value={o.id}>{o.numero} · ${o.precioFinal != null ? Number(o.precioFinal).toFixed(2) : "s/p"}</option>)}
+                  {ordenesCobrables.length === 0 ? (
+                    <option value="" disabled>No hay órdenes por cobrar</option>
+                  ) : (
+                    ordenesCobrables.map((o) => {
+                      const cob = pagos.filter((p) => p.ordenId === o.id).reduce((a, p) => a + Number(p.monto), 0);
+                      const saldo = Math.round((Number(o.precioFinal) - cob) * 100) / 100;
+                      return (
+                        <option key={o.id} value={o.id}>
+                          {o.numero} · ${Number(o.precioFinal).toFixed(2)} · Saldo ${saldo.toFixed(2)}
+                        </option>
+                      );
+                    })
+                  )}
                 </select>
+                {ordenElegida && precioOrden == null && (
+                  <p className="rounded-xl bg-amber-50 px-3 py-2 text-[13px] font-medium text-amber-900 ring-1 ring-inset ring-amber-200">
+                    Esta orden aún no tiene precio final. Volvé a la ficha y guardá el cierre antes de cobrar.
+                  </p>
+                )}
+                {ordenElegida && precioOrden != null && esCancelada && (
+                  <p className="rounded-xl bg-amber-50 px-3 py-2 text-[13px] font-medium text-amber-900 ring-1 ring-inset ring-amber-200">
+                    Esta orden está cancelada y no se puede cobrar.
+                  </p>
+                )}
+                {ordenElegida && precioOrden != null && !esCancelada && yaPagada && (
+                  <p className="rounded-xl bg-emerald-50 px-3 py-2 text-[13px] font-medium text-emerald-900 ring-1 ring-inset ring-emerald-200">
+                    Esta orden ya está pagada ✓. Elegí otra orden por cobrar.
+                  </p>
+                )}
               </div>
               {ordenElegida && (
                 <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-sm ring-1 ring-inset ring-blue-200/60">
@@ -326,15 +392,19 @@ function PagosForm() {
               )}
               <div>
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Monto *</label>
-                <input className={inputCls} required type="number" min="0.01" step="0.01" placeholder="0.00" value={monto} onChange={(e) => setMonto(e.target.value)} />
+                <input className={inputCls} required type="number" min="0.01" step="0.01" placeholder="0.00" value={monto} onChange={(e) => setMonto(e.target.value)} disabled={ordenElegida != null && !esCobrable} />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Medio de pago</label>
-                <select className={inputCls} value={medio} onChange={(e) => setMedio(e.target.value as MedioPago)}>
+                <select className={inputCls} value={medio} onChange={(e) => setMedio(e.target.value as MedioPago)} disabled={ordenElegida != null && !esCobrable}>
                   {MEDIOS.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
-              <button className={btnPrimary + " w-full gap-2"} disabled={guardando}>
+              <button
+                className={btnPrimary + " w-full gap-2 disabled:cursor-not-allowed disabled:opacity-50"}
+                disabled={guardando || !esCobrable}
+                title={!ordenElegida ? undefined : precioOrden == null ? "Falta el precio final" : esCancelada ? "Orden cancelada" : yaPagada ? "Sin saldo pendiente" : undefined}
+              >
                 <FiPlus size={15} /> {guardando ? "Registrando..." : "Registrar"}
               </button>
               {vinoDeOrden && ordenElegida && (

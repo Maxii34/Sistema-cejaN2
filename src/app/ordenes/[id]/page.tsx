@@ -127,7 +127,14 @@ export default function OrdenDetallePage() {
     setReco(res.data.recomendaciones ?? "");
     setReparacion(res.data.reparacionRealizada ?? "");
     setMano(String(res.data.manoDeObra ?? 0));
-    setPrecio(res.data.precioFinal != null ? String(res.data.precioFinal) : "");
+    // Si aún no hay precio final, sugerir la mano de obra para que no quede en 0.
+    // El usuario puede ajustarlo antes de Cerrar y entregar.
+    if (res.data.precioFinal != null) {
+      setPrecio(String(res.data.precioFinal));
+    } else {
+      const manoSugerida = Number(res.data.manoDeObra ?? 0);
+      setPrecio(manoSugerida > 0 ? String(manoSugerida) : "");
+    }
     setTecnicoId(res.data.tecnicoId ? String(res.data.tecnicoId) : "");
     setConformidad(res.data.conformidadEntregaCliente);
     return res.data;
@@ -238,7 +245,7 @@ export default function OrdenDetallePage() {
 
   const guardarCierre = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!precio.trim() || Number.isNaN(Number(precio))) {
+    if (!precio.trim() || Number.isNaN(Number(precio)) || Number(precio) < 0) {
       setError("El precio final es obligatorio.");
       return;
     }
@@ -249,7 +256,7 @@ export default function OrdenDetallePage() {
         precioFinal: Number(precio),
         conformidadEntregaCliente: conformidad,
       });
-      await trasGuardar("Orden entregada", "La orden quedó Entregada.");
+      await trasGuardar("Cierre guardado", "Precio guardado. Ahora podés ir a cobrar esta orden desde el recuadro azul.");
     } catch (e) {
       fallaGuardar(e);
     } finally {
@@ -391,7 +398,7 @@ export default function OrdenDetallePage() {
                       paso={3}
                       titulo="Reparación"
                       estado={ef(2)}
-                      resumen={orden.reparacionRealizada ? <><b className="text-stone-800">{orden.reparacionRealizada}</b>{` · Mano $${Number(orden.manoDeObra ?? 0).toFixed(2)}`}{orden.recomendaciones ? ` · ${orden.recomendaciones}` : ""}</> : "Sin reparación cargada."}
+                      resumen={orden.reparacionRealizada ? <><b className="text-stone-800">{orden.reparacionRealizada}</b>{` · Mano de obra $${Number(orden.manoDeObra ?? 0).toFixed(2)}`}{orden.recomendaciones ? ` · ${orden.recomendaciones}` : ""}</> : "Sin reparación cargada."}
                     >
                       <form onSubmit={(e) => void guardarReparacion(e)} className="space-y-2">
                         <div>
@@ -421,31 +428,57 @@ export default function OrdenDetallePage() {
                       resumen={orden.precioFinal != null ? <><b className="text-stone-800">${Number(orden.precioFinal).toFixed(2)}</b>{orden.conformidadEntregaCliente ? " · Conforme" : ""}{orden.fechaEntrega ? ` · ${new Date(orden.fechaEntrega).toLocaleDateString("es-AR")}` : ""}</> : "Sin precio cargado."}
                     >
                       <form onSubmit={(e) => void guardarCierre(e)} className="space-y-2">
-                        <div>
-                          <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Precio final ($) <Req /></label>
-                          <input className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={precio} onChange={(e) => setPrecio(e.target.value)} />
+                        <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+                          <div>
+                            <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Mano de obra ($)</label>
+                            <div className="font-ficha rounded-xl bg-stone-50 px-3 py-2 text-[15px] font-bold text-stone-900 ring-1 ring-inset ring-stone-200">
+                              ${Number(orden.manoDeObra ?? 0).toFixed(2)}
+                            </div>
+                            <p className="mt-1 text-[11px] text-stone-500">Viene de la fase Reparación.</p>
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Precio final ($) <Req /></label>
+                            <input className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={precio} onChange={(e) => setPrecio(e.target.value)} />
+                          </div>
                         </div>
                         {(() => {
                           const cobrado = (orden.pagos ?? []).reduce((a, p) => a + Number(p.monto), 0);
-                          const precioRef = orden.precioFinal != null ? Number(orden.precioFinal) : null;
-                          const saldo = precioRef != null ? Math.round((precioRef - cobrado) * 100) / 100 : null;
+                          const precioVivo = precio.trim() === "" || Number.isNaN(Number(precio)) ? 0 : Number(precio);
+                          const saldoVivo = Math.round((precioVivo - cobrado) * 100) / 100;
+                          const precioGuardado = orden.precioFinal != null ? Number(orden.precioFinal) : null;
+                          const saldoGuardado = precioGuardado != null ? Math.round((precioGuardado - cobrado) * 100) / 100 : null;
+                          const cobroHabilitado = precioGuardado != null && saldoGuardado != null && saldoGuardado > 0;
                           return (
                             <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-sm ring-1 ring-inset ring-blue-200/60">
                               <p className="text-[13px] text-blue-900">
-                                Cobrado <b className="font-ficha">${cobrado.toFixed(2)}</b>
-                                {precioRef != null ? <> de <b className="font-ficha">${precioRef.toFixed(2)}</b></> : " (sin precio final guardado)"}
-                                {saldo != null && saldo > 0 && <> · Saldo <b className="font-ficha">${saldo.toFixed(2)}</b></>}
-                                {saldo != null && saldo <= 0 && <> · <b>Pagado ✓</b></>}
+                                Precio total <b className="font-ficha">${precioVivo.toFixed(2)}</b>
+                                {" · "}Cobrado <b className="font-ficha">${cobrado.toFixed(2)}</b>
+                                {precioGuardado != null ? (
+                                  <> de <b className="font-ficha">${precioGuardado.toFixed(2)}</b></>
+                                ) : (
+                                  " (sin precio final guardado)"
+                                )}
+                                {saldoGuardado != null && saldoGuardado > 0 && <> · Saldo <b className="font-ficha">${saldoGuardado.toFixed(2)}</b></>}
+                                {saldoGuardado != null && saldoGuardado <= 0 && <> · <b>Pagado ✓</b></>}
                               </p>
+                              {precio.trim() !== "" && precioGuardado != null && Number(precio) !== precioGuardado && (
+                                <p className="mt-1 text-xs font-semibold text-amber-800">
+                                  Cambiaste el precio a ${precioVivo.toFixed(2)} (saldo nuevo ${saldoVivo.toFixed(2)}). Guardá con Cerrar y entregar para aplicarlo.
+                                </p>
+                              )}
                               <p className="mt-1 text-xs text-blue-800">
-                                El cobro se registra en Pagos: al guardar el precio, tocá Ir a cobrar para que el monto quede reflejado como pagado.
+                                {cobroHabilitado
+                                  ? "Precio guardado: ya podés cobrar esta orden en Pagos."
+                                  : "Guardá el precio con Cerrar y entregar; recién ahí aparece el botón para cobrar."}
                               </p>
-                              <Link
-                                href={`/pagos?ordenId=${orden.id}`}
-                                className="mt-2 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-blue-800 px-4 py-2 text-sm font-semibold text-white active:bg-blue-900"
-                              >
-                                <FiDollarSign size={15} /> Ir a cobrar esta orden
-                              </Link>
+                              {cobroHabilitado && (
+                                <Link
+                                  href={`/pagos?ordenId=${orden.id}`}
+                                  className="mt-2 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-blue-800 px-4 py-2 text-sm font-semibold text-white active:bg-blue-900"
+                                >
+                                  <FiDollarSign size={15} /> Ir a cobrar esta orden
+                                </Link>
+                              )}
                             </div>
                           );
                         })()}
