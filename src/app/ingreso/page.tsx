@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   FiChevronRight,
   FiEye,
+  FiMessageCircle,
   FiPlus,
   FiTrash2,
   FiUserPlus,
@@ -27,6 +28,15 @@ import {
 } from "@/components/ui";
 import type { ApiEnvelope, Cliente } from "@/lib/types";
 import { Reveal } from "@/components/motion";
+
+/** Normaliza a formato wa.me: solo dígitos, sin 0 inicial, con código país 54. */
+function normalizarWa(telefono: string): string {
+  let d = telefono.replace(/\D/g, "");
+  if (!d) return "";
+  if (d.startsWith("0")) d = d.slice(1);
+  if (!d.startsWith("54")) d = `54${d}`;
+  return d;
+}
 
 const Toast = Swal.mixin({
   toast: true,
@@ -126,6 +136,19 @@ export default function IngresoPage() {
 
   const acciones = (c: Cliente) => (
     <div className="flex shrink-0 items-center justify-end gap-1.5">
+      {c.telefono?.trim() && (
+        <a
+          href={`https://wa.me/${normalizarWa(c.telefono)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`Abrir chat de WhatsApp con ${c.nombre}`}
+          aria-label={`Abrir chat de WhatsApp con ${c.nombre}`}
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg bg-green-600 px-2.5 py-1.5 text-xs font-semibold text-white transition-colors active:bg-green-700 sm:min-h-[40px] sm:px-3 sm:text-xs sm:hover:bg-green-700"
+        >
+          <FiMessageCircle size={15} />
+          <span className="hidden min-[420px]:inline">WhatsApp</span>
+        </a>
+      )}
       <Link
         href={`/clientes/${c.id}`}
         title="Abrir ficha del cliente"
