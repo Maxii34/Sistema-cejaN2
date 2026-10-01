@@ -87,7 +87,7 @@ export default function ManualPage() {
               <Paso n={3} titulo="Volvé a la orden" texto="Con el botón Volver, la ficha ya muestra lo cobrado y el estado del pago." />
             </ol>
             <p className="mt-3 rounded-xl bg-blue-50 px-3 py-2 text-[13px] text-blue-900 ring-1 ring-inset ring-blue-200/60">
-              Tip: desde la ficha, el botón “Ir a cobrar esta orden” te lleva a Pagos con todo ya cargado.
+              Tip: en la ficha, primero guardá el precio con Cerrar y entregar; recién ahí se habilita “Ir a cobrar esta orden”.
             </p>
           </Card>
 
