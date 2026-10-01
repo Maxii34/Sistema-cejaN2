@@ -3,11 +3,12 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { FiArrowLeft, FiCalendar, FiChevronRight, FiClock, FiCreditCard, FiDollarSign, FiPlus } from "react-icons/fi";
+import { FiArrowLeft, FiCalendar, FiChevronRight, FiClock, FiCreditCard, FiDollarSign, FiFileText, FiPlus, FiPrinter } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { api } from "@/lib/api";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
+import { RemitoOrden } from "@/components/RemitoOrden";
 import { Card, PageHeader, Empty, Badge, btnPrimary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
 import { Lista, ItemLi, Reveal, Stagger, Item } from "@/components/motion";
 import type { ApiEnvelope, MedioPago, OrdenReparacion, Pago, Paged } from "@/lib/types";
@@ -47,6 +48,7 @@ function PagosForm() {
   const [cargandoLista, setCargandoLista] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [vinoDeOrden, setVinoDeOrden] = useState(false);
+  const [remitoOrdenId, setRemitoOrdenId] = useState("");
 
   const ordenPorId = useMemo(() => new Map(ordenes.map((o) => [o.id, o])), [ordenes]);
   const pagosOrdenados = useMemo(
@@ -73,6 +75,18 @@ function PagosForm() {
       if (o.estado === "CANCELADO") return false;
       const saldo = Math.round((Number(o.precioFinal) - (cobrado.get(o.id) ?? 0)) * 100) / 100;
       return saldo > 0;
+    });
+  }, [ordenes, pagos]);
+
+  // Órdenes ya cobradas: con precio, saldo <= 0 y no canceladas. Para el remito.
+  const ordenesCobradas = useMemo(() => {
+    const cobrado = new Map<number, number>();
+    for (const p of pagos) cobrado.set(p.ordenId, (cobrado.get(p.ordenId) ?? 0) + Number(p.monto));
+    return ordenes.filter((o) => {
+      if (o.precioFinal == null) return false;
+      if (o.estado === "CANCELADO") return false;
+      const saldo = Math.round((Number(o.precioFinal) - (cobrado.get(o.id) ?? 0)) * 100) / 100;
+      return saldo <= 0;
     });
   }, [ordenes, pagos]);
 
@@ -185,6 +199,10 @@ function PagosForm() {
   const esCancelada = ordenElegida?.estado === "CANCELADO";
   const yaPagada = precioOrden != null && saldoOrden != null && saldoOrden <= 0;
   const esCobrable = ordenElegida != null && precioOrden != null && saldoOrden != null && saldoOrden > 0 && !esCancelada;
+
+  // Remito: orden ya cobrada elegida abajo + sus pagos
+  const remitoOrden = remitoOrdenId === "" ? null : (ordenes.find((o) => o.id === Number(remitoOrdenId)) ?? null);
+  const remitoPagos = remitoOrden ? pagos.filter((p) => p.ordenId === remitoOrden.id) : [];
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-100 lg:flex-row">
@@ -419,6 +437,70 @@ function PagosForm() {
           </Card>
           </Reveal>
         </div>
+
+        <Card className="mt-3 sm:mt-4">
+          <h2 className="flex items-center gap-2 font-bold text-stone-900">
+            <IconTile tono="violet"><FiFileText size={16} /></IconTile>
+            <span className="min-w-0 flex-1">
+              Remito de entrega
+              <span className="block text-xs font-normal text-stone-500">
+                Elegí una orden ya cobrada para previsualizar el ticket de 80mm e imprimirlo.
+              </span>
+            </span>
+          </h2>
+          <div className="mt-2 grid gap-3 lg:grid-cols-[320px_1fr]">
+            <div className="space-y-2">
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Orden cobrada *</label>
+                <select className={inputCls} value={remitoOrdenId} onChange={(e) => setRemitoOrdenId(e.target.value)}>
+                  <option value="">Seleccionar orden cobrada...</option>
+                  {ordenesCobradas.length === 0 ? (
+                    <option value="" disabled>No hay órdenes cobradas</option>
+                  ) : (
+                    ordenesCobradas.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.numero} · ${Number(o.precioFinal).toFixed(2)}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+              {remitoOrden && (
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className={btnPrimary + " w-full gap-2"}
+                  >
+                    <FiPrinter size={15} /> Imprimir remito
+                  </button>
+                  <Link
+                    href={`/ordenes/${remitoOrden.id}`}
+                    className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 active:bg-stone-100"
+                  >
+                    <FiChevronRight size={15} /> Ver {remitoOrden.numero}
+                  </Link>
+                </div>
+              )}
+            </div>
+            <div className="min-w-0">
+              {!remitoOrden ? (
+                <Empty mensaje="Sin remito" detalle="Elegí una orden ya cobrada para ver el ticket." />
+              ) : (
+                <div className="rounded-xl border border-dashed border-stone-300 bg-stone-50/60 p-3">
+                  <div id="remito-print">
+                    <RemitoOrden orden={remitoOrden} pagos={remitoPagos} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+        <style>{`@media print {
+          body * { visibility: hidden; }
+          #remito-print, #remito-print * { visibility: visible; }
+          #remito-print { position: absolute; left: 0; top: 0; width: 80mm; padding: 0 2mm; }
+        }`}</style>
       </main>
     </div>
   );
