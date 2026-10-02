@@ -3,22 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiClipboard, FiDollarSign, FiEye, FiEyeOff, FiLogIn, FiTool, FiZap } from "react-icons/fi";
-import Swal from "sweetalert2";
 import { useAuth } from "@/context/AuthContext";
+import { Toast } from "@/lib/toast";
 import { Card, inputCls, btnPrimary } from "@/components/ui";
 import { Reveal } from "@/components/motion";
-
-const Toast = Swal.mixin({
-  toast: true,
-  position: "top",
-  showConfirmButton: false,
-  timer: 2500,
-  timerProgressBar: true,
-  didOpen: (toast) => {
-    toast.addEventListener("mouseenter", Swal.stopTimer);
-    toast.addEventListener("mouseleave", Swal.resumeTimer);
-  },
-});
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -82,10 +70,12 @@ export default function LoginPage() {
           </p>
           <form onSubmit={(e) => void submit(e)} className="mt-5 space-y-3">
             <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
+              <label htmlFor="login-email" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
                 Email
               </label>
               <input
+                id="login-email"
+                name="email"
                 className={inputCls}
                 type="email"
                 required
@@ -97,11 +87,13 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
+              <label htmlFor="login-password" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
                 Contraseña
               </label>
               <div className="flex gap-2">
                 <input
+                  id="login-password"
+                  name="password"
                   className={inputCls}
                   type={verPassword ? "text" : "password"}
                   required

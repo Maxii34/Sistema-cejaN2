@@ -4,8 +4,8 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FiArrowLeft, FiCalendar, FiChevronRight, FiClock, FiCreditCard, FiDollarSign, FiFileText, FiPlus, FiPrinter } from "react-icons/fi";
-import Swal from "sweetalert2";
 import { api } from "@/lib/api";
+import { Toast } from "@/lib/toast";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { RemitoOrden } from "@/components/RemitoOrden";
@@ -23,18 +23,6 @@ const MEDIO_LABEL: Record<MedioPago, string> = {
   MERCADO_PAGO: "Mercado Pago",
   OTRO: "Otro",
 };
-
-const Toast = Swal.mixin({
-  toast: true,
-  position: "top",
-  showConfirmButton: false,
-  timer: 2500,
-  timerProgressBar: true,
-  didOpen: (toast) => {
-    toast.addEventListener("mouseenter", Swal.stopTimer);
-    toast.addEventListener("mouseleave", Swal.resumeTimer);
-  },
-});
 
 function PagosForm() {
   const { usuario, cargando } = useRequireAuth();
@@ -341,8 +329,8 @@ function PagosForm() {
             </h2>
             <form onSubmit={(e) => void crear(e)} className="mt-2 space-y-2">
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Orden *</label>
-                <select className={inputCls} required value={ordenId} onChange={(e) => elegirOrden(e.target.value, ordenes, pagos)}>
+                <label htmlFor="orden-cobro" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Orden *</label>
+                <select id="orden-cobro" className={inputCls} required value={ordenId} onChange={(e) => elegirOrden(e.target.value, ordenes, pagos)}>
                   <option value="">Seleccionar orden...</option>
                   {ordenesCobrables.length === 0 ? (
                     <option value="" disabled>No hay órdenes por cobrar</option>
@@ -382,7 +370,7 @@ function PagosForm() {
                       <span className="ml-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">Garantía</span>
                     )}
                   </p>
-                  <dl className="mt-1 space-y-0.5 break-words text-[13px] text-stone-600">
+                  <div className="mt-1 space-y-0.5 break-words text-[13px] text-stone-600">
                     <p>
                       <b className="text-stone-800">Equipo:</b>{" "}
                       {ordenElegida.equipo
@@ -405,17 +393,17 @@ function PagosForm() {
                         </span>
                       ) : "—"}
                     </p>
-                  </dl>
+                  </div>
                 </div>
               )}
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Monto *</label>
-                <input className={inputCls} required type="number" min="0.01" step="0.01" placeholder="0.00" value={monto} onChange={(e) => setMonto(e.target.value)} disabled={ordenElegida != null && !esCobrable} />
+                <label htmlFor="monto-cobro" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Monto *</label>
+                <input id="monto-cobro" name="monto" className={inputCls} required type="number" min="0.01" step="0.01" placeholder="0.00" value={monto} onChange={(e) => setMonto(e.target.value)} disabled={ordenElegida != null && !esCobrable} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Medio de pago</label>
-                <select className={inputCls} value={medio} onChange={(e) => setMedio(e.target.value as MedioPago)} disabled={ordenElegida != null && !esCobrable}>
-                  {MEDIOS.map((m) => <option key={m} value={m}>{m}</option>)}
+                <label htmlFor="medio-pago" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Medio de pago</label>
+                <select id="medio-pago" className={inputCls} value={medio} onChange={(e) => setMedio(e.target.value as MedioPago)} disabled={ordenElegida != null && !esCobrable}>
+                  {MEDIOS.map((m) => <option key={m} value={m}>{MEDIO_LABEL[m]}</option>)}
                 </select>
               </div>
               <button
@@ -451,8 +439,8 @@ function PagosForm() {
           <div className="mt-2 grid gap-3 lg:grid-cols-[320px_1fr]">
             <div className="space-y-2">
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Orden cobrada *</label>
-                <select className={inputCls} value={remitoOrdenId} onChange={(e) => setRemitoOrdenId(e.target.value)}>
+                <label htmlFor="orden-remito" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Orden cobrada *</label>
+                <select id="orden-remito" className={inputCls} value={remitoOrdenId} onChange={(e) => setRemitoOrdenId(e.target.value)}>
                   <option value="">Seleccionar orden cobrada...</option>
                   {ordenesCobradas.length === 0 ? (
                     <option value="" disabled>No hay órdenes cobradas</option>

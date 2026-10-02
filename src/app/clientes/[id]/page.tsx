@@ -12,8 +12,8 @@ import {
   FiUser,
   FiX,
 } from "react-icons/fi";
-import Swal from "sweetalert2";
 import { api } from "@/lib/api";
+import { Toast } from "@/lib/toast";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, PageHeader, Empty, Badge, btnPrimary, btnSecondary, inputCls, IconTile, CargandoPagina } from "@/components/ui";
@@ -28,18 +28,6 @@ function tonoEstado(e: EstadoOrden) {
   if (e === "RECIBIDO") return "blue" as const;
   return "violet" as const;
 }
-
-const Toast = Swal.mixin({
-  toast: true,
-  position: "top",
-  showConfirmButton: false,
-  timer: 2500,
-  timerProgressBar: true,
-  didOpen: (toast) => {
-    toast.addEventListener("mouseenter", Swal.stopTimer);
-    toast.addEventListener("mouseleave", Swal.resumeTimer);
-  },
-});
 
 export default function ClienteDetallePage() {
   const params = useParams<{ id: string }>();
@@ -244,10 +232,12 @@ export default function ClienteDetallePage() {
                 ] as const
               ).map(([k, label, req]) => (
                 <div key={k}>
-                  <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
+                  <label htmlFor={`edit-${k}`} className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
                     {label} {req && <span className="font-bold text-red-600">*</span>}
                   </label>
                   <input
+                    id={`edit-${k}`}
+                    name={k}
                     className={inputCls + (!editando ? " bg-zinc-50 text-zinc-600" : "")}
                     placeholder={label}
                     value={form[k]}
@@ -257,10 +247,13 @@ export default function ClienteDetallePage() {
                 </div>
               ))}
               <div className="min-[420px]:col-span-2">
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Dirección</label>
+                <label htmlFor="edit-direccion" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Dirección</label>
                 <input
+                  id="edit-direccion"
+                  name="direccion"
                   className={inputCls + (!editando ? " bg-zinc-50 text-zinc-600" : "")}
                   placeholder="Dirección"
+                  autoComplete="street-address"
                   value={form.direccion}
                   disabled={!editando}
                   onChange={(e) => setForm({ ...form, direccion: e.target.value })}
@@ -282,24 +275,24 @@ export default function ClienteDetallePage() {
             </h2>
             <form onSubmit={(e) => void crearEquipo(e)} className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Tipo <span className="font-bold text-red-600">*</span></label>
-                <input className={inputCls} required placeholder="Ej: Heladera" value={eq.tipo} onChange={(e) => setEq({ ...eq, tipo: e.target.value })} />
+                <label htmlFor="eq-tipo" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Tipo <span className="font-bold text-red-600">*</span></label>
+                <input id="eq-tipo" name="tipo" className={inputCls} required placeholder="Ej: Heladera" value={eq.tipo} onChange={(e) => setEq({ ...eq, tipo: e.target.value })} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Marca <span className="font-bold text-red-600">*</span></label>
-                <input className={inputCls} required placeholder="Ej: Samsung" value={eq.marca} onChange={(e) => setEq({ ...eq, marca: e.target.value })} />
+                <label htmlFor="eq-marca" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Marca <span className="font-bold text-red-600">*</span></label>
+                <input id="eq-marca" name="marca" className={inputCls} required placeholder="Ej: Samsung" value={eq.marca} onChange={(e) => setEq({ ...eq, marca: e.target.value })} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Modelo <span className="font-bold text-red-600">*</span></label>
-                <input className={inputCls} required placeholder="Ej: RT38" value={eq.modelo} onChange={(e) => setEq({ ...eq, modelo: e.target.value })} />
+                <label htmlFor="eq-modelo" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Modelo <span className="font-bold text-red-600">*</span></label>
+                <input id="eq-modelo" name="modelo" className={inputCls} required placeholder="Ej: RT38" value={eq.modelo} onChange={(e) => setEq({ ...eq, modelo: e.target.value })} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">N° serie</label>
-                <input className={inputCls} placeholder="N° de serie" value={eq.numeroSerie} onChange={(e) => setEq({ ...eq, numeroSerie: e.target.value })} />
+                <label htmlFor="eq-serie" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">N° serie</label>
+                <input id="eq-serie" name="numeroSerie" className={inputCls} placeholder="N° de serie" value={eq.numeroSerie} onChange={(e) => setEq({ ...eq, numeroSerie: e.target.value })} />
               </div>
               <div className="min-[420px]:col-span-2">
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Observaciones</label>
-                <input className={inputCls} placeholder="Observaciones" value={eq.observaciones} onChange={(e) => setEq({ ...eq, observaciones: e.target.value })} />
+                <label htmlFor="eq-obs" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Observaciones</label>
+                <input id="eq-obs" name="observaciones" className={inputCls} placeholder="Observaciones" value={eq.observaciones} onChange={(e) => setEq({ ...eq, observaciones: e.target.value })} />
               </div>
               <button className={btnPrimary + " min-[420px]:col-span-2 gap-2"}>
                 <FiPlus size={15} /> Agregar equipo

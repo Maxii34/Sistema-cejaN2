@@ -12,8 +12,8 @@ import {
   FiPrinter,
   FiSave,
 } from "react-icons/fi";
-import Swal from "sweetalert2";
 import { api } from "@/lib/api";
+import { Toast } from "@/lib/toast";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { FotosOrden } from "@/components/FotosOrden";
@@ -37,18 +37,6 @@ function Req() {
     </span>
   );
 }
-
-const Toast = Swal.mixin({
-  toast: true,
-  position: "top",
-  showConfirmButton: false,
-  timer: 2500,
-  timerProgressBar: true,
-  didOpen: (toast) => {
-    toast.addEventListener("mouseenter", Swal.stopTimer);
-    toast.addEventListener("mouseleave", Swal.resumeTimer);
-  },
-});
 
 type FaseKey = "diagnostico" | "autorizacion" | "reparacion" | "cierre";
 
@@ -310,14 +298,14 @@ export default function OrdenDetallePage() {
                   <Badge tono={orden.estadoPago === "PAGADO" ? "green" : "amber"}>{orden.estadoPago}</Badge>
                   {orden.autorizadoCliente && <Badge tono="green">Autorizado</Badge>}
                 </div>
-                <dl className="mt-3 space-y-1.5 break-words text-sm text-zinc-700">
+                <div className="mt-3 space-y-1.5 break-words text-sm text-zinc-700">
                   <p><b>Cliente:</b> {orden.equipo?.cliente ? `${orden.equipo.cliente.nombre} ${orden.equipo.cliente.apellido ?? ""}` : `Equipo #${orden.equipoId}`}</p>
                   <p><b>Accesorios:</b> {orden.accesorios || "—"}</p>
                   <p><b>Condición:</b> {orden.condicionFisica.map((c) => CONDICION_LABEL[c]).join(", ")}</p>
                   {orden.detalleCondicionFisica && <p><b>Detalle:</b> {orden.detalleCondicionFisica}</p>}
                   <p><b>Garantía:</b> {orden.garantiaDias} días</p>
                   <p><b>Firmas recepción:</b> cliente {orden.firmaClienteRecepcion ? "✓" : "✗"} · técnico {orden.firmaTecnicoRecepcion ? "✓" : "✗"}</p>
-                </dl>
+                </div>
               </Card>
               {(() => {
                 const idx = ["EN_DIAGNOSTICO", "ESPERANDO_REPUESTO"].includes(orden.estado)
@@ -342,17 +330,17 @@ export default function OrdenDetallePage() {
                     >
                       <form onSubmit={(e) => void guardarDiagnostico(e)} className="space-y-2">
                         <div>
-                          <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Diagnóstico <Req /></label>
-                          <textarea className={inputCls} rows={2} placeholder="Ej: Placa con soldadura fría en la fuente..." value={diag} onChange={(e) => setDiag(e.target.value)} />
+                          <label htmlFor="fase-diag" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Diagnóstico <Req /></label>
+                          <textarea id="fase-diag" className={inputCls} rows={2} placeholder="Ej: Placa con soldadura fría en la fuente..." value={diag} onChange={(e) => setDiag(e.target.value)} />
                         </div>
                         <div>
-                          <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Pruebas realizadas <TagOpcional /></label>
-                          <textarea className={inputCls} rows={2} placeholder="Ej: Medición de tensión, prueba de encendido..." value={pruebas} onChange={(e) => setPruebas(e.target.value)} />
+                          <label htmlFor="fase-pruebas" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Pruebas realizadas <TagOpcional /></label>
+                          <textarea id="fase-pruebas" className={inputCls} rows={2} placeholder="Ej: Medición de tensión, prueba de encendido..." value={pruebas} onChange={(e) => setPruebas(e.target.value)} />
                         </div>
                         {esAdmin ? (
                           <div>
-                            <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Técnico a cargo <Req /></label>
-                            <select className={inputCls} value={tecnicoId} onChange={(e) => setTecnicoId(e.target.value)}>
+                            <label htmlFor="fase-tecnico" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Técnico a cargo <Req /></label>
+                            <select id="fase-tecnico" className={inputCls} value={tecnicoId} onChange={(e) => setTecnicoId(e.target.value)}>
                               <option value="">Seleccionar técnico...</option>
                               {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nombre} ({t.rol})</option>)}
                             </select>
@@ -402,17 +390,17 @@ export default function OrdenDetallePage() {
                     >
                       <form onSubmit={(e) => void guardarReparacion(e)} className="space-y-2">
                         <div>
-                          <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Reparación realizada <Req /></label>
-                          <textarea className={inputCls} rows={2} placeholder="Ej: Se resoldó la fuente y se cambió el fusible..." value={reparacion} onChange={(e) => setReparacion(e.target.value)} />
+                          <label htmlFor="fase-reparacion" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Reparación realizada <Req /></label>
+                          <textarea id="fase-reparacion" className={inputCls} rows={2} placeholder="Ej: Se resoldó la fuente y se cambió el fusible..." value={reparacion} onChange={(e) => setReparacion(e.target.value)} />
                         </div>
                         <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
                           <div>
-                            <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Mano de obra ($) <TagOpcional /></label>
-                            <input className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={mano} onChange={(e) => setMano(e.target.value)} />
+                            <label htmlFor="fase-mano" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Mano de obra ($) <TagOpcional /></label>
+                            <input id="fase-mano" name="manoObra" className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={mano} onChange={(e) => setMano(e.target.value)} />
                           </div>
                           <div>
-                            <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Recomendaciones <TagOpcional /></label>
-                            <textarea className={inputCls} rows={1} placeholder="Ej: Cambiar el cable..." value={reco} onChange={(e) => setReco(e.target.value)} />
+                            <label htmlFor="fase-reco" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Recomendaciones <TagOpcional /></label>
+                            <textarea id="fase-reco" className={inputCls} rows={1} placeholder="Ej: Cambiar el cable..." value={reco} onChange={(e) => setReco(e.target.value)} />
                           </div>
                         </div>
                         <button className={btnPrimary + " w-full gap-2"} disabled={faseEnCurso !== null}>
@@ -437,8 +425,8 @@ export default function OrdenDetallePage() {
                             <p className="mt-1 text-[11px] text-stone-500">Viene de la fase Reparación.</p>
                           </div>
                           <div>
-                            <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Precio final ($) <Req /></label>
-                            <input className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={precio} onChange={(e) => setPrecio(e.target.value)} />
+                            <label htmlFor="fase-precio" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Precio final ($) <Req /></label>
+                            <input id="fase-precio" name="precioFinal" className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={precio} onChange={(e) => setPrecio(e.target.value)} />
                           </div>
                         </div>
                         {(() => {

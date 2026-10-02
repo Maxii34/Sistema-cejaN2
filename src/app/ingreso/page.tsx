@@ -13,6 +13,7 @@ import {
 } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { api } from "@/lib/api";
+import { Toast } from "@/lib/toast";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import {
@@ -38,18 +39,6 @@ function normalizarWa(telefono: string): string {
   return d;
 }
 
-const Toast = Swal.mixin({
-  toast: true,
-  position: "top",
-  showConfirmButton: false,
-  timer: 2500,
-  timerProgressBar: true,
-  didOpen: (toast) => {
-    toast.addEventListener("mouseenter", Swal.stopTimer);
-    toast.addEventListener("mouseleave", Swal.resumeTimer);
-  },
-});
-
 export default function IngresoPage() {
   const { usuario, cargando } = useRequireAuth();
   const [error, setError] = useState<string | null>(null);
@@ -58,8 +47,10 @@ export default function IngresoPage() {
   const [busquedaC, setBusquedaC] = useState("");
   const [cargandoC, setCargandoC] = useState(true);
   const [nombre, setNombre] = useState("");
+  const [apellido, setApellido] = useState("");
   const [telefono, setTelefono] = useState("");
   const [dni, setDni] = useState("");
+  const [guardandoCliente, setGuardandoCliente] = useState(false);
 
   const cargarClientes = async () => {
     setCargandoC(true);
@@ -82,13 +73,22 @@ export default function IngresoPage() {
 
   const crearCliente = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (guardandoCliente) return;
+    if (!nombre.trim()) {
+      setError("El nombre del cliente es obligatorio.");
+      return;
+    }
+    setError(null);
+    setGuardandoCliente(true);
     try {
       await api.post("/api/cliente", {
         nombre: nombre.trim(),
+        apellido: apellido.trim() || null,
         telefono: telefono.trim() || null,
         dni: dni.trim() || null,
       });
       setNombre("");
+      setApellido("");
       setTelefono("");
       setDni("");
       await cargarClientes();
@@ -97,6 +97,8 @@ export default function IngresoPage() {
       const mensaje = e instanceof Error ? e.message : "No se pudo crear";
       setError(mensaje);
       void Toast.fire({ icon: "error", title: "No se pudo crear", text: mensaje });
+    } finally {
+      setGuardandoCliente(false);
     }
   };
 
@@ -143,7 +145,7 @@ export default function IngresoPage() {
           rel="noopener noreferrer"
           title={`Abrir chat de WhatsApp con ${c.nombre}`}
           aria-label={`Abrir chat de WhatsApp con ${c.nombre}`}
-          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg bg-green-600 px-2.5 py-1.5 text-xs font-semibold text-white transition-colors active:bg-green-700 sm:min-h-[40px] sm:px-3 sm:text-xs sm:hover:bg-green-700"
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-green-600 px-2.5 py-1.5 text-xs font-semibold text-white transition-colors active:bg-green-700 sm:min-h-[40px] sm:px-3 sm:text-xs sm:hover:bg-green-700"
         >
           <FiMessageCircle size={15} />
           <span className="hidden min-[420px]:inline">WhatsApp</span>
@@ -195,7 +197,11 @@ export default function IngresoPage() {
           <Card className="order-last lg:order-none">
             <div className="flex items-center gap-2">
               <input
+                id="buscar-clientes"
                 className={inputCls}
+                type="search"
+                autoComplete="off"
+                aria-label="Buscar clientes por nombre, DNI o teléfono"
                 placeholder="Buscar por nombre, DNI o teléfono..."
                 value={busquedaC}
                 onChange={(e) => setBusquedaC(e.target.value)}
@@ -277,28 +283,72 @@ export default function IngresoPage() {
               </div>
             </div>
             <form onSubmit={(e) => void crearCliente(e)} className="mt-4 space-y-2">
-              <input
-                className={inputCls}
-                required
-                placeholder="Nombre *"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-              />
-              <input
-                className={inputCls}
-                placeholder="DNI"
-                value={dni}
-                onChange={(e) => setDni(e.target.value)}
-              />
-              <input
-                className={inputCls}
-                placeholder="Teléfono / WhatsApp"
-                value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
-              />
-              <button className={btnPrimary + " w-full"}>
+              <div>
+                <label htmlFor="alta-nombre" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
+                  Nombre <span className="font-bold text-red-600">*</span>
+                </label>
+                <input
+                  id="alta-nombre"
+                  name="nombre"
+                  className={inputCls}
+                  required
+                  type="text"
+                  autoComplete="given-name"
+                  placeholder="Nombre *"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="alta-apellido" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
+                  Apellido
+                </label>
+                <input
+                  id="alta-apellido"
+                  name="apellido"
+                  className={inputCls}
+                  type="text"
+                  autoComplete="family-name"
+                  placeholder="Apellido"
+                  value={apellido}
+                  onChange={(e) => setApellido(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="alta-dni" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
+                  DNI
+                </label>
+                <input
+                  id="alta-dni"
+                  name="dni"
+                  className={inputCls}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="DNI"
+                  value={dni}
+                  onChange={(e) => setDni(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="alta-telefono" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
+                  Teléfono / WhatsApp
+                </label>
+                <input
+                  id="alta-telefono"
+                  name="telefono"
+                  className={inputCls}
+                  type="tel"
+                  autoComplete="tel"
+                  inputMode="tel"
+                  placeholder="Teléfono / WhatsApp"
+                  value={telefono}
+                  onChange={(e) => setTelefono(e.target.value)}
+                />
+              </div>
+              <button className={btnPrimary + " w-full gap-2"} disabled={guardandoCliente}>
                 <FiUserPlus size={15} />
-                Guardar cliente
+                {guardandoCliente ? "Guardando..." : "Guardar cliente"}
               </button>
             </form>
           </Card>
