@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  FiCalendar,
   FiChevronDown,
   FiChevronUp,
   FiClipboard,
@@ -341,7 +342,8 @@ export default function HistorialEquiposPage() {
                                       <span className="font-ficha truncate font-bold text-stone-900">
                                         {o.numero}
                                       </span>
-                                      <span className="shrink-0 text-stone-400">
+                                      <span className="inline-flex shrink-0 items-center gap-1 text-stone-500" title="Fecha de ingreso">
+                                        <FiCalendar size={11} className="text-stone-400" />
                                         {new Date(o.fechaIngreso).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" })}
                                       </span>
                                     </span>
