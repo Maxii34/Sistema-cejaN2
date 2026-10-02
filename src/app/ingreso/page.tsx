@@ -222,7 +222,7 @@ export default function IngresoPage() {
                 />
               </div>
             ) : (
-              <Lista className="mt-3 space-y-2 text-sm">
+              <Lista className="tabla-scroll mt-3 max-h-[380px] space-y-2 overflow-y-auto pb-1 pr-1 text-sm sm:max-h-[480px]">
                 {clientesFiltrados.map((c) => (
                   <ItemLi
                     key={c.id}
