@@ -13,8 +13,15 @@ import {
   FiUsers,
 } from "react-icons/fi";
 import Swal from "sweetalert2";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/api";
 import { Toast } from "@/lib/toast";
+import {
+  altaRapidaAPayload,
+  altaRapidaFormSchema,
+  type AltaRapidaFormValues,
+} from "@/lib/validaciones";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import {
@@ -29,6 +36,7 @@ import {
   CargandoPagina,
 } from "@/components/ui";
 import type { ApiEnvelope, Cliente } from "@/lib/types";
+import { Field } from "@/components/Field";
 import { Lista, ItemLi, Reveal } from "@/components/motion";
 
 /** Normaliza a formato wa.me: solo dígitos, sin 0 inicial, con código país 54. */
@@ -48,11 +56,15 @@ export default function IngresoPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [busquedaC, setBusquedaC] = useState("");
   const [cargandoC, setCargandoC] = useState(true);
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [dni, setDni] = useState("");
-  const [guardandoCliente, setGuardandoCliente] = useState(false);
+  const {
+    register: registerAlta,
+    handleSubmit: handleAlta,
+    reset: resetAlta,
+    formState: { errors: erroresAlta, isSubmitting: guardandoCliente },
+  } = useForm<AltaRapidaFormValues>({
+    resolver: zodResolver(altaRapidaFormSchema),
+    defaultValues: { nombre: "", apellido: "", telefono: "", dni: "" },
+  });
 
   const cargarClientes = async () => {
     setCargandoC(true);
@@ -73,34 +85,18 @@ export default function IngresoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [usuario]);
 
-  const crearCliente = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const crearCliente = async (values: AltaRapidaFormValues) => {
     if (guardandoCliente) return;
-    if (!nombre.trim()) {
-      setError("El nombre del cliente es obligatorio.");
-      return;
-    }
     setError(null);
-    setGuardandoCliente(true);
     try {
-      await api.post("/api/cliente", {
-        nombre: nombre.trim(),
-        apellido: apellido.trim() || null,
-        telefono: telefono.trim() || null,
-        dni: dni.trim() || null,
-      });
-      setNombre("");
-      setApellido("");
-      setTelefono("");
-      setDni("");
+      await api.post("/api/cliente", altaRapidaAPayload(values));
+      resetAlta();
       await cargarClientes();
       void Toast.fire({ icon: "success", title: "Cliente creado", text: "El cliente se guardó correctamente." });
     } catch (e) {
       const mensaje = e instanceof Error ? e.message : "No se pudo crear";
       setError(mensaje);
       void Toast.fire({ icon: "error", title: "No se pudo crear", text: mensaje });
-    } finally {
-      setGuardandoCliente(false);
     }
   };
 
@@ -277,70 +273,50 @@ export default function IngresoPage() {
                 </p>
               </div>
             </div>
-            <form onSubmit={(e) => void crearCliente(e)} className="mt-4 space-y-2">
-              <div>
-                <label htmlFor="alta-nombre" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
-                  Nombre <span className="font-bold text-red-600">*</span>
-                </label>
+            <form onSubmit={(e) => void handleAlta(crearCliente)(e)} noValidate className="mt-4 space-y-2">
+              <Field id="alta-nombre" label="Nombre" required error={erroresAlta.nombre?.message}>
                 <input
                   id="alta-nombre"
-                  name="nombre"
                   className={inputCls}
                   required
                   type="text"
                   autoComplete="given-name"
                   placeholder="Nombre *"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
+                  {...registerAlta("nombre")}
                 />
-              </div>
-              <div>
-                <label htmlFor="alta-apellido" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
-                  Apellido
-                </label>
+              </Field>
+              <Field id="alta-apellido" label="Apellido" error={erroresAlta.apellido?.message}>
                 <input
                   id="alta-apellido"
-                  name="apellido"
                   className={inputCls}
                   type="text"
                   autoComplete="family-name"
                   placeholder="Apellido"
-                  value={apellido}
-                  onChange={(e) => setApellido(e.target.value)}
+                  {...registerAlta("apellido")}
                 />
-              </div>
-              <div>
-                <label htmlFor="alta-dni" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
-                  DNI
-                </label>
+              </Field>
+              <Field id="alta-dni" label="DNI" error={erroresAlta.dni?.message}>
                 <input
                   id="alta-dni"
-                  name="dni"
                   className={inputCls}
                   type="text"
                   inputMode="numeric"
                   autoComplete="off"
                   placeholder="DNI"
-                  value={dni}
-                  onChange={(e) => setDni(e.target.value)}
+                  {...registerAlta("dni")}
                 />
-              </div>
-              <div>
-                <label htmlFor="alta-telefono" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
-                  Teléfono / WhatsApp
-                </label>
+              </Field>
+              <Field id="alta-telefono" label="Teléfono / WhatsApp" error={erroresAlta.telefono?.message}>
                 <input
                   id="alta-telefono"
-                  name="telefono"
                   className={inputCls}
                   type="tel"
                   autoComplete="tel"
                   inputMode="tel"
                   placeholder="Teléfono / WhatsApp"
-                  value={telefono}
-                  onChange={(e) => setTelefono(e.target.value)}
+                  {...registerAlta("telefono")}
                 />
-              </div>
+              </Field>
               <button className={btnPrimary + " w-full gap-2"} disabled={guardandoCliente}>
                 <FiUserPlus size={15} />
                 {guardandoCliente ? "Guardando..." : "Guardar cliente"}
