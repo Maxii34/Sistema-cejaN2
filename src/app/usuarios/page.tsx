@@ -22,7 +22,9 @@ import { Toast } from "@/lib/toast";
 import {
   crearUsuarioAPayload,
   crearUsuarioFormSchema,
+  editarUsuarioFormSchema,
   type CrearUsuarioFormValues,
+  type EditarUsuarioFormValues,
 } from "@/lib/validaciones";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -46,6 +48,206 @@ const ROL_INFO: Record<RolUsuario, { titulo: string; detalle: string; caja: stri
   },
 };
 
+/**
+ * Form de edición dentro del modal: su propio useForm, reseteado al
+ * abrir/cambiar de usuario. La repetición de clave es regla solo del front.
+ */
+function EditarUsuarioForm({
+  usuario: u,
+  alGuardar,
+  alFallar,
+  alCancelar,
+}: {
+  usuario: Usuario;
+  alGuardar: (claveOk: boolean) => void;
+  alFallar: (mensaje: string) => void;
+  alCancelar: () => void;
+}) {
+  const [verNueva, setVerNueva] = useState(false);
+  const [verRepetir, setVerRepetir] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<EditarUsuarioFormValues>({
+    resolver: zodResolver(editarUsuarioFormSchema),
+    defaultValues: {
+      nombre: u.nombre,
+      email: u.email,
+      rol: u.rol,
+      cambiarClave: false,
+      claveNueva: "",
+      claveRepetir: "",
+    },
+  });
+  useEffect(() => {
+    reset({
+      nombre: u.nombre,
+      email: u.email,
+      rol: u.rol,
+      cambiarClave: false,
+      claveNueva: "",
+      claveRepetir: "",
+    });
+    setVerNueva(false);
+    setVerRepetir(false);
+  }, [u, reset]);
+  const rolVivo = watch("rol");
+  const cambiarClave = watch("cambiarClave");
+  const claveNueva = watch("claveNueva");
+  const claveRepetir = watch("claveRepetir");
+
+  const guardar = async (values: EditarUsuarioFormValues) => {
+    if (isSubmitting) return;
+    try {
+      await api.put(`/api/usuario/${u.id}`, {
+        nombre: values.nombre.trim(),
+        email: values.email.trim(),
+        rol: values.rol,
+      });
+      let claveOk = false;
+      if (values.cambiarClave) {
+        await api.put(`/api/usuario/${u.id}/password`, { password: values.claveNueva });
+        claveOk = true;
+      }
+      alGuardar(claveOk);
+    } catch (e) {
+      alFallar(e instanceof Error ? e.message : "No se pudo actualizar");
+    }
+  };
+
+  return (
+    <form onSubmit={(e) => void handleSubmit(guardar)(e)} noValidate className="space-y-2">
+      <Field id="edit-u-nombre" label="Nombre" error={errors.nombre?.message}>
+        <input
+          id="edit-u-nombre"
+          className={inputCls}
+          required
+          autoComplete="name"
+          {...register("nombre")}
+        />
+      </Field>
+      <Field id="edit-u-email" label="Email" error={errors.email?.message}>
+        <input
+          id="edit-u-email"
+          className={inputCls}
+          required
+          type="email"
+          autoComplete="email"
+          {...register("email")}
+        />
+      </Field>
+      <div>
+        <label htmlFor="edit-u-rol" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Rol</label>
+        <select
+          id="edit-u-rol"
+          className={inputCls}
+          {...register("rol")}
+        >
+          <option value="TECNICO">TÉCNICO</option>
+          <option value="ADMIN">ADMIN</option>
+        </select>
+        {errors.rol?.message && (
+          <p role="alert" className="mt-1 text-xs font-medium text-red-600">{errors.rol.message}</p>
+        )}
+        <p className={`mt-1.5 rounded-xl border px-3 py-2 text-xs leading-snug ring-1 ring-inset ${ROL_INFO[rolVivo].caja}`}>
+          <b className="block text-[11px] font-bold uppercase tracking-wider opacity-80">{ROL_INFO[rolVivo].titulo}</b>
+          <span className="mt-0.5 block">{ROL_INFO[rolVivo].detalle}</span>
+        </p>
+      </div>
+      {/* Restablecer contraseña (solo ADMIN) */}
+      <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-3">
+        <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5">
+          <input
+            type="checkbox"
+            className="h-5 w-5 shrink-0 accent-blue-800"
+            {...register("cambiarClave")}
+          />
+          <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-bold text-stone-800">
+            <FiLock size={14} className="shrink-0 text-blue-800" />
+            Cambiar contraseña
+          </span>
+        </label>
+        {cambiarClave && (
+          <div className="mt-2 space-y-2 border-t border-stone-200/70 pt-2">
+            <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+              <div>
+                <label htmlFor="clave-nueva" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nueva clave</label>
+                <div className="relative">
+                  <input
+                    id="clave-nueva"
+                    className={inputCls + " pr-11"}
+                    type={verNueva ? "text" : "password"}
+                    autoComplete="new-password"
+                    placeholder="Mínimo 6 caracteres"
+                    {...register("claveNueva")}
+                  />
+                  <button
+                    type="button"
+                    aria-label={verNueva ? "Ocultar nueva clave" : "Mostrar nueva clave"}
+                    onClick={() => setVerNueva((v) => !v)}
+                    className="absolute inset-y-0 right-1 flex w-9 items-center justify-center rounded-lg text-stone-400 hover:text-stone-700"
+                  >
+                    {verNueva ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                  </button>
+                </div>
+                {errors.claveNueva?.message && (
+                  <p role="alert" className="mt-1 text-xs font-medium text-red-600">{errors.claveNueva.message}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="clave-repetir" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Repetir nueva clave</label>
+                <div className="relative">
+                  <input
+                    id="clave-repetir"
+                    className={inputCls + " pr-11"}
+                    type={verRepetir ? "text" : "password"}
+                    autoComplete="new-password"
+                    placeholder="Repetí la nueva clave"
+                    {...register("claveRepetir")}
+                  />
+                  <button
+                    type="button"
+                    aria-label={verRepetir ? "Ocultar confirmación" : "Mostrar confirmación"}
+                    onClick={() => setVerRepetir((v) => !v)}
+                    className="absolute inset-y-0 right-1 flex w-9 items-center justify-center rounded-lg text-stone-400 hover:text-stone-700"
+                  >
+                    {verRepetir ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                  </button>
+                </div>
+                {errors.claveRepetir?.message && (
+                  <p role="alert" className="mt-1 text-xs font-medium text-red-600">{errors.claveRepetir.message}</p>
+                )}
+              </div>
+            </div>
+            {claveNueva !== "" && claveNueva.length < 6 && (
+              <p className="text-xs font-medium text-amber-700">La nueva clave debe tener al menos 6 caracteres.</p>
+            )}
+            {claveNueva !== "" && claveRepetir !== "" && (
+              claveNueva === claveRepetir
+                ? <p className="text-xs font-semibold text-emerald-700">Las claves nuevas coinciden ✓</p>
+                : <p className="text-xs font-semibold text-red-600">Las claves nuevas no coinciden.</p>
+            )}
+            <p className="rounded-lg bg-blue-50 px-2.5 py-1.5 text-[11px] leading-snug text-blue-800 ring-1 ring-inset ring-blue-200/70">
+              Como administrador, fijás una nueva contraseña sin necesidad de la anterior. El usuario deberá ingresar con la nueva.
+            </p>
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-2 pt-1">
+        <button type="button" className={btnSecondary} onClick={alCancelar}>
+          Cancelar
+        </button>
+        <button className={btnPrimary} disabled={isSubmitting || (cambiarClave && (claveNueva.length < 6 || claveNueva !== claveRepetir))}>
+          <FiEdit size={15} /> {isSubmitting ? "Guardando..." : "Guardar"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function UsuariosPage() {
   const { usuario, cargando, esAdmin } = useRequireAuth();
   const router = useRouter();
@@ -64,17 +266,8 @@ export default function UsuariosPage() {
   });
   const rolNuevo = watchNuevo("rol");
 
-  // edición
+  // edición (el form vive dentro del modal)
   const [editando, setEditando] = useState<Usuario | null>(null);
-  const [formEdit, setFormEdit] = useState({ nombre: "", email: "", rol: "TECNICO" as RolUsuario });
-  const [guardandoEdit, setGuardandoEdit] = useState(false);
-
-  // Restablecer clave (solo ADMIN): nueva + repetir, va a PUT /:id/password
-  const [cambiarClave, setCambiarClave] = useState(false);
-  const [claveNueva, setClaveNueva] = useState("");
-  const [claveRepetir, setClaveRepetir] = useState("");
-  const [verNueva, setVerNueva] = useState(false);
-  const [verRepetir, setVerRepetir] = useState(false);
 
   // ADMIN siempre fijo arriba, luego por nombre
   const listaOrdenada = useMemo(
@@ -121,55 +314,22 @@ export default function UsuariosPage() {
   };
 
   const abrirEdicion = (u: Usuario) => {
-    setFormEdit({ nombre: u.nombre, email: u.email, rol: u.rol });
     setEditando(u);
-    // resetea la sección de clave
-    setCambiarClave(false);
-    setClaveNueva("");
-    setClaveRepetir("");
-    setVerNueva(false);
-    setVerRepetir(false);
   };
 
-  const guardarEdicion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editando) return;
-    if (cambiarClave) {
-      if (claveNueva.length < 6) {
-        void Toast.fire({ icon: "error", title: "Clave muy corta", text: "La nueva clave debe tener al menos 6 caracteres." });
-        return;
-      }
-      if (claveNueva !== claveRepetir) {
-        void Toast.fire({ icon: "error", title: "No coinciden", text: "La nueva clave y su repetición no coinciden." });
-        return;
-      }
-    }
-    setGuardandoEdit(true);
-    try {
-      await api.put(`/api/usuario/${editando.id}`, {
-        nombre: formEdit.nombre.trim(),
-        email: formEdit.email.trim(),
-        rol: formEdit.rol,
-      });
-      let claveOk = false;
-      if (cambiarClave) {
-        await api.put(`/api/usuario/${editando.id}/password`, { password: claveNueva });
-        claveOk = true;
-      }
-      setEditando(null);
-      await cargar();
-      void Toast.fire({
-        icon: "success",
-        title: "Usuario actualizado",
-        text: claveOk ? "Datos y contraseña guardados correctamente." : "Los datos se guardaron correctamente.",
-      });
-    } catch (e) {
-      const mensaje = e instanceof Error ? e.message : "No se pudo actualizar";
-      setError(mensaje);
-      void Toast.fire({ icon: "error", title: "No se pudo actualizar", text: mensaje });
-    } finally {
-      setGuardandoEdit(false);
-    }
+  const trasGuardarEdicion = async (claveOk: boolean) => {
+    setEditando(null);
+    await cargar();
+    void Toast.fire({
+      icon: "success",
+      title: "Usuario actualizado",
+      text: claveOk ? "Datos y contraseña guardados correctamente." : "Los datos se guardaron correctamente.",
+    });
+  };
+
+  const fallaEdicion = (mensaje: string) => {
+    setError(mensaje);
+    void Toast.fire({ icon: "error", title: "No se pudo actualizar", text: mensaje });
   };
 
   const alternarActivo = async (u: Usuario) => {
@@ -374,136 +534,12 @@ export default function UsuariosPage() {
       <AnimatePresence>
       {editando && (
         <Modal titulo={`Editar: ${editando.nombre}`} onClose={() => setEditando(null)}>
-          <form onSubmit={(e) => void guardarEdicion(e)} className="space-y-2">
-            <div>
-              <label htmlFor="edit-u-nombre" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nombre</label>
-              <input
-                id="edit-u-nombre"
-                name="nombre"
-                className={inputCls}
-                required
-                autoComplete="name"
-                value={formEdit.nombre}
-                onChange={(e) => setFormEdit({ ...formEdit, nombre: e.target.value })}
-              />
-            </div>
-            <div>
-              <label htmlFor="edit-u-email" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Email</label>
-              <input
-                id="edit-u-email"
-                name="email"
-                className={inputCls}
-                required
-                type="email"
-                autoComplete="email"
-                value={formEdit.email}
-                onChange={(e) => setFormEdit({ ...formEdit, email: e.target.value })}
-              />
-            </div>
-            <div>
-              <label htmlFor="edit-u-rol" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Rol</label>
-              <select
-                id="edit-u-rol"
-                name="rol"
-                className={inputCls}
-                value={formEdit.rol}
-                onChange={(e) => setFormEdit({ ...formEdit, rol: e.target.value as RolUsuario })}
-              >
-                <option value="TECNICO">TÉCNICO</option>
-                <option value="ADMIN">ADMIN</option>
-              </select>
-              <p className={`mt-1.5 rounded-xl border px-3 py-2 text-xs leading-snug ring-1 ring-inset ${ROL_INFO[formEdit.rol].caja}`}>
-                <b className="block text-[11px] font-bold uppercase tracking-wider opacity-80">{ROL_INFO[formEdit.rol].titulo}</b>
-                <span className="mt-0.5 block">{ROL_INFO[formEdit.rol].detalle}</span>
-              </p>
-            </div>
-            {/* Restablecer contraseña (solo ADMIN) */}
-            <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-3">
-              <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5">
-                <input
-                  type="checkbox"
-                  className="h-5 w-5 shrink-0 accent-blue-800"
-                  checked={cambiarClave}
-                  onChange={(e) => setCambiarClave(e.target.checked)}
-                />
-                <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-bold text-stone-800">
-                  <FiLock size={14} className="shrink-0 text-blue-800" />
-                  Cambiar contraseña
-                </span>
-              </label>
-              {cambiarClave && (
-                <div className="mt-2 space-y-2 border-t border-stone-200/70 pt-2">
-                  <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
-                    <div>
-                      <label htmlFor="clave-nueva" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nueva clave</label>
-                      <div className="relative">
-                        <input
-                          id="clave-nueva"
-                          name="nuevaClave"
-                          className={inputCls + " pr-11"}
-                          type={verNueva ? "text" : "password"}
-                          autoComplete="new-password"
-                          placeholder="Mínimo 6 caracteres"
-                          value={claveNueva}
-                          onChange={(e) => setClaveNueva(e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          aria-label={verNueva ? "Ocultar nueva clave" : "Mostrar nueva clave"}
-                          onClick={() => setVerNueva((v) => !v)}
-                          className="absolute inset-y-0 right-1 flex w-9 items-center justify-center rounded-lg text-stone-400 hover:text-stone-700"
-                        >
-                          {verNueva ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label htmlFor="clave-repetir" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Repetir nueva clave</label>
-                      <div className="relative">
-                        <input
-                          id="clave-repetir"
-                          name="repetirClave"
-                          className={inputCls + " pr-11"}
-                          type={verRepetir ? "text" : "password"}
-                          autoComplete="new-password"
-                          placeholder="Repetí la nueva clave"
-                          value={claveRepetir}
-                          onChange={(e) => setClaveRepetir(e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          aria-label={verRepetir ? "Ocultar confirmación" : "Mostrar confirmación"}
-                          onClick={() => setVerRepetir((v) => !v)}
-                          className="absolute inset-y-0 right-1 flex w-9 items-center justify-center rounded-lg text-stone-400 hover:text-stone-700"
-                        >
-                          {verRepetir ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  {claveNueva !== "" && claveNueva.length < 6 && (
-                    <p className="text-xs font-medium text-amber-700">La nueva clave debe tener al menos 6 caracteres.</p>
-                  )}
-                  {claveNueva !== "" && claveRepetir !== "" && (
-                    claveNueva === claveRepetir
-                      ? <p className="text-xs font-semibold text-emerald-700">Las claves nuevas coinciden ✓</p>
-                      : <p className="text-xs font-semibold text-red-600">Las claves nuevas no coinciden.</p>
-                  )}
-                  <p className="rounded-lg bg-blue-50 px-2.5 py-1.5 text-[11px] leading-snug text-blue-800 ring-1 ring-inset ring-blue-200/70">
-                    Como administrador, fijás una nueva contraseña sin necesidad de la anterior. El usuario deberá ingresar con la nueva.
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <button type="button" className={btnSecondary} onClick={() => setEditando(null)}>
-                Cancelar
-              </button>
-              <button className={btnPrimary} disabled={guardandoEdit || (cambiarClave && (claveNueva.length < 6 || claveNueva !== claveRepetir))}>
-                <FiEdit size={15} /> {guardandoEdit ? "Guardando..." : "Guardar"}
-              </button>
-            </div>
-          </form>
+          <EditarUsuarioForm
+            usuario={editando}
+            alGuardar={(claveOk) => void trasGuardarEdicion(claveOk)}
+            alFallar={fallaEdicion}
+            alCancelar={() => setEditando(null)}
+          />
         </Modal>
       )}
       </AnimatePresence>

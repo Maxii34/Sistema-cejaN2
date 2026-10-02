@@ -8,12 +8,14 @@ export function Field({
   id,
   label,
   required = false,
+  marca,
   error,
   children,
 }: {
   id: string;
   label: string;
   required?: boolean;
+  marca?: ReactNode;
   error?: string;
   children: ReactNode;
 }) {
@@ -25,6 +27,7 @@ export function Field({
       >
         {label}{" "}
         {required && <span className="font-bold text-red-600">*</span>}
+        {marca}
       </label>
       {children}
       {error && (

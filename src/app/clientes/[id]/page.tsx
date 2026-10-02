@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   FiArrowLeft,
@@ -19,7 +19,10 @@ import { Toast } from "@/lib/toast";
 import {
   crearEquipoAPayload,
   crearEquipoFormSchema,
+  editarClienteAPayload,
+  editarClienteFormSchema,
   type CrearEquipoFormValues,
+  type EditarClienteFormValues,
 } from "@/lib/validaciones";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
@@ -48,7 +51,15 @@ export default function ClienteDetallePage() {
   const [error, setError] = useState<string | null>(null);
 
   // edición cliente (los campos se habilitan con "Editar datos")
-  const [form, setForm] = useState({ nombre: "", apellido: "", telefono: "", whatsapp: "", email: "", direccion: "", dni: "" });
+  const {
+    register: registerEdit,
+    handleSubmit: handleEdit,
+    reset: resetEdit,
+    formState: { errors: erroresEdit },
+  } = useForm<EditarClienteFormValues>({
+    resolver: zodResolver(editarClienteFormSchema),
+    defaultValues: { nombre: "", apellido: "", telefono: "", whatsapp: "", email: "", direccion: "", dni: "" },
+  });
   const [editando, setEditando] = useState(false);
   const [verTodos, setVerTodos] = useState(false);
   // alta equipo
@@ -62,16 +73,19 @@ export default function ClienteDetallePage() {
     defaultValues: { tipo: "", marca: "", modelo: "", numeroSerie: "", observaciones: "" },
   });
 
-  const rellenarForm = (c: Cliente) =>
-    setForm({
-      nombre: c.nombre ?? "",
-      apellido: c.apellido ?? "",
-      telefono: c.telefono ?? "",
-      whatsapp: c.whatsapp ?? "",
-      email: c.email ?? "",
-      direccion: c.direccion ?? "",
-      dni: c.dni ?? "",
-    });
+  const rellenarForm = useCallback(
+    (c: Cliente) =>
+      resetEdit({
+        nombre: c.nombre ?? "",
+        apellido: c.apellido ?? "",
+        telefono: c.telefono ?? "",
+        whatsapp: c.whatsapp ?? "",
+        email: c.email ?? "",
+        direccion: c.direccion ?? "",
+        dni: c.dni ?? "",
+      }),
+    [resetEdit]
+  );
 
   useEffect(() => {
     if (!usuario || !id) return;
@@ -107,13 +121,9 @@ export default function ClienteDetallePage() {
     return map;
   }, [ordenes]);
 
-  const guardarCliente = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const guardarCliente = async (values: EditarClienteFormValues) => {
     try {
-      const payload = Object.fromEntries(
-        Object.entries(form).map(([k, v]) => [k, v.trim() === "" ? null : v.trim()])
-      );
-      const res = await api.put<ApiEnvelope<Cliente>>(`/api/cliente/${id}`, payload);
+      const res = await api.put<ApiEnvelope<Cliente>>(`/api/cliente/${id}`, editarClienteAPayload(values));
       setCliente(res.data);
       setEditando(false);
       void Toast.fire({ icon: "success", title: "Datos guardados", text: "La ficha del cliente se actualizó." });
@@ -229,7 +239,7 @@ export default function ClienteDetallePage() {
                 )}
               </div>
             ) : (
-            <form onSubmit={(e) => void guardarCliente(e)} className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+            <form onSubmit={(e) => void handleEdit(guardarCliente)(e)} noValidate className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
               {(
                 [
                   ["nombre", "Nombre", true],
@@ -240,33 +250,27 @@ export default function ClienteDetallePage() {
                   ["email", "Email", false],
                 ] as const
               ).map(([k, label, req]) => (
-                <div key={k}>
-                  <label htmlFor={`edit-${k}`} className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
-                    {label} {req && <span className="font-bold text-red-600">*</span>}
-                  </label>
+                <Field key={k} id={`edit-${k}`} label={label} required={req} error={erroresEdit[k]?.message}>
                   <input
                     id={`edit-${k}`}
-                    name={k}
                     className={inputCls + (!editando ? " bg-zinc-50 text-zinc-600" : "")}
                     placeholder={label}
-                    value={form[k]}
                     disabled={!editando}
-                    onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+                    {...registerEdit(k)}
                   />
-                </div>
+                </Field>
               ))}
               <div className="min-[420px]:col-span-2">
-                <label htmlFor="edit-direccion" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Dirección</label>
-                <input
-                  id="edit-direccion"
-                  name="direccion"
-                  className={inputCls + (!editando ? " bg-zinc-50 text-zinc-600" : "")}
-                  placeholder="Dirección"
-                  autoComplete="street-address"
-                  value={form.direccion}
-                  disabled={!editando}
-                  onChange={(e) => setForm({ ...form, direccion: e.target.value })}
-                />
+                <Field id="edit-direccion" label="Dirección" error={erroresEdit.direccion?.message}>
+                  <input
+                    id="edit-direccion"
+                    className={inputCls + (!editando ? " bg-zinc-50 text-zinc-600" : "")}
+                    placeholder="Dirección"
+                    autoComplete="street-address"
+                    disabled={!editando}
+                    {...registerEdit("direccion")}
+                  />
+                </Field>
               </div>
               <button
                 className={btnPrimary + " min-[420px]:col-span-2 gap-2"}
