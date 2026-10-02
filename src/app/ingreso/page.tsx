@@ -145,7 +145,7 @@ export default function IngresoPage() {
           rel="noopener noreferrer"
           title={`Abrir chat de WhatsApp con ${c.nombre}`}
           aria-label={`Abrir chat de WhatsApp con ${c.nombre}`}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-green-200 bg-white text-green-700 shadow-sm transition-all hover:-translate-y-px hover:border-green-300 hover:bg-green-50 hover:shadow-md active:translate-y-0 active:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/30 sm:h-10 sm:w-10"
+          className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg border border-green-200 bg-white px-2 text-green-700 shadow-sm transition-all hover:-translate-y-px hover:border-green-300 hover:bg-green-50 hover:shadow-md active:translate-y-0 active:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/30 sm:min-h-[40px] sm:min-w-[40px] sm:px-2.5"
         >
           <FiMessageCircle size={15} />
         </a>
@@ -154,7 +154,7 @@ export default function IngresoPage() {
         href={`/clientes/${c.id}`}
         title="Abrir ficha del cliente"
         aria-label={`Abrir ficha de ${c.nombre}`}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-blue-200 bg-white text-blue-800 shadow-sm transition-all hover:-translate-y-px hover:border-blue-300 hover:bg-blue-50 hover:shadow-md active:translate-y-0 active:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700/30 sm:h-10 sm:w-10"
+        className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg border border-blue-200 bg-white px-2 text-blue-700 shadow-sm transition-all hover:-translate-y-px hover:border-blue-300 hover:bg-blue-50 hover:shadow-md active:translate-y-0 active:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700/30 sm:min-h-[40px] sm:min-w-[40px] sm:px-2.5"
       >
         <FiEye size={15} />
       </Link>
@@ -164,7 +164,7 @@ export default function IngresoPage() {
         }
         title="Eliminar cliente"
         aria-label={`Eliminar a ${c.nombre}`}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-200 bg-white text-red-600 shadow-sm transition-all hover:-translate-y-px hover:border-red-300 hover:bg-red-50 hover:shadow-md active:translate-y-0 active:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30 sm:h-10 sm:w-10"
+        className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg border border-red-200 bg-white px-2 text-red-600 shadow-sm transition-all hover:-translate-y-px hover:border-red-300 hover:bg-red-50 hover:shadow-md active:translate-y-0 active:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30 sm:min-h-[40px] sm:min-w-[40px] sm:px-2.5"
       >
         <FiTrash2 size={15} />
       </button>
