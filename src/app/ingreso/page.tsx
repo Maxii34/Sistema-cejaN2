@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   FiChevronRight,
   FiEye,
@@ -41,6 +42,7 @@ function normalizarWa(telefono: string): string {
 
 export default function IngresoPage() {
   const { usuario, cargando, esAdmin } = useRequireAuth();
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -232,7 +234,12 @@ export default function IngresoPage() {
                   </thead>
                   <tbody>
                     {clientesFiltrados.map((c) => (
-                      <tr key={c.id} className="border-b border-stone-100 transition-colors last:border-0 hover:bg-blue-50/40">
+                      <tr
+                        key={c.id}
+                        onClick={() => router.push(`/clientes/${c.id}`)}
+                        title={`Abrir ficha de ${c.nombre}`}
+                        className="cursor-pointer border-b border-stone-100 transition-all last:border-0 hover:bg-blue-50/50 hover:shadow-[inset_3px_0_0_0_#1e40af]"
+                      >
                         <td className="px-3 py-2.5">
                           <div className="flex items-center gap-2.5">
                             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-800 text-xs font-extrabold text-white">
@@ -260,7 +267,7 @@ export default function IngresoPage() {
                             {c.activo ? "Activo" : "Inactivo"}
                           </Badge>
                         </td>
-                        <td className="whitespace-nowrap px-3 py-2.5">{acciones(c)}</td>
+                        <td className="whitespace-nowrap px-3 py-2.5" onClick={(e) => e.stopPropagation()}>{acciones(c)}</td>
                       </tr>
                     ))}
                     </tbody>
