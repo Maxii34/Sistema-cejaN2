@@ -145,20 +145,18 @@ export default function IngresoPage() {
           rel="noopener noreferrer"
           title={`Abrir chat de WhatsApp con ${c.nombre}`}
           aria-label={`Abrir chat de WhatsApp con ${c.nombre}`}
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-green-600 px-2.5 py-1.5 text-xs font-semibold text-white transition-colors active:bg-green-700 sm:min-h-[40px] sm:px-3 sm:text-xs sm:hover:bg-green-700"
+          className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg bg-green-600 px-2 text-white transition-colors active:bg-green-700 sm:min-h-[40px] sm:min-w-[40px] sm:px-2.5 sm:hover:bg-green-700"
         >
           <FiMessageCircle size={15} />
-          <span className="hidden min-[420px]:inline">WhatsApp</span>
         </a>
       )}
       <Link
         href={`/clientes/${c.id}`}
         title="Abrir ficha del cliente"
         aria-label={`Abrir ficha de ${c.nombre}`}
-        className="inline-flex min-h-[36px] items-center gap-1 rounded-lg bg-blue-800 px-2.5 py-1.5 text-xs font-semibold text-white active:bg-blue-900 sm:min-h-[40px] sm:px-3 sm:text-xs"
+        className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg bg-blue-800 px-2 text-white active:bg-blue-900 sm:min-h-[40px] sm:min-w-[40px] sm:px-2.5"
       >
-        <FiEye size={14} />
-        Abrir
+        <FiEye size={15} />
       </Link>
       <button
         onClick={() =>
