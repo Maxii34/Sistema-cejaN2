@@ -13,10 +13,11 @@ import { z } from "zod";
  * Espeja `loginSchema` de Back `src/validators/usuario.validation.ts`.
  */
 export const loginFormSchema = z.object({
+  // Sin toLowerCase a propósito: el resolver devuelve valores transformados
+  // y el backend no loweriza al comparar; el email se envía igual que hoy.
   email: z
     .string()
     .trim()
-    .toLowerCase()
     .pipe(z.email("El email no es válido")),
   // Sin trim a propósito: la clave se envía tal cual, igual que hoy.
   password: z.string().min(1, "La contraseña es obligatoria"),
