@@ -5,13 +5,17 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
   FiArrowLeft,
+  FiBox,
   FiCalendar,
   FiCheck,
   FiClock,
   FiCreditCard,
   FiDollarSign,
+  FiInfo,
   FiLock,
   FiSave,
+  FiShield,
+  FiUser,
 } from "react-icons/fi";
 import { api } from "@/lib/api";
 import { Toast } from "@/lib/toast";
@@ -301,31 +305,49 @@ export default function OrdenDetallePage() {
                   <Badge tono={orden.estadoPago === "PAGADO" ? "green" : "amber"}>{orden.estadoPago}</Badge>
                   {orden.autorizadoCliente && <Badge tono="green">Autorizado</Badge>}
                 </div>
-                <dl className="mt-3 space-y-1.5 rounded-xl bg-stone-50 p-3 text-sm ring-1 ring-inset ring-stone-200/70">
-                  <div className="flex items-center justify-between gap-2">
-                    <dt className="shrink-0 text-xs font-bold uppercase tracking-wider text-stone-400">Cliente</dt>
-                    <dd className="min-w-0 truncate text-right font-semibold text-stone-800">
-                      {orden.equipo?.cliente ? `${orden.equipo.cliente.nombre} ${orden.equipo.cliente.apellido ?? ""}`.trim() : `Equipo #${orden.equipoId}`}
-                    </dd>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 border-t border-stone-200/70 pt-1.5">
-                    <dt className="shrink-0 text-xs font-bold uppercase tracking-wider text-stone-400">Accesorios</dt>
-                    <dd className="min-w-0 truncate text-right font-semibold text-stone-800">{orden.accesorios || "—"}</dd>
-                  </div>
-                  <div className="border-t border-stone-200/70 pt-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <dt className="shrink-0 text-xs font-bold uppercase tracking-wider text-stone-400">Condición</dt>
-                      <dd className="min-w-0 truncate text-right font-semibold text-stone-800">{orden.condicionFisica.map((c) => CONDICION_LABEL[c]).join(", ")}</dd>
-                    </div>
-                    {orden.detalleCondicionFisica && (
-                      <dd className="mt-1 break-words text-[13px] text-stone-600">{orden.detalleCondicionFisica}</dd>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between gap-2 border-t border-stone-200/70 pt-1.5">
-                    <dt className="shrink-0 text-xs font-bold uppercase tracking-wider text-stone-400">Garantía</dt>
-                    <dd className="font-ficha font-bold text-stone-900">{orden.garantiaDias} días</dd>
-                  </div>
-                </dl>
+                <ul className="mt-3 space-y-2.5 text-sm">
+                  <li className="flex items-start gap-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-800">
+                      <FiUser size={14} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-stone-400">Cliente</span>
+                      <span className="block truncate font-semibold text-stone-800">
+                        {orden.equipo?.cliente ? `${orden.equipo.cliente.nombre} ${orden.equipo.cliente.apellido ?? ""}`.trim() : `Equipo #${orden.equipoId}`}
+                      </span>
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-stone-600">
+                      <FiBox size={14} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-stone-400">Accesorios</span>
+                      <span className="block break-words font-semibold text-stone-800">{orden.accesorios || "—"}</span>
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-800">
+                      <FiInfo size={14} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-stone-400">Condición</span>
+                      <span className="block break-words font-semibold text-stone-800">{orden.condicionFisica.map((c) => CONDICION_LABEL[c]).join(", ")}</span>
+                      {orden.detalleCondicionFisica && (
+                        <span className="mt-0.5 block break-words text-[13px] font-normal text-stone-500">{orden.detalleCondicionFisica}</span>
+                      )}
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
+                      <FiShield size={14} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-stone-400">Garantía</span>
+                      <span className="font-ficha block font-bold text-stone-900">{orden.garantiaDias} días</span>
+                    </span>
+                  </li>
+                </ul>
               </Card>
               {(() => {
                 const idx = ["EN_DIAGNOSTICO", "ESPERANDO_REPUESTO"].includes(orden.estado)
