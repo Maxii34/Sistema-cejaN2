@@ -194,7 +194,7 @@ export default function IngresoPage() {
         )}
 
         <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row">
-          <Card className="order-last min-w-0 flex-1 lg:order-none">
+          <Card className="order-last min-w-0 flex-1 lg:order-0">
             <div className="flex items-center gap-2">
               <input
                 id="buscar-clientes"
@@ -265,7 +265,7 @@ export default function IngresoPage() {
               </Lista>
             )}
           </Card>
-          <Reveal className="order-first shrink-0 lg:order-none lg:w-80" delay={0.08}><Card>
+          <Reveal className="order-first shrink-0 lg:order-0 lg:w-80" delay={0.08}><Card>
             <div className="flex items-center gap-3">
               <IconTile tono="brand">
                 <FiUserPlus size={18} />
