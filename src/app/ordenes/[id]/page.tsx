@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
   FiArrowLeft,
+  FiCalendar,
   FiCheck,
   FiClock,
+  FiCreditCard,
   FiDollarSign,
   FiLock,
-  FiPrinter,
   FiSave,
 } from "react-icons/fi";
 import { api } from "@/lib/api";
@@ -19,8 +20,17 @@ import { Sidebar } from "@/components/Sidebar";
 import { FotosOrden } from "@/components/FotosOrden";
 import { Card, PageHeader, Badge, btnPrimary, btnSecondary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
 import { Reveal } from "@/components/motion";
-import type { ApiEnvelope, OrdenReparacion, Usuario } from "@/lib/types";
+import type { ApiEnvelope, MedioPago, OrdenReparacion, Usuario } from "@/lib/types";
 import { ESTADO_ORDEN_LABEL, CONDICION_LABEL } from "@/lib/types";
+
+const MEDIO_LABEL: Record<MedioPago, string> = {
+  EFECTIVO: "Efectivo",
+  TRANSFERENCIA: "Transferencia",
+  TARJETA_DEBITO: "Débito",
+  TARJETA_CREDITO: "Crédito",
+  MERCADO_PAGO: "Mercado Pago",
+  OTRO: "Otro",
+};
 
 function TagOpcional() {
   return (
@@ -263,25 +273,18 @@ export default function OrdenDetallePage() {
           titulo={orden ? `Orden ${orden.numero}` : `Orden #${id}`}
           descripcion={orden ? `${orden.equipo?.tipo ?? ""} ${orden.equipo?.marca ?? ""} ${orden.equipo?.modelo ?? ""} · Falla: ${orden.fallaReportada}` : ""}
           accion={
-            <div className="grid grid-cols-2 gap-2 sm:flex">
-              <button
-                className={btnSecondary + " gap-2"}
-                onClick={() => {
-                  if (typeof window !== "undefined" && window.history.length > 1) {
-                    router.back();
-                  } else {
-                    router.push("/");
-                  }
-                }}
-              >
-                <FiArrowLeft size={15} /> Volver
-              </button>
-              {orden && (
-                <button className={btnSecondary + " gap-2"} onClick={() => window.print()}>
-                  <FiPrinter size={15} /> Imprimir
-                </button>
-              )}
-            </div>
+            <button
+              className={btnSecondary + " gap-2"}
+              onClick={() => {
+                if (typeof window !== "undefined" && window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push("/");
+                }
+              }}
+            >
+              <FiArrowLeft size={15} /> Volver
+            </button>
           }
         />
         {error && <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
@@ -304,7 +307,6 @@ export default function OrdenDetallePage() {
                   <p><b>Condición:</b> {orden.condicionFisica.map((c) => CONDICION_LABEL[c]).join(", ")}</p>
                   {orden.detalleCondicionFisica && <p><b>Detalle:</b> {orden.detalleCondicionFisica}</p>}
                   <p><b>Garantía:</b> {orden.garantiaDias} días</p>
-                  <p><b>Firmas recepción:</b> cliente {orden.firmaClienteRecepcion ? "✓" : "✗"} · técnico {orden.firmaTecnicoRecepcion ? "✓" : "✗"}</p>
                 </div>
               </Card>
               {(() => {
@@ -486,17 +488,68 @@ export default function OrdenDetallePage() {
             <Reveal delay={0.08} className="min-w-0 space-y-3 sm:space-y-4">
               <Card>
                 <h2 className="flex items-center gap-2 font-bold text-stone-900">
-                  <IconTile tono="green"><FiDollarSign size={16} /></IconTile> Pagos
+                  <IconTile tono="green"><FiDollarSign size={16} /></IconTile>
+                  <span className="min-w-0 flex-1">
+                    Pagos
+                    <span className="block text-xs font-normal text-stone-500">
+                      {(orden.pagos ?? []).length} cobro{(orden.pagos ?? []).length !== 1 ? "s" : ""} registrado{(orden.pagos ?? []).length !== 1 ? "s" : ""}
+                    </span>
+                  </span>
+                  <Badge tono={orden.estadoPago === "PAGADO" ? "green" : "amber"}>{orden.estadoPago}</Badge>
                 </h2>
-                <p className="mt-1 text-sm text-zinc-600">
-                  Precio final: <b>${Number(orden.precioFinal ?? 0).toFixed(2)}</b> · Cobrado: <b>${(orden.pagos ?? []).reduce((a, p) => a + Number(p.monto), 0).toFixed(2)}</b>
-                </p>
-                <ul className="mt-2 divide-y divide-zinc-100 text-sm">
-                  {(orden.pagos ?? []).map((p) => (
-                    <li key={p.id} className="py-1.5">${Number(p.monto).toFixed(2)} · {p.medioPago} · {new Date(p.fecha).toLocaleDateString()}</li>
-                  ))}
-                  {(orden.pagos ?? []).length === 0 && <li className="py-1.5 text-zinc-600">Todavía no hay pagos registrados.</li>}
-                </ul>
+                {(() => {
+                  const cobrado = (orden.pagos ?? []).reduce((a, p) => a + Number(p.monto), 0);
+                  const precio = orden.precioFinal != null ? Number(orden.precioFinal) : null;
+                  const saldo = precio != null ? Math.round((precio - cobrado) * 100) / 100 : null;
+                  return (
+                    <dl className="mt-3 space-y-1.5 rounded-xl bg-stone-50 p-3 text-sm ring-1 ring-inset ring-stone-200/70">
+                      <div className="flex items-center justify-between gap-2">
+                        <dt className="text-xs font-bold uppercase tracking-wider text-stone-400">Precio final</dt>
+                        <dd className="font-ficha font-bold text-stone-900">{precio != null ? `$${precio.toFixed(2)}` : "Sin definir"}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 border-t border-stone-200/70 pt-1.5">
+                        <dt className="text-xs font-bold uppercase tracking-wider text-stone-400">Cobrado</dt>
+                        <dd className="font-ficha font-bold text-emerald-700">${cobrado.toFixed(2)}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 border-t border-stone-200/70 pt-1.5">
+                        <dt className="text-xs font-bold uppercase tracking-wider text-stone-400">Saldo</dt>
+                        <dd className={`font-ficha font-bold ${saldo != null && saldo <= 0 ? "text-emerald-700" : "text-blue-800"}`}>
+                          {saldo != null ? (saldo <= 0 ? "Pagado ✓" : `$${saldo.toFixed(2)}`) : "—"}
+                        </dd>
+                      </div>
+                    </dl>
+                  );
+                })()}
+                {(orden.pagos ?? []).length === 0 ? (
+                  <p className="mt-3 rounded-xl border border-dashed border-stone-300 bg-stone-50/60 px-3 py-2.5 text-center text-sm text-stone-500">
+                    Todavía no hay pagos registrados.
+                  </p>
+                ) : (
+                  <ul className="mt-3 space-y-1.5">
+                    {(orden.pagos ?? []).map((p) => (
+                      <li
+                        key={p.id}
+                        className="flex items-center gap-2.5 rounded-xl border border-stone-200/70 bg-white px-3 py-2 text-sm shadow-sm"
+                      >
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-700 text-white">
+                          <FiDollarSign size={14} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="font-ficha block font-bold text-stone-900">
+                            ${Number(p.monto).toFixed(2)}
+                          </span>
+                          <span className="mt-0.5 flex items-center gap-1 text-xs text-stone-500">
+                            <FiCalendar size={11} className="shrink-0" />
+                            {new Date(p.fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                          </span>
+                        </span>
+                        <Badge tono="green">
+                          <FiCreditCard size={11} /> {MEDIO_LABEL[p.medioPago]}
+                        </Badge>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </Card>
               <FotosOrden
                 ordenId={orden.id}
@@ -510,16 +563,52 @@ export default function OrdenDetallePage() {
               />
               <Card>
                 <h2 className="flex items-center gap-2 font-bold text-stone-900">
-                  <IconTile tono="violet"><FiClock size={16} /></IconTile> Historial de estados
+                  <IconTile tono="violet"><FiClock size={16} /></IconTile>
+                  <span className="min-w-0 flex-1">
+                    Historial de estados
+                    <span className="block text-xs font-normal text-stone-500">
+                      {(orden.historialEstados ?? []).length} movimiento{(orden.historialEstados ?? []).length !== 1 ? "s" : ""}
+                    </span>
+                  </span>
                 </h2>
-                <ul className="mt-2 space-y-1 text-sm">
-                  {(orden.historialEstados ?? []).map((h) => (
-                    <li key={h.id} className="text-zinc-700">
-                      <b>{ESTADO_ORDEN_LABEL[h.estado]}</b> · {new Date(h.fecha).toLocaleString()} {h.comentario ? `— ${h.comentario}` : ""}
-                    </li>
-                  ))}
-                  {(orden.historialEstados ?? []).length === 0 && <li className="text-zinc-600">Sin historial registrado.</li>}
-                </ul>
+                {(orden.historialEstados ?? []).length === 0 ? (
+                  <p className="mt-3 rounded-xl border border-dashed border-stone-300 bg-stone-50/60 px-3 py-2.5 text-center text-sm text-stone-500">
+                    Sin historial registrado.
+                  </p>
+                ) : (
+                  <ol className="mt-3">
+                    {(orden.historialEstados ?? []).map((h, i, arr) => (
+                      <li key={h.id} className="relative flex gap-2.5 pb-3 last:pb-0">
+                        {i < arr.length - 1 && (
+                          <span aria-hidden className="absolute bottom-0 left-[7px] top-5 w-px bg-stone-200" />
+                        )}
+                        <span
+                          aria-hidden
+                          className={`mt-1.5 h-[15px] w-[15px] shrink-0 rounded-full ring-4 ring-white ${
+                            i === 0 ? "bg-blue-800" : "bg-stone-300"
+                          }`}
+                        />
+                        <div className="min-w-0 flex-1 rounded-xl bg-stone-50 px-3 py-2 ring-1 ring-inset ring-stone-200/60">
+                          <p className="text-sm font-bold text-stone-900">
+                            {ESTADO_ORDEN_LABEL[h.estado]}
+                          </p>
+                          <p className="mt-0.5 flex items-center gap-1 text-xs text-stone-500">
+                            <FiCalendar size={11} className="shrink-0" />
+                            {new Date(h.fecha).toLocaleString("es-AR", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                          {h.comentario && (
+                            <p className="mt-1 break-words text-[13px] text-stone-600">{h.comentario}</p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                )}
               </Card>
             </Reveal>
           </div>
