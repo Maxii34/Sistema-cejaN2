@@ -408,7 +408,7 @@ export default function OrdenDetallePage() {
                         </Field>
                         {esAdmin ? (
                           <Field id="fase-tecnico" label="Técnico a cargo" required error={erroresDiag.tecnicoId?.message}>
-                            <select id="fase-tecnico" className={inputCls} {...registerDiag("tecnicoId")}>
+                            <select id="fase-tecnico" className={inputCls} value={tecnicoIdVivo} {...registerDiag("tecnicoId")}>
                               <option value="">Seleccionar técnico...</option>
                               {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nombre} ({t.rol})</option>)}
                             </select>

@@ -341,6 +341,7 @@ function PagosForm() {
                   id="orden-cobro"
                   className={inputCls}
                   required
+                  value={ordenId}
                   {...registerCobro("ordenId", {
                     onChange: (e) => elegirOrden(e.target.value, ordenes, pagos),
                   })}

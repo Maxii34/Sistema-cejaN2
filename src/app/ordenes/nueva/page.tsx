@@ -229,6 +229,7 @@ function NuevaOrdenForm() {
                   id="recepcion-cliente"
                   className={inputCls}
                   required
+                  value={clienteIdVivo ?? ""}
                   {...registerRec("clienteId", {
                     onChange: (e) => {
                       setRec("clienteId", e.target.value);
@@ -247,6 +248,7 @@ function NuevaOrdenForm() {
                   id="recepcion-equipo"
                   className={inputCls}
                   required
+                  value={equipoIdVivo}
                   {...registerRec("equipoId", {
                     onChange: (e) => elegirEquipo(e.target.value),
                   })}
