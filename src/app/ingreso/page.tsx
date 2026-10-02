@@ -147,7 +147,7 @@ export default function IngresoPage() {
           rel="noopener noreferrer"
           title={`Abrir chat de WhatsApp con ${c.nombre}`}
           aria-label={`Abrir chat de WhatsApp con ${c.nombre}`}
-          className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg border border-green-200 bg-white px-2 text-green-700 shadow-sm transition-all hover:-translate-y-px hover:border-green-300 hover:bg-green-50 hover:shadow-md active:translate-y-0 active:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/30 sm:min-h-[40px] sm:min-w-[40px] sm:px-2.5"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-green-200 bg-white text-green-700 shadow-sm transition-all hover:-translate-y-px hover:border-green-300 hover:bg-green-50 hover:shadow-md active:translate-y-0 active:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600/30 sm:h-10 sm:w-10"
         >
           <FiMessageCircle size={15} />
         </a>
@@ -156,7 +156,7 @@ export default function IngresoPage() {
         href={`/clientes/${c.id}`}
         title="Abrir ficha del cliente"
         aria-label={`Abrir ficha de ${c.nombre}`}
-        className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg border border-blue-200 bg-white px-2 text-blue-700 shadow-sm transition-all hover:-translate-y-px hover:border-blue-300 hover:bg-blue-50 hover:shadow-md active:translate-y-0 active:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700/30 sm:min-h-[40px] sm:min-w-[40px] sm:px-2.5"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 bg-white text-blue-700 shadow-sm transition-all hover:-translate-y-px hover:border-blue-300 hover:bg-blue-50 hover:shadow-md active:translate-y-0 active:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700/30 sm:h-10 sm:w-10"
       >
         <FiEye size={15} />
       </Link>
@@ -166,7 +166,7 @@ export default function IngresoPage() {
         }
         title="Eliminar cliente"
         aria-label={`Eliminar a ${c.nombre}`}
-        className="inline-flex min-h-[36px] min-w-[36px] items-center justify-center rounded-lg border border-red-200 bg-white px-2 text-red-600 shadow-sm transition-all hover:-translate-y-px hover:border-red-300 hover:bg-red-50 hover:shadow-md active:translate-y-0 active:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30 sm:min-h-[40px] sm:min-w-[40px] sm:px-2.5"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-white text-red-600 shadow-sm transition-all hover:-translate-y-px hover:border-red-300 hover:bg-red-50 hover:shadow-md active:translate-y-0 active:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30 sm:h-10 sm:w-10"
       >
         <FiTrash2 size={15} />
       </button>
@@ -193,8 +193,8 @@ export default function IngresoPage() {
           </p>
         )}
 
-        <div className="flex flex-col gap-3 sm:gap-4 lg:grid lg:grid-cols-[1fr_320px]">
-          <Card className="order-last lg:order-none">
+        <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row">
+          <Card className="order-last min-w-0 flex-1 lg:order-none">
             <div className="flex items-center gap-2">
               <input
                 id="buscar-clientes"
@@ -222,13 +222,13 @@ export default function IngresoPage() {
                 />
               </div>
             ) : (
-              <Lista className="tabla-scroll mt-3 max-h-[380px] space-y-2 overflow-y-auto pb-1 pr-1 text-sm sm:max-h-[480px]">
+              <Lista className="tabla-scroll mt-3 max-h-96 space-y-2 overflow-y-auto pb-1 pr-1 text-sm">
                 {clientesFiltrados.map((c) => (
                   <ItemLi
                     key={c.id}
                     onClick={() => router.push(`/clientes/${c.id}`)}
                     title={`Abrir ficha de ${c.nombre}`}
-                    className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-stone-200/70 bg-stone-50/60 px-3 py-2.5 shadow-sm transition-all duration-200 sm:gap-3 sm:hover:-translate-y-0.5 sm:hover:border-blue-200 sm:hover:bg-white sm:hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.35)]"
+                    className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-stone-200/70 bg-stone-50/60 px-3 py-2.5 shadow-sm transition-all duration-200 sm:gap-3 sm:hover:-translate-y-0.5 sm:hover:border-blue-200 sm:hover:bg-white sm:hover:shadow-xl"
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-800 text-xs font-extrabold text-white">
                       {(c.nombre[0] ?? "?").toUpperCase()}
@@ -239,7 +239,7 @@ export default function IngresoPage() {
                         <span className="block truncate font-semibold text-stone-900">
                           {c.nombre} {c.apellido ?? ""}
                         </span>
-                        <span className="hidden shrink-0 min-[420px]:inline">
+                        <span className="hidden shrink-0 sm:inline">
                           <Badge tono={c.activo ? "green" : "zinc"}>
                             {c.activo ? "Activo" : "Inactivo"}
                           </Badge>
@@ -250,7 +250,7 @@ export default function IngresoPage() {
                           {c.dni ? `DNI ${c.dni}` : "Sin DNI"}
                           {c.telefono ? ` · ${c.telefono}` : " · Sin teléfono"}
                         </span>
-                        <span className="shrink-0 min-[420px]:hidden">
+                        <span className="shrink-0 sm:hidden">
                           <Badge tono={c.activo ? "green" : "zinc"}>
                             {c.activo ? "Activo" : "Inactivo"}
                           </Badge>
@@ -265,7 +265,7 @@ export default function IngresoPage() {
               </Lista>
             )}
           </Card>
-          <Reveal className="order-first lg:order-none" delay={0.08}><Card>
+          <Reveal className="order-first shrink-0 lg:order-none lg:w-80" delay={0.08}><Card>
             <div className="flex items-center gap-3">
               <IconTile tono="brand">
                 <FiUserPlus size={18} />
@@ -353,7 +353,7 @@ export default function IngresoPage() {
         {/* Acceso a órdenes desde Ingreso (viven en el Panel) */}
         <Link
           href="/"
-          className="mt-3 flex min-h-[48px] items-center justify-between rounded-2xl border border-blue-200 bg-blue-50/70 px-4 py-3 text-sm font-semibold text-blue-900 active:bg-blue-100 sm:hidden"
+          className="mt-3 flex min-h-12 items-center justify-between rounded-2xl border border-blue-200 bg-blue-50/70 px-4 py-3 text-sm font-semibold text-blue-900 active:bg-blue-100 sm:hidden"
         >
           <span className="flex items-center gap-2">
             <FiChevronRight size={16} /> Ver últimas órdenes en el Panel
