@@ -16,6 +16,7 @@ import {
 } from "react-icons/fi";
 import Swal from "sweetalert2";
 import { api } from "@/lib/api";
+import { Toast } from "@/lib/toast";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { AnimatePresence } from "motion/react";
@@ -23,18 +24,6 @@ import { Modal } from "@/components/Modal";
 import { Lista, ItemLi, Reveal } from "@/components/motion";
 import { Card, PageHeader, Badge, Empty, btnPrimary, btnSecondary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
 import type { ApiEnvelope, RolUsuario, Usuario } from "@/lib/types";
-
-const Toast = Swal.mixin({
-  toast: true,
-  position: "top",
-  showConfirmButton: false,
-  timer: 2500,
-  timerProgressBar: true,
-  didOpen: (toast) => {
-    toast.addEventListener("mouseenter", Swal.stopTimer);
-    toast.addEventListener("mouseleave", Swal.resumeTimer);
-  },
-});
 
 const ROL_INFO: Record<RolUsuario, { titulo: string; detalle: string; caja: string }> = {
   ADMIN: {
@@ -291,18 +280,16 @@ export default function UsuariosPage() {
                 <Spinner tamano="md" /> Cargando usuarios...
               </div>
             ) : listaOrdenada.length === 0 ? <Empty mensaje="Sin usuarios" /> : (
-              <>
-                {/* Cards en móvil: todo en una sola fila */}
-                <Lista className="tabla-scroll max-h-[340px] space-y-2 overflow-y-auto pb-1 pr-1 sm:hidden">
+                <Lista className="tabla-scroll max-h-[380px] space-y-2 overflow-y-auto pb-1 pr-1 text-sm sm:max-h-[420px]">
                   {listaOrdenada.map((u) => {
                     const esAdminFila = u.rol === "ADMIN";
                     return (
                     <ItemLi
                       key={u.id}
-                      className={`group flex items-center gap-2.5 overflow-hidden rounded-xl border p-2.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 ${
+                      className={`group flex items-center gap-2.5 overflow-hidden rounded-xl border p-2.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 sm:gap-3 ${
                         esAdminFila
-                          ? "border-violet-200 bg-gradient-to-r from-violet-50 via-white to-white ring-1 ring-inset ring-violet-100"
-                          : `border-stone-200 bg-white hover:border-blue-200 ${u.activo ? "" : "opacity-75"}`
+                          ? "border-violet-200 bg-gradient-to-r from-violet-50 via-white to-white ring-1 ring-inset ring-violet-100 hover:shadow-[0_18px_36px_-18px_rgba(109,40,217,0.35)]"
+                          : `border-stone-200/70 bg-stone-50/60 hover:border-blue-200 hover:bg-white hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.35)] ${u.activo ? "" : "opacity-75"}`
                       }`}
                     >
                       <span className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-extrabold text-white ${
@@ -334,68 +321,7 @@ export default function UsuariosPage() {
                     );
                   })}
                 </Lista>
-                {/* Tabla en sm+ */}
-                <Reveal className="tabla-scroll hidden max-h-[380px] overflow-y-auto overflow-x-auto pr-1 sm:block">
-                  <table className="w-full min-w-[560px] text-left text-sm">
-                    <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_#e7e5e4]">
-                      <tr className="border-b border-stone-200 text-xs uppercase tracking-wide text-stone-500">
-                        <th className="py-2 pr-3 font-bold">Usuario</th>
-                        <th className="py-2 pr-3 font-bold">Rol</th>
-                        <th className="py-2 pr-3 font-bold">Estado</th>
-                        <th className="py-2 text-right font-bold">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {listaOrdenada.map((u) => {
-                        const esAdminFila = u.rol === "ADMIN";
-                        return (
-                        <tr
-                          key={u.id}
-                          className={`border-b border-stone-100 transition-colors last:border-0 hover:shadow-[inset_3px_0_0_0_var(--tw-shadow-color)] ${
-                            esAdminFila
-                              ? "bg-violet-50/50 shadow-[inset_3px_0_0_0_#7c3aed] hover:bg-violet-50"
-                              : "hover:bg-blue-50/50 hover:shadow-[inset_3px_0_0_0_#1e40af]"
-                          } ${u.activo ? "" : "opacity-75"}`}
-                        >
-                          <td className="py-2.5 pr-3">
-                            <div className="flex items-center gap-2.5">
-                              <span className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-extrabold text-white transition-transform duration-200 group-hover:scale-105 ${
-                                esAdminFila
-                                  ? "bg-gradient-to-br from-violet-600 to-violet-800 shadow-[0_8px_16px_-8px_rgba(109,40,217,0.7)] ring-2 ring-violet-200"
-                                  : "bg-blue-800 shadow-[0_8px_16px_-8px_rgba(30,64,175,0.6)] ring-2 ring-blue-100"
-                              } ${u.activo ? "" : "saturate-50"}`}>
-                                {(u.nombre[0] ?? "?").toUpperCase()}
-                                <span
-                                  title={u.activo ? "Activo" : "Inactivo"}
-                                  className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-white ${u.activo ? "bg-emerald-500" : "bg-stone-400"}`}
-                                />
-                              </span>
-                              <span className="min-w-0">
-                                <span className="flex items-center gap-1.5">
-                                  <span className="block truncate font-semibold text-stone-900">
-                                    {u.nombre} {esYo(u) && <span className="text-xs font-medium text-stone-400">(vos)</span>}
-                                  </span>
-                                  {esAdminFila && <FiShield size={13} className="shrink-0 text-violet-700" />}
-                                </span>
-                                <span className="block truncate text-xs text-stone-500">{u.email}</span>
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-2.5 pr-3">
-                            <Badge tono={esAdminFila ? "violet" : "blue"}>{u.rol}</Badge>
-                          </td>
-                          <td className="py-2.5 pr-3">
-                            <Badge tono={u.activo ? "green" : "zinc"}>{u.activo ? "Activo" : "Inactivo"}</Badge>
-                          </td>
-                          <td className="py-2.5">{acciones(u)}</td>
-                        </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </Reveal>
-              </>
-            )}
+              )}
             </div>
           </Card>
           <Reveal className="order-first lg:order-none" delay={0.08}><Card>
@@ -404,20 +330,20 @@ export default function UsuariosPage() {
             </h2>
             <form onSubmit={(e) => void crear(e)} className="mt-3 space-y-2">
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nombre <span className="font-bold text-red-600">*</span></label>
-                <input className={inputCls} required placeholder="Ej: Juan Pérez" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+                <label htmlFor="nuevo-nombre" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nombre <span className="font-bold text-red-600">*</span></label>
+                <input id="nuevo-nombre" name="nombre" className={inputCls} required type="text" autoComplete="name" placeholder="Ej: Juan Pérez" value={nombre} onChange={(e) => setNombre(e.target.value)} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Email <span className="font-bold text-red-600">*</span></label>
-                <input className={inputCls} required type="email" placeholder="Ej: juan@taller.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <label htmlFor="nuevo-email" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Email <span className="font-bold text-red-600">*</span></label>
+                <input id="nuevo-email" name="email" className={inputCls} required type="email" autoComplete="email" placeholder="Ej: juan@taller.com" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Contraseña <span className="font-bold text-red-600">*</span></label>
-                <input className={inputCls} required type="password" minLength={6} placeholder="Mínimo 6 caracteres" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <label htmlFor="nuevo-password" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Contraseña <span className="font-bold text-red-600">*</span></label>
+                <input id="nuevo-password" name="password" className={inputCls} required type="password" autoComplete="new-password" minLength={6} placeholder="Mínimo 6 caracteres" value={password} onChange={(e) => setPassword(e.target.value)} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Rol <span className="font-bold text-red-600">*</span></label>
-                <select className={inputCls} value={rol} onChange={(e) => setRol(e.target.value as RolUsuario)}>
+                <label htmlFor="nuevo-rol" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Rol <span className="font-bold text-red-600">*</span></label>
+                <select id="nuevo-rol" name="rol" className={inputCls} value={rol} onChange={(e) => setRol(e.target.value as RolUsuario)}>
                   <option value="TECNICO">TÉCNICO</option>
                   <option value="ADMIN">ADMIN</option>
                 </select>
@@ -440,27 +366,35 @@ export default function UsuariosPage() {
         <Modal titulo={`Editar: ${editando.nombre}`} onClose={() => setEditando(null)}>
           <form onSubmit={(e) => void guardarEdicion(e)} className="space-y-2">
             <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nombre</label>
+              <label htmlFor="edit-u-nombre" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nombre</label>
               <input
+                id="edit-u-nombre"
+                name="nombre"
                 className={inputCls}
                 required
+                autoComplete="name"
                 value={formEdit.nombre}
                 onChange={(e) => setFormEdit({ ...formEdit, nombre: e.target.value })}
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Email</label>
+              <label htmlFor="edit-u-email" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Email</label>
               <input
+                id="edit-u-email"
+                name="email"
                 className={inputCls}
                 required
                 type="email"
+                autoComplete="email"
                 value={formEdit.email}
                 onChange={(e) => setFormEdit({ ...formEdit, email: e.target.value })}
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Rol</label>
+              <label htmlFor="edit-u-rol" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Rol</label>
               <select
+                id="edit-u-rol"
+                name="rol"
                 className={inputCls}
                 value={formEdit.rol}
                 onChange={(e) => setFormEdit({ ...formEdit, rol: e.target.value as RolUsuario })}
@@ -491,11 +425,14 @@ export default function UsuariosPage() {
                 <div className="mt-2 space-y-2 border-t border-stone-200/70 pt-2">
                   <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
                     <div>
-                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nueva clave</label>
+                      <label htmlFor="clave-nueva" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nueva clave</label>
                       <div className="relative">
                         <input
+                          id="clave-nueva"
+                          name="nuevaClave"
                           className={inputCls + " pr-11"}
                           type={verNueva ? "text" : "password"}
+                          autoComplete="new-password"
                           placeholder="Mínimo 6 caracteres"
                           value={claveNueva}
                           onChange={(e) => setClaveNueva(e.target.value)}
@@ -511,11 +448,14 @@ export default function UsuariosPage() {
                       </div>
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Repetir nueva clave</label>
+                      <label htmlFor="clave-repetir" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Repetir nueva clave</label>
                       <div className="relative">
                         <input
+                          id="clave-repetir"
+                          name="repetirClave"
                           className={inputCls + " pr-11"}
                           type={verRepetir ? "text" : "password"}
+                          autoComplete="new-password"
                           placeholder="Repetí la nueva clave"
                           value={claveRepetir}
                           onChange={(e) => setClaveRepetir(e.target.value)}

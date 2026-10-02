@@ -218,8 +218,8 @@ function NuevaOrdenForm() {
             </h2>
             <div className="mt-3 space-y-2">
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Cliente *</label>
-                <select className={inputCls} value={clienteId} onChange={(e) => { setClienteId(e.target.value ? Number(e.target.value) : ""); setEquipoId(""); }} required>
+                <label htmlFor="recepcion-cliente" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Cliente *</label>
+                <select id="recepcion-cliente" className={inputCls} value={clienteId} onChange={(e) => { setClienteId(e.target.value ? Number(e.target.value) : ""); setEquipoId(""); }} required>
                   <option value="">Seleccionar cliente...</option>
                   {clientes.map((c) => (
                     <option key={c.id} value={c.id}>{c.nombre} {c.apellido ?? ""}</option>
@@ -227,8 +227,8 @@ function NuevaOrdenForm() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Equipo (N° de serie) *</label>
-                <select className={inputCls} value={equipoId} onChange={(e) => elegirEquipo(e.target.value ? Number(e.target.value) : "")} required>
+                <label htmlFor="recepcion-equipo" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Equipo (N° de serie) *</label>
+                <select id="recepcion-equipo" className={inputCls} value={equipoId} onChange={(e) => elegirEquipo(e.target.value ? Number(e.target.value) : "")} required>
                   <option value="">
                     {equiposVisibles.length === 0
                       ? "Sin equipos"
@@ -254,7 +254,7 @@ function NuevaOrdenForm() {
                   <p className="font-bold text-stone-900">
                     {equipoElegido.tipo} · {equipoElegido.marca} {equipoElegido.modelo}
                   </p>
-                  <dl className="mt-1 space-y-0.5 break-words text-[13px] text-stone-600">
+                  <div className="mt-1 space-y-0.5 break-words text-[13px] text-stone-600">
                     <p><b className="text-stone-800">Serie:</b> {equipoElegido.numeroSerie ?? "—"}</p>
                     <p>
                       <b className="text-stone-800">Cliente:</b>{" "}
@@ -265,7 +265,7 @@ function NuevaOrdenForm() {
                     {equipoElegido.observaciones && (
                       <p><b className="text-stone-800">Obs:</b> {equipoElegido.observaciones}</p>
                     )}
-                  </dl>
+                  </div>
                 </div>
               )}
               {ordenAbierta && (
@@ -303,12 +303,12 @@ function NuevaOrdenForm() {
                   </label>
                 </div>
               )}
-              <label className="block text-xs font-medium text-zinc-600">Falla reportada *</label>
-              <textarea className={inputCls} rows={3} required value={falla} onChange={(e) => setFalla(e.target.value)} placeholder="Ej: No enfría, hace ruido..." />
-              <label className="block text-xs font-medium text-zinc-600">Accesorios que deja el cliente</label>
-              <textarea className={inputCls} rows={2} value={accesorios} onChange={(e) => setAccesorios(e.target.value)} placeholder="Ej: Control remoto, cable, funda..." />
-              <label className="block text-xs font-medium text-zinc-600">Costo estimado ($)</label>
-              <input className={inputCls} type="number" min="0" step="0.01" value={costoEstimado} onChange={(e) => setCostoEstimado(e.target.value)} />
+              <label htmlFor="recepcion-falla" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Falla reportada *</label>
+              <textarea id="recepcion-falla" className={inputCls} rows={3} required value={falla} onChange={(e) => setFalla(e.target.value)} placeholder="Ej: No enfría, hace ruido..." />
+              <label htmlFor="recepcion-accesorios" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Accesorios que deja el cliente</label>
+              <textarea id="recepcion-accesorios" className={inputCls} rows={2} value={accesorios} onChange={(e) => setAccesorios(e.target.value)} placeholder="Ej: Control remoto, cable, funda..." />
+              <label htmlFor="recepcion-costo" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Costo estimado ($)</label>
+              <input id="recepcion-costo" name="costoEstimado" className={inputCls} type="number" min="0" step="0.01" value={costoEstimado} onChange={(e) => setCostoEstimado(e.target.value)} />
             </div>
           </Card>
           </Reveal>
@@ -317,10 +317,10 @@ function NuevaOrdenForm() {
               <h2 className="flex items-center gap-2 font-bold text-stone-900">
                 <IconTile tono="brand"><FiCamera size={16} /></IconTile> 2 · Estado físico y foto
               </h2>
-              <label className="mt-3 block text-xs font-medium text-zinc-600">
+              <label htmlFor="recepcion-condicion" className="mb-1 mt-3 block text-xs font-bold uppercase tracking-wider text-stone-500">
                 Condición física del equipo (comentario)
               </label>
-              <textarea className={inputCls + " mt-1"} rows={3} value={detalleCond} onChange={(e) => setDetalleCond(e.target.value)} placeholder="Ej: Buen estado general, rayón en la tapa, falta una perilla..." />
+              <textarea id="recepcion-condicion" className={inputCls + " mt-1"} rows={3} value={detalleCond} onChange={(e) => setDetalleCond(e.target.value)} placeholder="Ej: Buen estado general, rayón en la tapa, falta una perilla..." />
               <div className="mt-3">
                 <ImageUploader equipoKey={equipoId ? `nuevo-${equipoId}` : "nuevo"} value={foto} onChange={setFoto} />
               </div>

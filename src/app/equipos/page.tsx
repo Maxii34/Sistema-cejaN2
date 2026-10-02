@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  FiCalendar,
   FiChevronDown,
   FiChevronUp,
   FiClipboard,
@@ -198,8 +199,8 @@ export default function HistorialEquiposPage() {
               return (
                 <Item key={q.id} className="min-w-0">
                 <Card className="flex h-full min-w-0 flex-col overflow-visible shadow-sm transition-all duration-200 sm:hover:-translate-y-1 sm:hover:border-blue-200 sm:hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.35)]">
-                  {/* Foto con contador de visitas superpuesto */}
-                  <div className="relative mb-3">
+                  {/* Foto del equipo */}
+                  <div className="mb-3">
                     {portada ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -216,11 +217,6 @@ export default function HistorialEquiposPage() {
                         </span>
                       </div>
                     )}
-                    <span className="absolute right-2 top-2 rounded-full bg-stone-950/80 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">
-                      {visitas.length === 0
-                        ? "Sin visitas"
-                        : `${visitas.length} visita${visitas.length > 1 ? "s" : ""}`}
-                    </span>
                   </div>
 
                   {/* Título + estado actual */}
@@ -346,7 +342,8 @@ export default function HistorialEquiposPage() {
                                       <span className="font-ficha truncate font-bold text-stone-900">
                                         {o.numero}
                                       </span>
-                                      <span className="shrink-0 text-stone-400">
+                                      <span className="inline-flex shrink-0 items-center gap-1 text-stone-500" title="Fecha de ingreso">
+                                        <FiCalendar size={11} className="text-stone-400" />
                                         {new Date(o.fechaIngreso).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" })}
                                       </span>
                                     </span>

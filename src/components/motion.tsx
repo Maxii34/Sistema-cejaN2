@@ -114,12 +114,16 @@ export function Lista({
 export function ItemLi({
   children,
   className,
+  onClick,
+  title,
 }: {
   children: ReactNode;
   className?: string;
+  onClick?: () => void;
+  title?: string;
 }) {
   return (
-    <motion.li className={className} variants={itemVariants}>
+    <motion.li className={className} variants={itemVariants} onClick={onClick} title={title}>
       {children}
     </motion.li>
   );
