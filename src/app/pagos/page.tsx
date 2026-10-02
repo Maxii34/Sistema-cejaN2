@@ -4,16 +4,23 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FiArrowLeft, FiCalendar, FiChevronRight, FiClock, FiCreditCard, FiDollarSign, FiFileText, FiPlus, FiPrinter } from "react-icons/fi";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/api";
 import { Toast } from "@/lib/toast";
+import {
+  MEDIOS_PAGO,
+  registrarCobroAPayload,
+  registrarCobroFormSchema,
+  type RegistrarCobroFormValues,
+} from "@/lib/validaciones";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { RemitoOrden } from "@/components/RemitoOrden";
 import { Card, PageHeader, Empty, Badge, btnPrimary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
+import { Field } from "@/components/Field";
 import { Lista, ItemLi, Reveal, Stagger, Item } from "@/components/motion";
 import type { ApiEnvelope, MedioPago, OrdenReparacion, Pago, Paged } from "@/lib/types";
-
-const MEDIOS: MedioPago[] = ["EFECTIVO", "TRANSFERENCIA", "TARJETA_DEBITO", "TARJETA_CREDITO", "MERCADO_PAGO", "OTRO"];
 
 const MEDIO_LABEL: Record<MedioPago, string> = {
   EFECTIVO: "Efectivo",
@@ -30,11 +37,18 @@ function PagosForm() {
   const [pagos, setPagos] = useState<Pago[]>([]);
   const [ordenes, setOrdenes] = useState<OrdenReparacion[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [ordenId, setOrdenId] = useState("");
-  const [monto, setMonto] = useState("");
-  const [medio, setMedio] = useState<MedioPago>("EFECTIVO");
+  const {
+    register: registerCobro,
+    handleSubmit: handleCobro,
+    setValue: setCobro,
+    watch: watchCobro,
+    formState: { errors: erroresCobro, isSubmitting: guardando },
+  } = useForm<RegistrarCobroFormValues>({
+    resolver: zodResolver(registrarCobroFormSchema),
+    defaultValues: { ordenId: "", monto: "", medio: "EFECTIVO" },
+  });
+  const ordenId = watchCobro("ordenId");
   const [cargandoLista, setCargandoLista] = useState(true);
-  const [guardando, setGuardando] = useState(false);
   const [vinoDeOrden, setVinoDeOrden] = useState(false);
   const [remitoOrdenId, setRemitoOrdenId] = useState("");
 
@@ -80,19 +94,19 @@ function PagosForm() {
 
   // Elige orden y autocompleta el monto con su saldo pendiente
   const elegirOrden = (id: string, listaO: OrdenReparacion[], listaP: Pago[]) => {
-    setOrdenId(id);
+    setCobro("ordenId", id);
     if (!id) {
-      setMonto("");
+      setCobro("monto", "");
       return;
     }
     const o = listaO.find((x) => x.id === Number(id));
     if (o?.precioFinal == null) {
-      setMonto("");
+      setCobro("monto", "");
       return;
     }
     const cob = listaP.filter((p) => p.ordenId === o.id).reduce((a, p) => a + Number(p.monto), 0);
     const saldo = Math.round((Number(o.precioFinal) - cob) * 100) / 100;
-    setMonto(saldo > 0 ? saldo.toFixed(2) : "");
+    setCobro("monto", saldo > 0 ? saldo.toFixed(2) : "");
   };
 
   const cargar = async () => {
@@ -121,12 +135,11 @@ function PagosForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [usuario]);
 
-  const crear = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const crear = async (values: RegistrarCobroFormValues) => {
     if (guardando) return;
     // Bloqueo frontend: no llamar a la API si la orden no tiene precio final
     // (el backend responde 400 en ese caso).
-    const ordenACobrar = ordenes.find((o) => o.id === Number(ordenId)) ?? null;
+    const ordenACobrar = ordenes.find((o) => o.id === Number(values.ordenId)) ?? null;
     if (!ordenACobrar || ordenACobrar.precioFinal == null) {
       const mensaje = "Esta orden aún no tiene precio final. Volvé a la ficha y guardá el cierre antes de cobrar.";
       setError(mensaje);
@@ -148,28 +161,23 @@ function PagosForm() {
       return;
     }
     setError(null);
-    setGuardando(true);
     try {
-      await api.post("/api/pago", {
-        ordenId: Number(ordenId),
-        monto: Number(monto),
-        medioPago: medio,
-        registradoPorId: usuario?.id ?? null,
-      });
-      const ordenCobrada = ordenes.find((o) => o.id === Number(ordenId));
-      setOrdenId(""); setMonto("");
+      await api.post(
+        "/api/pago",
+        registrarCobroAPayload(values, usuario?.id ?? null)
+      );
+      const ordenCobrada = ordenes.find((o) => o.id === Number(values.ordenId));
+      setCobro("ordenId", ""); setCobro("monto", "");
       await cargar();
       void Toast.fire({
         icon: "success",
         title: "Pago registrado",
-        text: `$${Number(monto).toFixed(2)} en ${ordenCobrada?.numero ?? `orden #${ordenId}`}.`,
+        text: `$${Number(values.monto).toFixed(2)} en ${ordenCobrada?.numero ?? `orden #${values.ordenId}`}.`,
       });
     } catch (e) {
       const mensaje = e instanceof Error ? e.message : "No se pudo registrar pago";
       setError(mensaje);
       void Toast.fire({ icon: "error", title: "No se pudo registrar", text: mensaje });
-    } finally {
-      setGuardando(false);
     }
   };
 
@@ -327,10 +335,16 @@ function PagosForm() {
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="green"><FiDollarSign size={16} /></IconTile> Registrar cobro
             </h2>
-            <form onSubmit={(e) => void crear(e)} className="mt-2 space-y-2">
-              <div>
-                <label htmlFor="orden-cobro" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Orden *</label>
-                <select id="orden-cobro" className={inputCls} required value={ordenId} onChange={(e) => elegirOrden(e.target.value, ordenes, pagos)}>
+            <form onSubmit={(e) => void handleCobro(crear)(e)} noValidate className="mt-2 space-y-2">
+              <Field id="orden-cobro" label="Orden" required error={erroresCobro.ordenId?.message}>
+                <select
+                  id="orden-cobro"
+                  className={inputCls}
+                  required
+                  {...registerCobro("ordenId", {
+                    onChange: (e) => elegirOrden(e.target.value, ordenes, pagos),
+                  })}
+                >
                   <option value="">Seleccionar orden...</option>
                   {ordenesCobrables.length === 0 ? (
                     <option value="" disabled>No hay órdenes por cobrar</option>
@@ -346,6 +360,7 @@ function PagosForm() {
                     })
                   )}
                 </select>
+                </Field>
                 {ordenElegida && precioOrden == null && (
                   <p className="rounded-xl bg-amber-50 px-3 py-2 text-[13px] font-medium text-amber-900 ring-1 ring-inset ring-amber-200">
                     Esta orden aún no tiene precio final. Volvé a la ficha y guardá el cierre antes de cobrar.
@@ -361,7 +376,6 @@ function PagosForm() {
                     Esta orden ya está pagada ✓. Elegí otra orden por cobrar.
                   </p>
                 )}
-              </div>
               {ordenElegida && (
                 <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-sm ring-1 ring-inset ring-blue-200/60">
                   <p className="font-bold text-stone-900">
@@ -396,14 +410,13 @@ function PagosForm() {
                   </div>
                 </div>
               )}
-              <div>
-                <label htmlFor="monto-cobro" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Monto *</label>
-                <input id="monto-cobro" name="monto" className={inputCls} required type="number" min="0.01" step="0.01" placeholder="0.00" value={monto} onChange={(e) => setMonto(e.target.value)} disabled={ordenElegida != null && !esCobrable} />
-              </div>
+              <Field id="monto-cobro" label="Monto" required error={erroresCobro.monto?.message}>
+                <input id="monto-cobro" className={inputCls} required type="number" min="0.01" step="0.01" placeholder="0.00" disabled={ordenElegida != null && !esCobrable} {...registerCobro("monto")} />
+              </Field>
               <div>
                 <label htmlFor="medio-pago" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Medio de pago</label>
-                <select id="medio-pago" className={inputCls} value={medio} onChange={(e) => setMedio(e.target.value as MedioPago)} disabled={ordenElegida != null && !esCobrable}>
-                  {MEDIOS.map((m) => <option key={m} value={m}>{MEDIO_LABEL[m]}</option>)}
+                <select id="medio-pago" className={inputCls} disabled={ordenElegida != null && !esCobrable} {...registerCobro("medio")}>
+                  {MEDIOS_PAGO.map((m) => <option key={m} value={m}>{MEDIO_LABEL[m]}</option>)}
                 </select>
               </div>
               <button

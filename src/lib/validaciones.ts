@@ -76,3 +76,136 @@ export function altaRapidaAPayload(v: AltaRapidaFormValues) {
     dni: v.dni?.trim() || null,
   };
 }
+
+/**
+ * Crear usuario (Administración).
+ * Espeja `crearUsuarioSchema` de Back `src/validators/usuario.validation.ts`.
+ * Email SIN lowercase: el resolver devuelve valores transformados y el
+ * backend compara sin lowerizar (misma lección que el login).
+ */
+export const crearUsuarioFormSchema = z.object({
+  nombre: z.string().trim().min(1, "El nombre es obligatorio"),
+  email: z
+    .string()
+    .trim()
+    .pipe(z.email("El email no es válido")),
+  // Sin trim a propósito: la clave se envía tal cual, igual que hoy.
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+  rol: z.enum(["ADMIN", "TECNICO"]),
+});
+
+export type CrearUsuarioFormValues = z.infer<typeof crearUsuarioFormSchema>;
+
+/** Payload idéntico al que se envía hoy al crear usuario. */
+export function crearUsuarioAPayload(v: CrearUsuarioFormValues) {
+  return {
+    nombre: v.nombre.trim(),
+    email: v.email.trim(),
+    password: v.password,
+    rol: v.rol,
+  };
+}
+
+/**
+ * Crear equipo (ficha del cliente).
+ * Espeja `createEquipoSchema` de Back `src/validators/equipo.validation.ts`.
+ * `clienteId` viene de la ruta y se agrega en el payload, fuera del form.
+ */
+export const crearEquipoFormSchema = z.object({
+  tipo: z
+    .string()
+    .trim()
+    .min(1, "El tipo es requerido")
+    .max(50, "Máximo 50 caracteres"),
+  marca: z
+    .string()
+    .trim()
+    .min(1, "La marca es requerida")
+    .max(50, "Máximo 50 caracteres"),
+  modelo: z
+    .string()
+    .trim()
+    .min(1, "El modelo es requerido")
+    .max(50, "Máximo 50 caracteres"),
+  numeroSerie: z
+    .string()
+    .trim()
+    .max(100, "Máximo 100 caracteres")
+    .optional(),
+  observaciones: z
+    .string()
+    .trim()
+    .max(1000, "Máximo 1000 caracteres")
+    .optional(),
+});
+
+export type CrearEquipoFormValues = z.infer<typeof crearEquipoFormSchema>;
+
+/** Payload idéntico al que se envía hoy al crear equipo. */
+export function crearEquipoAPayload(
+  v: CrearEquipoFormValues,
+  clienteId: number
+) {
+  return {
+    tipo: v.tipo.trim(),
+    marca: v.marca.trim(),
+    modelo: v.modelo.trim(),
+    numeroSerie: v.numeroSerie?.trim() || null,
+    observaciones: v.observaciones?.trim() || null,
+    clienteId,
+  };
+}
+
+export const MEDIOS_PAGO = [
+  "EFECTIVO",
+  "TRANSFERENCIA",
+  "TARJETA_DEBITO",
+  "TARJETA_CREDITO",
+  "MERCADO_PAGO",
+  "OTRO",
+] as const;
+
+/**
+ * Registrar cobro (Pagos).
+ * Espeja `createPagoSchema` de Back `src/validators/pago.validation.ts`.
+ * Los inputs son strings; la conversión a number se hace en el payload.
+ * `registradoPorId` se agrega en el payload, fuera del form.
+ * Los chequeos vivos (precio final, cancelada, saldo) quedan en el submit.
+ */
+export const registrarCobroFormSchema = z.object({
+  ordenId: z
+    .string()
+    .min(1, "Seleccioná una orden")
+    .refine(
+      (v) => Number.isInteger(Number(v)) && Number(v) > 0,
+      "ordenId debe ser entero"
+    ),
+  monto: z
+    .string()
+    .trim()
+    .min(1, "El monto debe ser mayor a 0")
+    .refine(
+      (v) => Number.isFinite(Number(v)),
+      "El monto debe ser un número"
+    )
+    .refine((v) => Number(v) > 0, "El monto debe ser mayor a 0")
+    .refine((v) => Number(v) <= 99999999.99, "Monto máximo excedido"),
+  medio: z.enum(MEDIOS_PAGO),
+});
+
+export type RegistrarCobroFormValues = z.infer<
+  typeof registrarCobroFormSchema
+>;
+
+/** Payload idéntico al que se envía hoy al registrar un cobro. */
+export function registrarCobroAPayload(
+  v: RegistrarCobroFormValues,
+  registradoPorId: number | null
+) {
+  return {
+    ordenId: Number(v.ordenId),
+    monto: Number(v.monto),
+    medioPago: v.medio,
+    registradoPorId,
+  };
+}

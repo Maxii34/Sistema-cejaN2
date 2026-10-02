@@ -12,11 +12,19 @@ import {
   FiUser,
   FiX,
 } from "react-icons/fi";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/api";
 import { Toast } from "@/lib/toast";
+import {
+  crearEquipoAPayload,
+  crearEquipoFormSchema,
+  type CrearEquipoFormValues,
+} from "@/lib/validaciones";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { Card, PageHeader, Empty, Badge, btnPrimary, btnSecondary, inputCls, IconTile, CargandoPagina } from "@/components/ui";
+import { Field } from "@/components/Field";
 import { Stagger, Item, Reveal } from "@/components/motion";
 import type { ApiEnvelope, Cliente, Equipo, EstadoOrden, OrdenReparacion, Paged } from "@/lib/types";
 import { ESTADO_ORDEN_LABEL } from "@/lib/types";
@@ -44,7 +52,15 @@ export default function ClienteDetallePage() {
   const [editando, setEditando] = useState(false);
   const [verTodos, setVerTodos] = useState(false);
   // alta equipo
-  const [eq, setEq] = useState({ tipo: "", marca: "", modelo: "", numeroSerie: "", observaciones: "" });
+  const {
+    register: registerEq,
+    handleSubmit: handleEq,
+    reset: resetEq,
+    formState: { errors: erroresEq, isSubmitting: creandoEquipo },
+  } = useForm<CrearEquipoFormValues>({
+    resolver: zodResolver(crearEquipoFormSchema),
+    defaultValues: { tipo: "", marca: "", modelo: "", numeroSerie: "", observaciones: "" },
+  });
 
   const rellenarForm = (c: Cliente) =>
     setForm({
@@ -108,18 +124,11 @@ export default function ClienteDetallePage() {
     }
   };
 
-  const crearEquipo = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const crearEquipo = async (values: CrearEquipoFormValues) => {
+    if (creandoEquipo) return;
     try {
-      await api.post("/api/equipo", {
-        tipo: eq.tipo.trim(),
-        marca: eq.marca.trim(),
-        modelo: eq.modelo.trim(),
-        numeroSerie: eq.numeroSerie.trim() || null,
-        observaciones: eq.observaciones.trim() || null,
-        clienteId: id,
-      });
-      setEq({ tipo: "", marca: "", modelo: "", numeroSerie: "", observaciones: "" });
+      await api.post("/api/equipo", crearEquipoAPayload(values, id));
+      resetEq();
       const e2 = await api.get<ApiEnvelope<Equipo[]>>(`/api/equipo/cliente/${id}`);
       setEquipos(e2.data);
       void Toast.fire({ icon: "success", title: "Equipo agregado", text: "El equipo quedó registrado en la ficha." });
@@ -273,29 +282,26 @@ export default function ClienteDetallePage() {
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="brand"><FiPlus size={16} /></IconTile> Agregar equipo
             </h2>
-            <form onSubmit={(e) => void crearEquipo(e)} className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
-              <div>
-                <label htmlFor="eq-tipo" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Tipo <span className="font-bold text-red-600">*</span></label>
-                <input id="eq-tipo" name="tipo" className={inputCls} required placeholder="Ej: Heladera" value={eq.tipo} onChange={(e) => setEq({ ...eq, tipo: e.target.value })} />
-              </div>
-              <div>
-                <label htmlFor="eq-marca" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Marca <span className="font-bold text-red-600">*</span></label>
-                <input id="eq-marca" name="marca" className={inputCls} required placeholder="Ej: Samsung" value={eq.marca} onChange={(e) => setEq({ ...eq, marca: e.target.value })} />
-              </div>
-              <div>
-                <label htmlFor="eq-modelo" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Modelo <span className="font-bold text-red-600">*</span></label>
-                <input id="eq-modelo" name="modelo" className={inputCls} required placeholder="Ej: RT38" value={eq.modelo} onChange={(e) => setEq({ ...eq, modelo: e.target.value })} />
-              </div>
-              <div>
-                <label htmlFor="eq-serie" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">N° serie</label>
-                <input id="eq-serie" name="numeroSerie" className={inputCls} placeholder="N° de serie" value={eq.numeroSerie} onChange={(e) => setEq({ ...eq, numeroSerie: e.target.value })} />
-              </div>
+            <form onSubmit={(e) => void handleEq(crearEquipo)(e)} noValidate className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+              <Field id="eq-tipo" label="Tipo" required error={erroresEq.tipo?.message}>
+                <input id="eq-tipo" className={inputCls} required placeholder="Ej: Heladera" {...registerEq("tipo")} />
+              </Field>
+              <Field id="eq-marca" label="Marca" required error={erroresEq.marca?.message}>
+                <input id="eq-marca" className={inputCls} required placeholder="Ej: Samsung" {...registerEq("marca")} />
+              </Field>
+              <Field id="eq-modelo" label="Modelo" required error={erroresEq.modelo?.message}>
+                <input id="eq-modelo" className={inputCls} required placeholder="Ej: RT38" {...registerEq("modelo")} />
+              </Field>
+              <Field id="eq-serie" label="N° serie" error={erroresEq.numeroSerie?.message}>
+                <input id="eq-serie" className={inputCls} placeholder="N° de serie" {...registerEq("numeroSerie")} />
+              </Field>
               <div className="min-[420px]:col-span-2">
-                <label htmlFor="eq-obs" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Observaciones</label>
-                <input id="eq-obs" name="observaciones" className={inputCls} placeholder="Observaciones" value={eq.observaciones} onChange={(e) => setEq({ ...eq, observaciones: e.target.value })} />
+                <Field id="eq-obs" label="Observaciones" error={erroresEq.observaciones?.message}>
+                  <input id="eq-obs" className={inputCls} placeholder="Observaciones" {...registerEq("observaciones")} />
+                </Field>
               </div>
-              <button className={btnPrimary + " min-[420px]:col-span-2 gap-2"}>
-                <FiPlus size={15} /> Agregar equipo
+              <button className={btnPrimary + " min-[420px]:col-span-2 gap-2"} disabled={creandoEquipo}>
+                <FiPlus size={15} /> {creandoEquipo ? "Agregando..." : "Agregar equipo"}
               </button>
             </form>
           </Card>

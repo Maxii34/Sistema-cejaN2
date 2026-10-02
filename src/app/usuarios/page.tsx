@@ -15,14 +15,22 @@ import {
   FiUsers,
 } from "react-icons/fi";
 import Swal from "sweetalert2";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/api";
 import { Toast } from "@/lib/toast";
+import {
+  crearUsuarioAPayload,
+  crearUsuarioFormSchema,
+  type CrearUsuarioFormValues,
+} from "@/lib/validaciones";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { AnimatePresence } from "motion/react";
 import { Modal } from "@/components/Modal";
 import { Lista, ItemLi, Reveal } from "@/components/motion";
 import { Card, PageHeader, Badge, Empty, btnPrimary, btnSecondary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
+import { Field } from "@/components/Field";
 import type { ApiEnvelope, RolUsuario, Usuario } from "@/lib/types";
 
 const ROL_INFO: Record<RolUsuario, { titulo: string; detalle: string; caja: string }> = {
@@ -44,10 +52,17 @@ export default function UsuariosPage() {
   const [lista, setLista] = useState<Usuario[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [cargandoLista, setCargandoLista] = useState(true);
-  const [nombre, setNombre] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rol, setRol] = useState<RolUsuario>("TECNICO");
+  const {
+    register: registerNuevo,
+    handleSubmit: handleNuevo,
+    reset: resetNuevo,
+    watch: watchNuevo,
+    formState: { errors: erroresNuevo, isSubmitting: creandoUsuario },
+  } = useForm<CrearUsuarioFormValues>({
+    resolver: zodResolver(crearUsuarioFormSchema),
+    defaultValues: { nombre: "", email: "", password: "", rol: "TECNICO" },
+  });
+  const rolNuevo = watchNuevo("rol");
 
   // edición
   const [editando, setEditando] = useState<Usuario | null>(null);
@@ -91,16 +106,11 @@ export default function UsuariosPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [usuario, esAdmin]);
 
-  const crear = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const crear = async (values: CrearUsuarioFormValues) => {
+    if (creandoUsuario) return;
     try {
-      await api.post("/api/usuario", {
-        nombre: nombre.trim(),
-        email: email.trim(),
-        password,
-        rol,
-      });
-      setNombre(""); setEmail(""); setPassword(""); setRol("TECNICO");
+      await api.post("/api/usuario", crearUsuarioAPayload(values));
+      resetNuevo();
       await cargar();
       void Toast.fire({ icon: "success", title: "Usuario creado", text: "El usuario ya puede ingresar al taller." });
     } catch (e) {
@@ -328,32 +338,32 @@ export default function UsuariosPage() {
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="violet"><FiShield size={16} /></IconTile> Nuevo usuario
             </h2>
-            <form onSubmit={(e) => void crear(e)} className="mt-3 space-y-2">
-              <div>
-                <label htmlFor="nuevo-nombre" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nombre <span className="font-bold text-red-600">*</span></label>
-                <input id="nuevo-nombre" name="nombre" className={inputCls} required type="text" autoComplete="name" placeholder="Ej: Juan Pérez" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-              </div>
-              <div>
-                <label htmlFor="nuevo-email" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Email <span className="font-bold text-red-600">*</span></label>
-                <input id="nuevo-email" name="email" className={inputCls} required type="email" autoComplete="email" placeholder="Ej: juan@taller.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-              </div>
-              <div>
-                <label htmlFor="nuevo-password" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Contraseña <span className="font-bold text-red-600">*</span></label>
-                <input id="nuevo-password" name="password" className={inputCls} required type="password" autoComplete="new-password" minLength={6} placeholder="Mínimo 6 caracteres" value={password} onChange={(e) => setPassword(e.target.value)} />
-              </div>
+            <form onSubmit={(e) => void handleNuevo(crear)(e)} noValidate className="mt-3 space-y-2">
+              <Field id="nuevo-nombre" label="Nombre" required error={erroresNuevo.nombre?.message}>
+                <input id="nuevo-nombre" className={inputCls} required type="text" autoComplete="name" placeholder="Ej: Juan Pérez" {...registerNuevo("nombre")} />
+              </Field>
+              <Field id="nuevo-email" label="Email" required error={erroresNuevo.email?.message}>
+                <input id="nuevo-email" className={inputCls} required type="email" autoComplete="email" placeholder="Ej: juan@taller.com" {...registerNuevo("email")} />
+              </Field>
+              <Field id="nuevo-password" label="Contraseña" required error={erroresNuevo.password?.message}>
+                <input id="nuevo-password" className={inputCls} required type="password" autoComplete="new-password" minLength={6} placeholder="Mínimo 6 caracteres" {...registerNuevo("password")} />
+              </Field>
               <div>
                 <label htmlFor="nuevo-rol" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Rol <span className="font-bold text-red-600">*</span></label>
-                <select id="nuevo-rol" name="rol" className={inputCls} value={rol} onChange={(e) => setRol(e.target.value as RolUsuario)}>
+                <select id="nuevo-rol" className={inputCls} {...registerNuevo("rol")}>
                   <option value="TECNICO">TÉCNICO</option>
                   <option value="ADMIN">ADMIN</option>
                 </select>
-                <p className={`mt-1.5 rounded-xl border px-3 py-2 text-xs leading-snug ring-1 ring-inset ${ROL_INFO[rol].caja}`}>
-                  <b className="block text-[11px] font-bold uppercase tracking-wider opacity-80">{ROL_INFO[rol].titulo}</b>
-                  <span className="mt-0.5 block">{ROL_INFO[rol].detalle}</span>
+                {erroresNuevo.rol?.message && (
+                  <p role="alert" className="mt-1 text-xs font-medium text-red-600">{erroresNuevo.rol.message}</p>
+                )}
+                <p className={`mt-1.5 rounded-xl border px-3 py-2 text-xs leading-snug ring-1 ring-inset ${ROL_INFO[rolNuevo].caja}`}>
+                  <b className="block text-[11px] font-bold uppercase tracking-wider opacity-80">{ROL_INFO[rolNuevo].titulo}</b>
+                  <span className="mt-0.5 block">{ROL_INFO[rolNuevo].detalle}</span>
                 </p>
               </div>
-              <button className={btnPrimary + " w-full"}>
-                <FiUserPlus size={15} /> Crear usuario
+              <button className={btnPrimary + " w-full"} disabled={creandoUsuario}>
+                <FiUserPlus size={15} /> {creandoUsuario ? "Creando..." : "Crear usuario"}
               </button>
             </form>
           </Card>
