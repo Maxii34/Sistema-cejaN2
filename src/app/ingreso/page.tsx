@@ -29,7 +29,7 @@ import {
   CargandoPagina,
 } from "@/components/ui";
 import type { ApiEnvelope, Cliente } from "@/lib/types";
-import { Reveal } from "@/components/motion";
+import { Lista, ItemLi, Reveal } from "@/components/motion";
 
 /** Normaliza a formato wa.me: solo dígitos, sin 0 inicial, con código país 54. */
 function normalizarWa(telefono: string): string {
@@ -222,57 +222,47 @@ export default function IngresoPage() {
                 />
               </div>
             ) : (
-              <Reveal className="tabla-scroll -mx-4 mt-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
-                <table className="w-full min-w-[620px] border-collapse text-left text-sm">
-                  <thead>
-                    <tr className="border-y border-stone-200 bg-stone-50 text-[11px] uppercase tracking-wide text-stone-500">
-                      <th className="px-3 py-2.5 font-bold">Cliente</th>
-                      <th className="px-3 py-2.5 font-bold">Contacto</th>
-                      <th className="px-3 py-2.5 font-bold">Estado</th>
-                      <th className="px-3 py-2.5 text-right font-bold">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {clientesFiltrados.map((c) => (
-                      <tr
-                        key={c.id}
-                        onClick={() => router.push(`/clientes/${c.id}`)}
-                        title={`Abrir ficha de ${c.nombre}`}
-                        className="cursor-pointer border-b border-stone-100 transition-all last:border-0 hover:bg-blue-50/50 hover:shadow-[inset_3px_0_0_0_#1e40af]"
-                      >
-                        <td className="px-3 py-2.5">
-                          <div className="flex items-center gap-2.5">
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-800 text-xs font-extrabold text-white">
-                              {(c.nombre[0] ?? "?").toUpperCase()}
-                              {(c.apellido?.[0] ?? "").toUpperCase()}
-                            </span>
-                            <span className="min-w-0">
-                              <Link
-                                href={`/clientes/${c.id}`}
-                                className="block truncate font-semibold text-stone-900 hover:text-blue-800 hover:underline"
-                              >
-                                {c.nombre} {c.apellido ?? ""}
-                              </Link>
-                              <span className="block truncate text-xs text-stone-500">
-                                {c.dni ? `DNI ${c.dni}` : "Sin DNI"}
-                              </span>
-                            </span>
-                          </div>
-                        </td>
-                        <td className="max-w-[220px] truncate px-3 py-2.5 text-xs text-stone-500">
-                          {c.telefono || "Sin teléfono"}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-2.5">
+              <Lista className="mt-3 space-y-2 text-sm">
+                {clientesFiltrados.map((c) => (
+                  <ItemLi
+                    key={c.id}
+                    onClick={() => router.push(`/clientes/${c.id}`)}
+                    title={`Abrir ficha de ${c.nombre}`}
+                    className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-stone-200/70 bg-stone-50/60 px-3 py-2.5 shadow-sm transition-all duration-200 sm:gap-3 sm:hover:-translate-y-0.5 sm:hover:border-blue-200 sm:hover:bg-white sm:hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.35)]"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-800 text-xs font-extrabold text-white">
+                      {(c.nombre[0] ?? "?").toUpperCase()}
+                      {(c.apellido?.[0] ?? "").toUpperCase()}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="block truncate font-semibold text-stone-900">
+                          {c.nombre} {c.apellido ?? ""}
+                        </span>
+                        <span className="hidden shrink-0 min-[420px]:inline">
                           <Badge tono={c.activo ? "green" : "zinc"}>
                             {c.activo ? "Activo" : "Inactivo"}
                           </Badge>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-2.5" onClick={(e) => e.stopPropagation()}>{acciones(c)}</td>
-                      </tr>
-                    ))}
-                    </tbody>
-                  </table>
-              </Reveal>
+                        </span>
+                      </span>
+                      <span className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-stone-500">
+                        <span className="truncate">
+                          {c.dni ? `DNI ${c.dni}` : "Sin DNI"}
+                          {c.telefono ? ` · ${c.telefono}` : " · Sin teléfono"}
+                        </span>
+                        <span className="shrink-0 min-[420px]:hidden">
+                          <Badge tono={c.activo ? "green" : "zinc"}>
+                            {c.activo ? "Activo" : "Inactivo"}
+                          </Badge>
+                        </span>
+                      </span>
+                    </span>
+                    <span className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                      {acciones(c)}
+                    </span>
+                  </ItemLi>
+                ))}
+              </Lista>
             )}
           </Card>
           <Reveal className="order-first lg:order-none" delay={0.08}><Card>
