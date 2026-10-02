@@ -156,6 +156,78 @@ export function crearEquipoAPayload(
   };
 }
 
+/**
+ * Nueva recepción (ordenes/nueva).
+ * Espeja `createOrdenReparacionSchema` de Back
+ * `src/validators/ordenReparacion.validation.ts`.
+ * `clienteId` es solo filtro del front (no viaja al back).
+ * `condicionFisica` es fija, firmas/tecnico/creadoPor/origen van en el
+ * payload desde datos vivos, y la foto queda fuera de RHF.
+ * Los chequeos vivos (orden abierta, garantía vigente) quedan en el submit.
+ */
+export const recepcionFormSchema = z.object({
+  clienteId: z.string().optional(),
+  equipoId: z
+    .string()
+    .min(1, "Seleccioná un equipo")
+    .refine(
+      (v) => Number.isInteger(Number(v)) && Number(v) > 0,
+      "equipoId debe ser entero"
+    ),
+  fallaReportada: z
+    .string()
+    .trim()
+    .min(1, "La falla reportada es requerida")
+    .max(2000, "Máximo 2000 caracteres"),
+  accesorios: z
+    .string()
+    .trim()
+    .max(1000, "Máximo 1000 caracteres")
+    .optional(),
+  costoEstimado: z.union([
+    z.literal(""),
+    z
+      .string()
+      .trim()
+      .refine((v) => Number.isFinite(Number(v)), "Debe ser un número")
+      .refine((v) => Number(v) >= 0, "No puede ser negativo")
+      .refine((v) => Number(v) <= 99999999.99, "Monto máximo excedido"),
+  ]),
+  detalleCondicion: z
+    .string()
+    .trim()
+    .max(1000, "Máximo 1000 caracteres")
+    .optional(),
+  modoGarantia: z.boolean(),
+});
+
+export type RecepcionFormValues = z.infer<typeof recepcionFormSchema>;
+
+/** Payload idéntico al que se envía hoy al crear la recepción. */
+export function recepcionAPayload(
+  v: RecepcionFormValues,
+  ctx: {
+    origenGarantiaId: number | null;
+    tecnicoId: number | null;
+    creadoPorId: number | null;
+  }
+) {
+  return {
+    equipoId: Number(v.equipoId),
+    fallaReportada: v.fallaReportada.trim(),
+    accesorios: v.accesorios?.trim() || null,
+    condicionFisica: ["BUEN_ESTADO"],
+    detalleCondicionFisica: v.detalleCondicion?.trim() || null,
+    costoEstimado: v.costoEstimado ? Number(v.costoEstimado) : null,
+    firmaClienteRecepcion: false,
+    firmaTecnicoRecepcion: false,
+    tecnicoId: ctx.tecnicoId,
+    creadoPorId: ctx.creadoPorId,
+    esGarantia: v.modoGarantia,
+    ordenOrigenId: v.modoGarantia && ctx.origenGarantiaId ? ctx.origenGarantiaId : null,
+  };
+}
+
 export const MEDIOS_PAGO = [
   "EFECTIVO",
   "TRANSFERENCIA",
