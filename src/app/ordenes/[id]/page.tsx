@@ -301,13 +301,31 @@ export default function OrdenDetallePage() {
                   <Badge tono={orden.estadoPago === "PAGADO" ? "green" : "amber"}>{orden.estadoPago}</Badge>
                   {orden.autorizadoCliente && <Badge tono="green">Autorizado</Badge>}
                 </div>
-                <div className="mt-3 space-y-1.5 break-words text-sm text-zinc-700">
-                  <p><b>Cliente:</b> {orden.equipo?.cliente ? `${orden.equipo.cliente.nombre} ${orden.equipo.cliente.apellido ?? ""}` : `Equipo #${orden.equipoId}`}</p>
-                  <p><b>Accesorios:</b> {orden.accesorios || "—"}</p>
-                  <p><b>Condición:</b> {orden.condicionFisica.map((c) => CONDICION_LABEL[c]).join(", ")}</p>
-                  {orden.detalleCondicionFisica && <p><b>Detalle:</b> {orden.detalleCondicionFisica}</p>}
-                  <p><b>Garantía:</b> {orden.garantiaDias} días</p>
-                </div>
+                <dl className="mt-3 space-y-1.5 rounded-xl bg-stone-50 p-3 text-sm ring-1 ring-inset ring-stone-200/70">
+                  <div className="flex items-center justify-between gap-2">
+                    <dt className="shrink-0 text-xs font-bold uppercase tracking-wider text-stone-400">Cliente</dt>
+                    <dd className="min-w-0 truncate text-right font-semibold text-stone-800">
+                      {orden.equipo?.cliente ? `${orden.equipo.cliente.nombre} ${orden.equipo.cliente.apellido ?? ""}`.trim() : `Equipo #${orden.equipoId}`}
+                    </dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 border-t border-stone-200/70 pt-1.5">
+                    <dt className="shrink-0 text-xs font-bold uppercase tracking-wider text-stone-400">Accesorios</dt>
+                    <dd className="min-w-0 truncate text-right font-semibold text-stone-800">{orden.accesorios || "—"}</dd>
+                  </div>
+                  <div className="border-t border-stone-200/70 pt-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <dt className="shrink-0 text-xs font-bold uppercase tracking-wider text-stone-400">Condición</dt>
+                      <dd className="min-w-0 truncate text-right font-semibold text-stone-800">{orden.condicionFisica.map((c) => CONDICION_LABEL[c]).join(", ")}</dd>
+                    </div>
+                    {orden.detalleCondicionFisica && (
+                      <dd className="mt-1 break-words text-[13px] text-stone-600">{orden.detalleCondicionFisica}</dd>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between gap-2 border-t border-stone-200/70 pt-1.5">
+                    <dt className="shrink-0 text-xs font-bold uppercase tracking-wider text-stone-400">Garantía</dt>
+                    <dd className="font-ficha font-bold text-stone-900">{orden.garantiaDias} días</dd>
+                  </div>
+                </dl>
               </Card>
               {(() => {
                 const idx = ["EN_DIAGNOSTICO", "ESPERANDO_REPUESTO"].includes(orden.estado)
