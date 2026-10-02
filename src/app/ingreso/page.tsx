@@ -40,7 +40,7 @@ function normalizarWa(telefono: string): string {
 }
 
 export default function IngresoPage() {
-  const { usuario, cargando } = useRequireAuth();
+  const { usuario, cargando, esAdmin } = useRequireAuth();
   const [error, setError] = useState<string | null>(null);
 
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -138,7 +138,7 @@ export default function IngresoPage() {
 
   const acciones = (c: Cliente) => (
     <div className="flex shrink-0 items-center justify-end gap-1.5">
-      {c.telefono?.trim() && (
+      {esAdmin && c.telefono?.trim() && (
         <a
           href={`https://wa.me/${normalizarWa(c.telefono)}`}
           target="_blank"
