@@ -5,22 +5,50 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
   FiArrowLeft,
+  FiBox,
+  FiCalendar,
   FiCheck,
   FiClock,
+  FiCreditCard,
   FiDollarSign,
+  FiInfo,
   FiLock,
-  FiPrinter,
   FiSave,
+  FiShield,
+  FiUser,
 } from "react-icons/fi";
-import Swal from "sweetalert2";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/api";
+import { Toast } from "@/lib/toast";
+import {
+  faseCierreAPayload,
+  faseCierreFormSchema,
+  faseDiagnosticoAPayload,
+  faseDiagnosticoFormSchema,
+  faseReparacionAPayload,
+  faseReparacionFormSchema,
+  type FaseCierreFormValues,
+  type FaseDiagnosticoFormValues,
+  type FaseReparacionFormValues,
+} from "@/lib/validaciones";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { FotosOrden } from "@/components/FotosOrden";
 import { Card, PageHeader, Badge, btnPrimary, btnSecondary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
+import { Field } from "@/components/Field";
 import { Reveal } from "@/components/motion";
-import type { ApiEnvelope, OrdenReparacion, Usuario } from "@/lib/types";
+import type { ApiEnvelope, MedioPago, OrdenReparacion, Usuario } from "@/lib/types";
 import { ESTADO_ORDEN_LABEL, CONDICION_LABEL } from "@/lib/types";
+
+const MEDIO_LABEL: Record<MedioPago, string> = {
+  EFECTIVO: "Efectivo",
+  TRANSFERENCIA: "Transferencia",
+  TARJETA_DEBITO: "Débito",
+  TARJETA_CREDITO: "Crédito",
+  MERCADO_PAGO: "Mercado Pago",
+  OTRO: "Otro",
+};
 
 function TagOpcional() {
   return (
@@ -37,18 +65,6 @@ function Req() {
     </span>
   );
 }
-
-const Toast = Swal.mixin({
-  toast: true,
-  position: "top",
-  showConfirmButton: false,
-  timer: 2500,
-  timerProgressBar: true,
-  didOpen: (toast) => {
-    toast.addEventListener("mouseenter", Swal.stopTimer);
-    toast.addEventListener("mouseleave", Swal.resumeTimer);
-  },
-});
 
 type FaseKey = "diagnostico" | "autorizacion" | "reparacion" | "cierre";
 
@@ -108,35 +124,64 @@ export default function OrdenDetallePage() {
   const [tecnicos, setTecnicos] = useState<Usuario[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // campos por fase
-  const [diag, setDiag] = useState("");
-  const [pruebas, setPruebas] = useState("");
-  const [reco, setReco] = useState("");
-  const [reparacion, setReparacion] = useState("");
-  const [mano, setMano] = useState("");
-  const [precio, setPrecio] = useState("");
-  const [tecnicoId, setTecnicoId] = useState<string>("");
-  const [conformidad, setConformidad] = useState(true);
+  // formularios por fase (precarga con reset al cargar la orden)
+  const {
+    register: registerDiag,
+    handleSubmit: handleDiag,
+    reset: resetDiag,
+    watch: watchDiag,
+    formState: { errors: erroresDiag },
+  } = useForm<FaseDiagnosticoFormValues>({
+    resolver: zodResolver(faseDiagnosticoFormSchema),
+    defaultValues: { diagnostico: "", pruebasRealizadas: "", tecnicoId: "" },
+  });
+  const {
+    register: registerRep,
+    handleSubmit: handleRep,
+    reset: resetRep,
+    formState: { errors: erroresRep },
+  } = useForm<FaseReparacionFormValues>({
+    resolver: zodResolver(faseReparacionFormSchema),
+    defaultValues: { reparacionRealizada: "", manoDeObra: "", recomendaciones: "" },
+  });
+  const {
+    register: registerCierre,
+    handleSubmit: handleCierre,
+    reset: resetCierre,
+    watch: watchCierre,
+    formState: { errors: erroresCierre },
+  } = useForm<FaseCierreFormValues>({
+    resolver: zodResolver(faseCierreFormSchema),
+    defaultValues: { precioFinal: "", conformidadEntregaCliente: true },
+  });
+  const tecnicoIdVivo = watchDiag("tecnicoId");
+  const precioVivo = watchCierre("precioFinal");
   const [faseEnCurso, setFaseEnCurso] = useState<FaseKey | null>(null);
 
   const cargar = async () => {
     const res = await api.get<ApiEnvelope<OrdenReparacion>>(`/api/orden-reparacion/${id}`);
     setOrden(res.data);
-    setDiag(res.data.diagnostico ?? "");
-    setPruebas(res.data.pruebasRealizadas ?? "");
-    setReco(res.data.recomendaciones ?? "");
-    setReparacion(res.data.reparacionRealizada ?? "");
-    setMano(String(res.data.manoDeObra ?? 0));
+    resetDiag({
+      diagnostico: res.data.diagnostico ?? "",
+      pruebasRealizadas: res.data.pruebasRealizadas ?? "",
+      tecnicoId: res.data.tecnicoId ? String(res.data.tecnicoId) : tecnicoIdVivo,
+    });
+    resetRep({
+      reparacionRealizada: res.data.reparacionRealizada ?? "",
+      manoDeObra: String(res.data.manoDeObra ?? 0),
+      recomendaciones: res.data.recomendaciones ?? "",
+    });
     // Si aún no hay precio final, sugerir la mano de obra para que no quede en 0.
     // El usuario puede ajustarlo antes de Cerrar y entregar.
-    if (res.data.precioFinal != null) {
-      setPrecio(String(res.data.precioFinal));
-    } else {
-      const manoSugerida = Number(res.data.manoDeObra ?? 0);
-      setPrecio(manoSugerida > 0 ? String(manoSugerida) : "");
-    }
-    setTecnicoId(res.data.tecnicoId ? String(res.data.tecnicoId) : "");
-    setConformidad(res.data.conformidadEntregaCliente);
+    resetCierre({
+      precioFinal:
+        res.data.precioFinal != null
+          ? String(res.data.precioFinal)
+          : Number(res.data.manoDeObra ?? 0) > 0
+            ? String(res.data.manoDeObra)
+            : "",
+      conformidadEntregaCliente: res.data.conformidadEntregaCliente,
+    });
     return res.data;
   };
 
@@ -159,7 +204,11 @@ export default function OrdenDetallePage() {
           setTecnicos(u.data);
         } else if (!od.tecnicoId) {
           // El técnico se autoasigna: no necesita el listado (solo ADMIN)
-          setTecnicoId(String(usuario.id));
+          resetDiag({
+            diagnostico: od.diagnostico ?? "",
+            pruebasRealizadas: od.pruebasRealizadas ?? "",
+            tecnicoId: String(usuario.id),
+          });
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar orden");
@@ -179,24 +228,15 @@ export default function OrdenDetallePage() {
     void Toast.fire({ icon: "error", title: titulo, text: mensaje });
   };
 
-  const guardarDiagnostico = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!diag.trim()) {
-      setError("El diagnóstico es obligatorio.");
-      return;
-    }
-    if (!tecnicoId) {
-      setError("Asigná un técnico a cargo.");
-      return;
-    }
+  const guardarDiagnostico = async (values: FaseDiagnosticoFormValues) => {
+    if (faseEnCurso !== null) return;
     setError(null);
     setFaseEnCurso("diagnostico");
     try {
-      await api.patch(`/api/orden-reparacion/${id}/diagnostico`, {
-        diagnostico: diag.trim(),
-        pruebasRealizadas: pruebas.trim() || null,
-        tecnicoId: Number(tecnicoId),
-      });
+      await api.patch(
+        `/api/orden-reparacion/${id}/diagnostico`,
+        faseDiagnosticoAPayload(values)
+      );
       await trasGuardar("Diagnóstico guardado", "La orden pasó a En diagnóstico.");
     } catch (e) {
       fallaGuardar(e);
@@ -221,20 +261,15 @@ export default function OrdenDetallePage() {
     }
   };
 
-  const guardarReparacion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reparacion.trim()) {
-      setError("La reparación realizada es obligatoria.");
-      return;
-    }
+  const guardarReparacion = async (values: FaseReparacionFormValues) => {
+    if (faseEnCurso !== null) return;
     setError(null);
     setFaseEnCurso("reparacion");
     try {
-      await api.patch(`/api/orden-reparacion/${id}/reparacion`, {
-        reparacionRealizada: reparacion.trim(),
-        manoDeObra: mano ? Number(mano) : 0,
-        recomendaciones: reco.trim() || null,
-      });
+      await api.patch(
+        `/api/orden-reparacion/${id}/reparacion`,
+        faseReparacionAPayload(values)
+      );
       await trasGuardar("Reparación guardada", "La orden quedó Lista.");
     } catch (e) {
       fallaGuardar(e);
@@ -243,19 +278,15 @@ export default function OrdenDetallePage() {
     }
   };
 
-  const guardarCierre = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!precio.trim() || Number.isNaN(Number(precio)) || Number(precio) < 0) {
-      setError("El precio final es obligatorio.");
-      return;
-    }
+  const guardarCierre = async (values: FaseCierreFormValues) => {
+    if (faseEnCurso !== null) return;
     setError(null);
     setFaseEnCurso("cierre");
     try {
-      await api.patch(`/api/orden-reparacion/${id}/cierre`, {
-        precioFinal: Number(precio),
-        conformidadEntregaCliente: conformidad,
-      });
+      await api.patch(
+        `/api/orden-reparacion/${id}/cierre`,
+        faseCierreAPayload(values)
+      );
       await trasGuardar("Cierre guardado", "Precio guardado. Ahora podés ir a cobrar esta orden desde el recuadro azul.");
     } catch (e) {
       fallaGuardar(e);
@@ -275,25 +306,18 @@ export default function OrdenDetallePage() {
           titulo={orden ? `Orden ${orden.numero}` : `Orden #${id}`}
           descripcion={orden ? `${orden.equipo?.tipo ?? ""} ${orden.equipo?.marca ?? ""} ${orden.equipo?.modelo ?? ""} · Falla: ${orden.fallaReportada}` : ""}
           accion={
-            <div className="grid grid-cols-2 gap-2 sm:flex">
-              <button
-                className={btnSecondary + " gap-2"}
-                onClick={() => {
-                  if (typeof window !== "undefined" && window.history.length > 1) {
-                    router.back();
-                  } else {
-                    router.push("/");
-                  }
-                }}
-              >
-                <FiArrowLeft size={15} /> Volver
-              </button>
-              {orden && (
-                <button className={btnSecondary + " gap-2"} onClick={() => window.print()}>
-                  <FiPrinter size={15} /> Imprimir
-                </button>
-              )}
-            </div>
+            <button
+              className={btnSecondary + " gap-2"}
+              onClick={() => {
+                if (typeof window !== "undefined" && window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push("/");
+                }
+              }}
+            >
+              <FiArrowLeft size={15} /> Volver
+            </button>
           }
         />
         {error && <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
@@ -310,14 +334,49 @@ export default function OrdenDetallePage() {
                   <Badge tono={orden.estadoPago === "PAGADO" ? "green" : "amber"}>{orden.estadoPago}</Badge>
                   {orden.autorizadoCliente && <Badge tono="green">Autorizado</Badge>}
                 </div>
-                <dl className="mt-3 space-y-1.5 break-words text-sm text-zinc-700">
-                  <p><b>Cliente:</b> {orden.equipo?.cliente ? `${orden.equipo.cliente.nombre} ${orden.equipo.cliente.apellido ?? ""}` : `Equipo #${orden.equipoId}`}</p>
-                  <p><b>Accesorios:</b> {orden.accesorios || "—"}</p>
-                  <p><b>Condición:</b> {orden.condicionFisica.map((c) => CONDICION_LABEL[c]).join(", ")}</p>
-                  {orden.detalleCondicionFisica && <p><b>Detalle:</b> {orden.detalleCondicionFisica}</p>}
-                  <p><b>Garantía:</b> {orden.garantiaDias} días</p>
-                  <p><b>Firmas recepción:</b> cliente {orden.firmaClienteRecepcion ? "✓" : "✗"} · técnico {orden.firmaTecnicoRecepcion ? "✓" : "✗"}</p>
-                </dl>
+                <ul className="mt-3 space-y-2.5 text-sm">
+                  <li className="flex items-start gap-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-800">
+                      <FiUser size={14} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-stone-400">Cliente</span>
+                      <span className="block truncate font-semibold text-stone-800">
+                        {orden.equipo?.cliente ? `${orden.equipo.cliente.nombre} ${orden.equipo.cliente.apellido ?? ""}`.trim() : `Equipo #${orden.equipoId}`}
+                      </span>
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-stone-100 text-stone-600">
+                      <FiBox size={14} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-stone-400">Accesorios</span>
+                      <span className="block break-words font-semibold text-stone-800">{orden.accesorios || "—"}</span>
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-800">
+                      <FiInfo size={14} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-stone-400">Condición</span>
+                      <span className="block break-words font-semibold text-stone-800">{orden.condicionFisica.map((c) => CONDICION_LABEL[c]).join(", ")}</span>
+                      {orden.detalleCondicionFisica && (
+                        <span className="mt-0.5 block break-words text-[13px] font-normal text-stone-500">{orden.detalleCondicionFisica}</span>
+                      )}
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-800">
+                      <FiShield size={14} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-stone-400">Garantía</span>
+                      <span className="font-ficha block font-bold text-stone-900">{orden.garantiaDias} días</span>
+                    </span>
+                  </li>
+                </ul>
               </Card>
               {(() => {
                 const idx = ["EN_DIAGNOSTICO", "ESPERANDO_REPUESTO"].includes(orden.estado)
@@ -331,7 +390,7 @@ export default function OrdenDetallePage() {
                         : 4;
                 const ef = (i: number): "lista" | "actual" | "bloqueada" =>
                   idx > i || idx === 4 ? "lista" : idx === i ? "actual" : "bloqueada";
-                const tecNombre = orden.tecnico?.nombre ?? (tecnicoId && usuario && Number(tecnicoId) === usuario.id ? usuario.nombre : null);
+                const tecNombre = orden.tecnico?.nombre ?? (tecnicoIdVivo && usuario && Number(tecnicoIdVivo) === usuario.id ? usuario.nombre : null);
                 return (
                   <>
                     <FaseCard
@@ -340,23 +399,20 @@ export default function OrdenDetallePage() {
                       estado={ef(0)}
                       resumen={orden.diagnostico ? <><b className="text-stone-800">{orden.diagnostico}</b>{orden.pruebasRealizadas ? ` · ${orden.pruebasRealizadas}` : ""}{tecNombre ? ` · Téc: ${tecNombre}` : ""}</> : "Sin diagnóstico cargado."}
                     >
-                      <form onSubmit={(e) => void guardarDiagnostico(e)} className="space-y-2">
-                        <div>
-                          <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Diagnóstico <Req /></label>
-                          <textarea className={inputCls} rows={2} placeholder="Ej: Placa con soldadura fría en la fuente..." value={diag} onChange={(e) => setDiag(e.target.value)} />
-                        </div>
-                        <div>
-                          <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Pruebas realizadas <TagOpcional /></label>
-                          <textarea className={inputCls} rows={2} placeholder="Ej: Medición de tensión, prueba de encendido..." value={pruebas} onChange={(e) => setPruebas(e.target.value)} />
-                        </div>
+                      <form onSubmit={(e) => void handleDiag(guardarDiagnostico)(e)} noValidate className="space-y-2">
+                        <Field id="fase-diag" label="Diagnóstico" required error={erroresDiag.diagnostico?.message}>
+                          <textarea id="fase-diag" className={inputCls} rows={2} placeholder="Ej: Placa con soldadura fría en la fuente..." {...registerDiag("diagnostico")} />
+                        </Field>
+                        <Field id="fase-pruebas" label="Pruebas realizadas" marca={<TagOpcional />} error={erroresDiag.pruebasRealizadas?.message}>
+                          <textarea id="fase-pruebas" className={inputCls} rows={2} placeholder="Ej: Medición de tensión, prueba de encendido..." {...registerDiag("pruebasRealizadas")} />
+                        </Field>
                         {esAdmin ? (
-                          <div>
-                            <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Técnico a cargo <Req /></label>
-                            <select className={inputCls} value={tecnicoId} onChange={(e) => setTecnicoId(e.target.value)}>
+                          <Field id="fase-tecnico" label="Técnico a cargo" required error={erroresDiag.tecnicoId?.message}>
+                            <select id="fase-tecnico" className={inputCls} value={tecnicoIdVivo} {...registerDiag("tecnicoId")}>
                               <option value="">Seleccionar técnico...</option>
                               {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nombre} ({t.rol})</option>)}
                             </select>
-                          </div>
+                          </Field>
                         ) : (
                           <p className="rounded-xl bg-blue-50 px-3 py-2 text-sm text-blue-900 ring-1 ring-inset ring-blue-200">
                             Te asignás esta orden: <b>{usuario.nombre}</b>
@@ -400,20 +456,17 @@ export default function OrdenDetallePage() {
                       estado={ef(2)}
                       resumen={orden.reparacionRealizada ? <><b className="text-stone-800">{orden.reparacionRealizada}</b>{` · Mano de obra $${Number(orden.manoDeObra ?? 0).toFixed(2)}`}{orden.recomendaciones ? ` · ${orden.recomendaciones}` : ""}</> : "Sin reparación cargada."}
                     >
-                      <form onSubmit={(e) => void guardarReparacion(e)} className="space-y-2">
-                        <div>
-                          <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Reparación realizada <Req /></label>
-                          <textarea className={inputCls} rows={2} placeholder="Ej: Se resoldó la fuente y se cambió el fusible..." value={reparacion} onChange={(e) => setReparacion(e.target.value)} />
-                        </div>
+                      <form onSubmit={(e) => void handleRep(guardarReparacion)(e)} noValidate className="space-y-2">
+                        <Field id="fase-reparacion" label="Reparación realizada" required error={erroresRep.reparacionRealizada?.message}>
+                          <textarea id="fase-reparacion" className={inputCls} rows={2} placeholder="Ej: Se resoldó la fuente y se cambió el fusible..." {...registerRep("reparacionRealizada")} />
+                        </Field>
                         <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
-                          <div>
-                            <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Mano de obra ($) <TagOpcional /></label>
-                            <input className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={mano} onChange={(e) => setMano(e.target.value)} />
-                          </div>
-                          <div>
-                            <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Recomendaciones <TagOpcional /></label>
-                            <textarea className={inputCls} rows={1} placeholder="Ej: Cambiar el cable..." value={reco} onChange={(e) => setReco(e.target.value)} />
-                          </div>
+                          <Field id="fase-mano" label="Mano de obra ($)" marca={<TagOpcional />} error={erroresRep.manoDeObra?.message}>
+                            <input id="fase-mano" className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" {...registerRep("manoDeObra")} />
+                          </Field>
+                          <Field id="fase-reco" label="Recomendaciones" marca={<TagOpcional />} error={erroresRep.recomendaciones?.message}>
+                            <textarea id="fase-reco" className={inputCls} rows={1} placeholder="Ej: Cambiar el cable..." {...registerRep("recomendaciones")} />
+                          </Field>
                         </div>
                         <button className={btnPrimary + " w-full gap-2"} disabled={faseEnCurso !== null}>
                           <FiSave size={15} /> {faseEnCurso === "reparacion" ? "Guardando..." : "Guardar reparación"}
@@ -427,7 +480,7 @@ export default function OrdenDetallePage() {
                       estado={ef(3)}
                       resumen={orden.precioFinal != null ? <><b className="text-stone-800">${Number(orden.precioFinal).toFixed(2)}</b>{orden.conformidadEntregaCliente ? " · Conforme" : ""}{orden.fechaEntrega ? ` · ${new Date(orden.fechaEntrega).toLocaleDateString("es-AR")}` : ""}</> : "Sin precio cargado."}
                     >
-                      <form onSubmit={(e) => void guardarCierre(e)} className="space-y-2">
+                      <form onSubmit={(e) => void handleCierre(guardarCierre)(e)} noValidate className="space-y-2">
                         <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
                           <div>
                             <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Mano de obra ($)</label>
@@ -436,22 +489,21 @@ export default function OrdenDetallePage() {
                             </div>
                             <p className="mt-1 text-[11px] text-stone-500">Viene de la fase Reparación.</p>
                           </div>
-                          <div>
-                            <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Precio final ($) <Req /></label>
-                            <input className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" value={precio} onChange={(e) => setPrecio(e.target.value)} />
-                          </div>
+                          <Field id="fase-precio" label="Precio final ($)" required error={erroresCierre.precioFinal?.message}>
+                            <input id="fase-precio" className={inputCls} type="number" min="0" step="0.01" placeholder="0.00" {...registerCierre("precioFinal")} />
+                          </Field>
                         </div>
                         {(() => {
                           const cobrado = (orden.pagos ?? []).reduce((a, p) => a + Number(p.monto), 0);
-                          const precioVivo = precio.trim() === "" || Number.isNaN(Number(precio)) ? 0 : Number(precio);
-                          const saldoVivo = Math.round((precioVivo - cobrado) * 100) / 100;
+                          const precioNum = precioVivo.trim() === "" || Number.isNaN(Number(precioVivo)) ? 0 : Number(precioVivo);
+                          const saldoVivo = Math.round((precioNum - cobrado) * 100) / 100;
                           const precioGuardado = orden.precioFinal != null ? Number(orden.precioFinal) : null;
                           const saldoGuardado = precioGuardado != null ? Math.round((precioGuardado - cobrado) * 100) / 100 : null;
                           const cobroHabilitado = precioGuardado != null && saldoGuardado != null && saldoGuardado > 0;
                           return (
                             <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-sm ring-1 ring-inset ring-blue-200/60">
                               <p className="text-[13px] text-blue-900">
-                                Precio total <b className="font-ficha">${precioVivo.toFixed(2)}</b>
+                                Precio total <b className="font-ficha">${precioNum.toFixed(2)}</b>
                                 {" · "}Cobrado <b className="font-ficha">${cobrado.toFixed(2)}</b>
                                 {precioGuardado != null ? (
                                   <> de <b className="font-ficha">${precioGuardado.toFixed(2)}</b></>
@@ -461,9 +513,9 @@ export default function OrdenDetallePage() {
                                 {saldoGuardado != null && saldoGuardado > 0 && <> · Saldo <b className="font-ficha">${saldoGuardado.toFixed(2)}</b></>}
                                 {saldoGuardado != null && saldoGuardado <= 0 && <> · <b>Pagado ✓</b></>}
                               </p>
-                              {precio.trim() !== "" && precioGuardado != null && Number(precio) !== precioGuardado && (
+                              {precioVivo.trim() !== "" && precioGuardado != null && Number(precioVivo) !== precioGuardado && (
                                 <p className="mt-1 text-xs font-semibold text-amber-800">
-                                  Cambiaste el precio a ${precioVivo.toFixed(2)} (saldo nuevo ${saldoVivo.toFixed(2)}). Guardá con Cerrar y entregar para aplicarlo.
+                                  Cambiaste el precio a ${precioNum.toFixed(2)} (saldo nuevo ${saldoVivo.toFixed(2)}). Guardá con Cerrar y entregar para aplicarlo.
                                 </p>
                               )}
                               <p className="mt-1 text-xs text-blue-800">
@@ -483,7 +535,7 @@ export default function OrdenDetallePage() {
                           );
                         })()}
                         <label className="flex min-h-[44px] items-center gap-2.5 text-[15px] sm:text-sm">
-                          <input type="checkbox" className="h-5 w-5 shrink-0 accent-blue-800" checked={conformidad} onChange={(e) => setConformidad(e.target.checked)} />
+                          <input type="checkbox" className="h-5 w-5 shrink-0 accent-blue-800" {...registerCierre("conformidadEntregaCliente")} />
                           Cliente conforme / equipo entregado
                         </label>
                         <button className={btnPrimary + " w-full gap-2"} disabled={faseEnCurso !== null}>
@@ -498,17 +550,68 @@ export default function OrdenDetallePage() {
             <Reveal delay={0.08} className="min-w-0 space-y-3 sm:space-y-4">
               <Card>
                 <h2 className="flex items-center gap-2 font-bold text-stone-900">
-                  <IconTile tono="green"><FiDollarSign size={16} /></IconTile> Pagos
+                  <IconTile tono="green"><FiDollarSign size={16} /></IconTile>
+                  <span className="min-w-0 flex-1">
+                    Pagos
+                    <span className="block text-xs font-normal text-stone-500">
+                      {(orden.pagos ?? []).length} cobro{(orden.pagos ?? []).length !== 1 ? "s" : ""} registrado{(orden.pagos ?? []).length !== 1 ? "s" : ""}
+                    </span>
+                  </span>
+                  <Badge tono={orden.estadoPago === "PAGADO" ? "green" : "amber"}>{orden.estadoPago}</Badge>
                 </h2>
-                <p className="mt-1 text-sm text-zinc-600">
-                  Precio final: <b>${Number(orden.precioFinal ?? 0).toFixed(2)}</b> · Cobrado: <b>${(orden.pagos ?? []).reduce((a, p) => a + Number(p.monto), 0).toFixed(2)}</b>
-                </p>
-                <ul className="mt-2 divide-y divide-zinc-100 text-sm">
-                  {(orden.pagos ?? []).map((p) => (
-                    <li key={p.id} className="py-1.5">${Number(p.monto).toFixed(2)} · {p.medioPago} · {new Date(p.fecha).toLocaleDateString()}</li>
-                  ))}
-                  {(orden.pagos ?? []).length === 0 && <li className="py-1.5 text-zinc-600">Todavía no hay pagos registrados.</li>}
-                </ul>
+                {(() => {
+                  const cobrado = (orden.pagos ?? []).reduce((a, p) => a + Number(p.monto), 0);
+                  const precio = orden.precioFinal != null ? Number(orden.precioFinal) : null;
+                  const saldo = precio != null ? Math.round((precio - cobrado) * 100) / 100 : null;
+                  return (
+                    <dl className="mt-3 space-y-1.5 rounded-xl bg-stone-50 p-3 text-sm ring-1 ring-inset ring-stone-200/70">
+                      <div className="flex items-center justify-between gap-2">
+                        <dt className="text-xs font-bold uppercase tracking-wider text-stone-400">Precio final</dt>
+                        <dd className="font-ficha font-bold text-stone-900">{precio != null ? `$${precio.toFixed(2)}` : "Sin definir"}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 border-t border-stone-200/70 pt-1.5">
+                        <dt className="text-xs font-bold uppercase tracking-wider text-stone-400">Cobrado</dt>
+                        <dd className="font-ficha font-bold text-emerald-700">${cobrado.toFixed(2)}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 border-t border-stone-200/70 pt-1.5">
+                        <dt className="text-xs font-bold uppercase tracking-wider text-stone-400">Saldo</dt>
+                        <dd className={`font-ficha font-bold ${saldo != null && saldo <= 0 ? "text-emerald-700" : "text-blue-800"}`}>
+                          {saldo != null ? (saldo <= 0 ? "Pagado ✓" : `$${saldo.toFixed(2)}`) : "—"}
+                        </dd>
+                      </div>
+                    </dl>
+                  );
+                })()}
+                {(orden.pagos ?? []).length === 0 ? (
+                  <p className="mt-3 rounded-xl border border-dashed border-stone-300 bg-stone-50/60 px-3 py-2.5 text-center text-sm text-stone-500">
+                    Todavía no hay pagos registrados.
+                  </p>
+                ) : (
+                  <ul className="mt-3 space-y-1.5">
+                    {(orden.pagos ?? []).map((p) => (
+                      <li
+                        key={p.id}
+                        className="flex items-center gap-2.5 rounded-xl border border-stone-200/70 bg-white px-3 py-2 text-sm shadow-sm"
+                      >
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-700 text-white">
+                          <FiDollarSign size={14} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="font-ficha block font-bold text-stone-900">
+                            ${Number(p.monto).toFixed(2)}
+                          </span>
+                          <span className="mt-0.5 flex items-center gap-1 text-xs text-stone-500">
+                            <FiCalendar size={11} className="shrink-0" />
+                            {new Date(p.fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                          </span>
+                        </span>
+                        <Badge tono="green">
+                          <FiCreditCard size={11} /> {MEDIO_LABEL[p.medioPago]}
+                        </Badge>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </Card>
               <FotosOrden
                 ordenId={orden.id}
@@ -522,16 +625,52 @@ export default function OrdenDetallePage() {
               />
               <Card>
                 <h2 className="flex items-center gap-2 font-bold text-stone-900">
-                  <IconTile tono="violet"><FiClock size={16} /></IconTile> Historial de estados
+                  <IconTile tono="violet"><FiClock size={16} /></IconTile>
+                  <span className="min-w-0 flex-1">
+                    Historial de estados
+                    <span className="block text-xs font-normal text-stone-500">
+                      {(orden.historialEstados ?? []).length} movimiento{(orden.historialEstados ?? []).length !== 1 ? "s" : ""}
+                    </span>
+                  </span>
                 </h2>
-                <ul className="mt-2 space-y-1 text-sm">
-                  {(orden.historialEstados ?? []).map((h) => (
-                    <li key={h.id} className="text-zinc-700">
-                      <b>{ESTADO_ORDEN_LABEL[h.estado]}</b> · {new Date(h.fecha).toLocaleString()} {h.comentario ? `— ${h.comentario}` : ""}
-                    </li>
-                  ))}
-                  {(orden.historialEstados ?? []).length === 0 && <li className="text-zinc-600">Sin historial registrado.</li>}
-                </ul>
+                {(orden.historialEstados ?? []).length === 0 ? (
+                  <p className="mt-3 rounded-xl border border-dashed border-stone-300 bg-stone-50/60 px-3 py-2.5 text-center text-sm text-stone-500">
+                    Sin historial registrado.
+                  </p>
+                ) : (
+                  <ol className="mt-3">
+                    {(orden.historialEstados ?? []).map((h, i, arr) => (
+                      <li key={h.id} className="relative flex gap-2.5 pb-3 last:pb-0">
+                        {i < arr.length - 1 && (
+                          <span aria-hidden className="absolute bottom-0 left-[7px] top-5 w-px bg-stone-200" />
+                        )}
+                        <span
+                          aria-hidden
+                          className={`mt-1.5 h-[15px] w-[15px] shrink-0 rounded-full ring-4 ring-white ${
+                            i === 0 ? "bg-blue-800" : "bg-stone-300"
+                          }`}
+                        />
+                        <div className="min-w-0 flex-1 rounded-xl bg-stone-50 px-3 py-2 ring-1 ring-inset ring-stone-200/60">
+                          <p className="text-sm font-bold text-stone-900">
+                            {ESTADO_ORDEN_LABEL[h.estado]}
+                          </p>
+                          <p className="mt-0.5 flex items-center gap-1 text-xs text-stone-500">
+                            <FiCalendar size={11} className="shrink-0" />
+                            {new Date(h.fecha).toLocaleString("es-AR", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                          {h.comentario && (
+                            <p className="mt-1 break-words text-[13px] text-stone-600">{h.comentario}</p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                )}
               </Card>
             </Reveal>
           </div>

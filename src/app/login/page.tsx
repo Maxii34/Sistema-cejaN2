@@ -3,38 +3,38 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiClipboard, FiDollarSign, FiEye, FiEyeOff, FiLogIn, FiTool, FiZap } from "react-icons/fi";
-import Swal from "sweetalert2";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/context/AuthContext";
+import { Toast } from "@/lib/toast";
+import {
+  loginAPayload,
+  loginFormSchema,
+  type LoginFormValues,
+} from "@/lib/validaciones";
 import { Card, inputCls, btnPrimary } from "@/components/ui";
+import { Field } from "@/components/Field";
 import { Reveal } from "@/components/motion";
-
-const Toast = Swal.mixin({
-  toast: true,
-  position: "top",
-  showConfirmButton: false,
-  timer: 2500,
-  timerProgressBar: true,
-  didOpen: (toast) => {
-    toast.addEventListener("mouseenter", Swal.stopTimer);
-    toast.addEventListener("mouseleave", Swal.resumeTimer);
-  },
-});
 
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [verPassword, setVerPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cargando, setCargando] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginFormSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (values: LoginFormValues) => {
     setError(null);
-    setCargando(true);
     try {
-      await login(email.trim(), password);
+      const payload = loginAPayload(values);
+      await login(payload.email, payload.password);
       void Toast.fire({
         icon: "success",
         title: "Sesión iniciada",
@@ -45,8 +45,6 @@ export default function LoginPage() {
       const mensaje = err instanceof Error ? err.message : "No se pudo iniciar sesión";
       setError(mensaje);
       void Toast.fire({ icon: "error", title: "No se pudo ingresar", text: mensaje });
-    } finally {
-      setCargando(false);
     }
   };
 
@@ -80,35 +78,29 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-stone-500">
             Accedé al sistema para gestionar recepciones, equipos y pagos del taller.
           </p>
-          <form onSubmit={(e) => void submit(e)} className="mt-5 space-y-3">
-            <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
-                Email
-              </label>
+          <form onSubmit={(e) => void handleSubmit(submit)(e)} noValidate className="mt-5 space-y-3">
+            <Field id="login-email" label="Email" error={errors.email?.message}>
               <input
+                id="login-email"
                 className={inputCls}
                 type="email"
                 required
                 autoComplete="email"
                 inputMode="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="tecnico@taller.com"
+                {...register("email")}
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">
-                Contraseña
-              </label>
+            </Field>
+            <Field id="login-password" label="Contraseña" error={errors.password?.message}>
               <div className="flex gap-2">
                 <input
+                  id="login-password"
                   className={inputCls}
                   type={verPassword ? "text" : "password"}
                   required
                   autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••"
+                  {...register("password")}
                 />
                 <button
                   type="button"
@@ -120,15 +112,15 @@ export default function LoginPage() {
                   {verPassword ? <FiEyeOff size={19} /> : <FiEye size={19} />}
                 </button>
               </div>
-            </div>
+            </Field>
             {error && (
               <p className="rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-200">
                 {error}
               </p>
             )}
-            <button className={btnPrimary + " w-full"} disabled={cargando}>
+            <button className={btnPrimary + " w-full"} disabled={isSubmitting}>
               <FiLogIn size={17} />
-              {cargando ? "Ingresando..." : "Ingresar al taller"}
+              {isSubmitting ? "Ingresando..." : "Ingresar al taller"}
             </button>
           </form>
         </Card>

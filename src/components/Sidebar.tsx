@@ -311,7 +311,7 @@ export function Sidebar() {
                   aria-label="Nueva recepción"
                   className="flex flex-col items-center justify-center gap-0.5 py-1.5"
                 >
-                  <span className="brand-btn -mt-6 flex h-13 w-13 items-center justify-center rounded-2xl bg-blue-800 p-3.5 text-white ring-4 ring-[#eef2f7]">
+                  <span className="brand-btn -mt-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-800 p-3.5 text-white ring-4 ring-[#eef2f7]">
                     <FiPlus size={24} strokeWidth={2.5} />
                   </span>
                   <span className="text-[10px] font-bold text-blue-800">

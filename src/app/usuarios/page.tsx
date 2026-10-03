@@ -15,26 +15,25 @@ import {
   FiUsers,
 } from "react-icons/fi";
 import Swal from "sweetalert2";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/api";
+import { Toast } from "@/lib/toast";
+import {
+  crearUsuarioAPayload,
+  crearUsuarioFormSchema,
+  editarUsuarioFormSchema,
+  type CrearUsuarioFormValues,
+  type EditarUsuarioFormValues,
+} from "@/lib/validaciones";
 import { useRequireAuth } from "@/context/AuthContext";
 import { Sidebar } from "@/components/Sidebar";
 import { AnimatePresence } from "motion/react";
 import { Modal } from "@/components/Modal";
 import { Lista, ItemLi, Reveal } from "@/components/motion";
 import { Card, PageHeader, Badge, Empty, btnPrimary, btnSecondary, inputCls, IconTile, Spinner, CargandoPagina } from "@/components/ui";
+import { Field } from "@/components/Field";
 import type { ApiEnvelope, RolUsuario, Usuario } from "@/lib/types";
-
-const Toast = Swal.mixin({
-  toast: true,
-  position: "top",
-  showConfirmButton: false,
-  timer: 2500,
-  timerProgressBar: true,
-  didOpen: (toast) => {
-    toast.addEventListener("mouseenter", Swal.stopTimer);
-    toast.addEventListener("mouseleave", Swal.resumeTimer);
-  },
-});
 
 const ROL_INFO: Record<RolUsuario, { titulo: string; detalle: string; caja: string }> = {
   ADMIN: {
@@ -49,28 +48,226 @@ const ROL_INFO: Record<RolUsuario, { titulo: string; detalle: string; caja: stri
   },
 };
 
+/**
+ * Form de edición dentro del modal: su propio useForm, reseteado al
+ * abrir/cambiar de usuario. La repetición de clave es regla solo del front.
+ */
+function EditarUsuarioForm({
+  usuario: u,
+  alGuardar,
+  alFallar,
+  alCancelar,
+}: {
+  usuario: Usuario;
+  alGuardar: (claveOk: boolean) => void;
+  alFallar: (mensaje: string) => void;
+  alCancelar: () => void;
+}) {
+  const [verNueva, setVerNueva] = useState(false);
+  const [verRepetir, setVerRepetir] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<EditarUsuarioFormValues>({
+    resolver: zodResolver(editarUsuarioFormSchema),
+    defaultValues: {
+      nombre: u.nombre,
+      email: u.email,
+      rol: u.rol,
+      cambiarClave: false,
+      claveNueva: "",
+      claveRepetir: "",
+    },
+  });
+  useEffect(() => {
+    reset({
+      nombre: u.nombre,
+      email: u.email,
+      rol: u.rol,
+      cambiarClave: false,
+      claveNueva: "",
+      claveRepetir: "",
+    });
+    setVerNueva(false);
+    setVerRepetir(false);
+  }, [u, reset]);
+  const rolVivo = watch("rol");
+  const cambiarClave = watch("cambiarClave");
+  const claveNueva = watch("claveNueva");
+  const claveRepetir = watch("claveRepetir");
+
+  const guardar = async (values: EditarUsuarioFormValues) => {
+    if (isSubmitting) return;
+    try {
+      await api.put(`/api/usuario/${u.id}`, {
+        nombre: values.nombre.trim(),
+        email: values.email.trim(),
+        rol: values.rol,
+      });
+      let claveOk = false;
+      if (values.cambiarClave) {
+        await api.put(`/api/usuario/${u.id}/password`, { password: values.claveNueva });
+        claveOk = true;
+      }
+      alGuardar(claveOk);
+    } catch (e) {
+      alFallar(e instanceof Error ? e.message : "No se pudo actualizar");
+    }
+  };
+
+  return (
+    <form onSubmit={(e) => void handleSubmit(guardar)(e)} noValidate className="space-y-2">
+      <Field id="edit-u-nombre" label="Nombre" error={errors.nombre?.message}>
+        <input
+          id="edit-u-nombre"
+          className={inputCls}
+          required
+          autoComplete="name"
+          {...register("nombre")}
+        />
+      </Field>
+      <Field id="edit-u-email" label="Email" error={errors.email?.message}>
+        <input
+          id="edit-u-email"
+          className={inputCls}
+          required
+          type="email"
+          autoComplete="email"
+          {...register("email")}
+        />
+      </Field>
+      <div>
+        <label htmlFor="edit-u-rol" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Rol</label>
+        <select
+          id="edit-u-rol"
+          className={inputCls}
+          {...register("rol")}
+        >
+          <option value="TECNICO">TÉCNICO</option>
+          <option value="ADMIN">ADMIN</option>
+        </select>
+        {errors.rol?.message && (
+          <p role="alert" className="mt-1 text-xs font-medium text-red-600">{errors.rol.message}</p>
+        )}
+        <p className={`mt-1.5 rounded-xl border px-3 py-2 text-xs leading-snug ring-1 ring-inset ${ROL_INFO[rolVivo].caja}`}>
+          <b className="block text-[11px] font-bold uppercase tracking-wider opacity-80">{ROL_INFO[rolVivo].titulo}</b>
+          <span className="mt-0.5 block">{ROL_INFO[rolVivo].detalle}</span>
+        </p>
+      </div>
+      {/* Restablecer contraseña (solo ADMIN) */}
+      <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-3">
+        <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5">
+          <input
+            type="checkbox"
+            className="h-5 w-5 shrink-0 accent-blue-800"
+            {...register("cambiarClave")}
+          />
+          <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-bold text-stone-800">
+            <FiLock size={14} className="shrink-0 text-blue-800" />
+            Cambiar contraseña
+          </span>
+        </label>
+        {cambiarClave && (
+          <div className="mt-2 space-y-2 border-t border-stone-200/70 pt-2">
+            <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+              <div>
+                <label htmlFor="clave-nueva" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nueva clave</label>
+                <div className="relative">
+                  <input
+                    id="clave-nueva"
+                    className={inputCls + " pr-11"}
+                    type={verNueva ? "text" : "password"}
+                    autoComplete="new-password"
+                    placeholder="Mínimo 6 caracteres"
+                    {...register("claveNueva")}
+                  />
+                  <button
+                    type="button"
+                    aria-label={verNueva ? "Ocultar nueva clave" : "Mostrar nueva clave"}
+                    onClick={() => setVerNueva((v) => !v)}
+                    className="absolute inset-y-0 right-1 flex w-9 items-center justify-center rounded-lg text-stone-400 hover:text-stone-700"
+                  >
+                    {verNueva ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                  </button>
+                </div>
+                {errors.claveNueva?.message && (
+                  <p role="alert" className="mt-1 text-xs font-medium text-red-600">{errors.claveNueva.message}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="clave-repetir" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Repetir nueva clave</label>
+                <div className="relative">
+                  <input
+                    id="clave-repetir"
+                    className={inputCls + " pr-11"}
+                    type={verRepetir ? "text" : "password"}
+                    autoComplete="new-password"
+                    placeholder="Repetí la nueva clave"
+                    {...register("claveRepetir")}
+                  />
+                  <button
+                    type="button"
+                    aria-label={verRepetir ? "Ocultar confirmación" : "Mostrar confirmación"}
+                    onClick={() => setVerRepetir((v) => !v)}
+                    className="absolute inset-y-0 right-1 flex w-9 items-center justify-center rounded-lg text-stone-400 hover:text-stone-700"
+                  >
+                    {verRepetir ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                  </button>
+                </div>
+                {errors.claveRepetir?.message && (
+                  <p role="alert" className="mt-1 text-xs font-medium text-red-600">{errors.claveRepetir.message}</p>
+                )}
+              </div>
+            </div>
+            {claveNueva !== "" && claveNueva.length < 6 && (
+              <p className="text-xs font-medium text-amber-700">La nueva clave debe tener al menos 6 caracteres.</p>
+            )}
+            {claveNueva !== "" && claveRepetir !== "" && (
+              claveNueva === claveRepetir
+                ? <p className="text-xs font-semibold text-emerald-700">Las claves nuevas coinciden ✓</p>
+                : <p className="text-xs font-semibold text-red-600">Las claves nuevas no coinciden.</p>
+            )}
+            <p className="rounded-lg bg-blue-50 px-2.5 py-1.5 text-[11px] leading-snug text-blue-800 ring-1 ring-inset ring-blue-200/70">
+              Como administrador, fijás una nueva contraseña sin necesidad de la anterior. El usuario deberá ingresar con la nueva.
+            </p>
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-2 pt-1">
+        <button type="button" className={btnSecondary} onClick={alCancelar}>
+          Cancelar
+        </button>
+        <button className={btnPrimary} disabled={isSubmitting || (cambiarClave && (claveNueva.length < 6 || claveNueva !== claveRepetir))}>
+          <FiEdit size={15} /> {isSubmitting ? "Guardando..." : "Guardar"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function UsuariosPage() {
   const { usuario, cargando, esAdmin } = useRequireAuth();
   const router = useRouter();
   const [lista, setLista] = useState<Usuario[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [cargandoLista, setCargandoLista] = useState(true);
-  const [nombre, setNombre] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rol, setRol] = useState<RolUsuario>("TECNICO");
+  const {
+    register: registerNuevo,
+    handleSubmit: handleNuevo,
+    reset: resetNuevo,
+    watch: watchNuevo,
+    formState: { errors: erroresNuevo, isSubmitting: creandoUsuario },
+  } = useForm<CrearUsuarioFormValues>({
+    resolver: zodResolver(crearUsuarioFormSchema),
+    defaultValues: { nombre: "", email: "", password: "", rol: "TECNICO" },
+  });
+  const rolNuevo = watchNuevo("rol");
 
-  // edición
+  // edición (el form vive dentro del modal)
   const [editando, setEditando] = useState<Usuario | null>(null);
-  const [formEdit, setFormEdit] = useState({ nombre: "", email: "", rol: "TECNICO" as RolUsuario });
-  const [guardandoEdit, setGuardandoEdit] = useState(false);
-
-  // Restablecer clave (solo ADMIN): nueva + repetir, va a PUT /:id/password
-  const [cambiarClave, setCambiarClave] = useState(false);
-  const [claveNueva, setClaveNueva] = useState("");
-  const [claveRepetir, setClaveRepetir] = useState("");
-  const [verNueva, setVerNueva] = useState(false);
-  const [verRepetir, setVerRepetir] = useState(false);
 
   // ADMIN siempre fijo arriba, luego por nombre
   const listaOrdenada = useMemo(
@@ -102,16 +299,11 @@ export default function UsuariosPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [usuario, esAdmin]);
 
-  const crear = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const crear = async (values: CrearUsuarioFormValues) => {
+    if (creandoUsuario) return;
     try {
-      await api.post("/api/usuario", {
-        nombre: nombre.trim(),
-        email: email.trim(),
-        password,
-        rol,
-      });
-      setNombre(""); setEmail(""); setPassword(""); setRol("TECNICO");
+      await api.post("/api/usuario", crearUsuarioAPayload(values));
+      resetNuevo();
       await cargar();
       void Toast.fire({ icon: "success", title: "Usuario creado", text: "El usuario ya puede ingresar al taller." });
     } catch (e) {
@@ -122,55 +314,22 @@ export default function UsuariosPage() {
   };
 
   const abrirEdicion = (u: Usuario) => {
-    setFormEdit({ nombre: u.nombre, email: u.email, rol: u.rol });
     setEditando(u);
-    // resetea la sección de clave
-    setCambiarClave(false);
-    setClaveNueva("");
-    setClaveRepetir("");
-    setVerNueva(false);
-    setVerRepetir(false);
   };
 
-  const guardarEdicion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editando) return;
-    if (cambiarClave) {
-      if (claveNueva.length < 6) {
-        void Toast.fire({ icon: "error", title: "Clave muy corta", text: "La nueva clave debe tener al menos 6 caracteres." });
-        return;
-      }
-      if (claveNueva !== claveRepetir) {
-        void Toast.fire({ icon: "error", title: "No coinciden", text: "La nueva clave y su repetición no coinciden." });
-        return;
-      }
-    }
-    setGuardandoEdit(true);
-    try {
-      await api.put(`/api/usuario/${editando.id}`, {
-        nombre: formEdit.nombre.trim(),
-        email: formEdit.email.trim(),
-        rol: formEdit.rol,
-      });
-      let claveOk = false;
-      if (cambiarClave) {
-        await api.put(`/api/usuario/${editando.id}/password`, { password: claveNueva });
-        claveOk = true;
-      }
-      setEditando(null);
-      await cargar();
-      void Toast.fire({
-        icon: "success",
-        title: "Usuario actualizado",
-        text: claveOk ? "Datos y contraseña guardados correctamente." : "Los datos se guardaron correctamente.",
-      });
-    } catch (e) {
-      const mensaje = e instanceof Error ? e.message : "No se pudo actualizar";
-      setError(mensaje);
-      void Toast.fire({ icon: "error", title: "No se pudo actualizar", text: mensaje });
-    } finally {
-      setGuardandoEdit(false);
-    }
+  const trasGuardarEdicion = async (claveOk: boolean) => {
+    setEditando(null);
+    await cargar();
+    void Toast.fire({
+      icon: "success",
+      title: "Usuario actualizado",
+      text: claveOk ? "Datos y contraseña guardados correctamente." : "Los datos se guardaron correctamente.",
+    });
+  };
+
+  const fallaEdicion = (mensaje: string) => {
+    setError(mensaje);
+    void Toast.fire({ icon: "error", title: "No se pudo actualizar", text: mensaje });
   };
 
   const alternarActivo = async (u: Usuario) => {
@@ -291,18 +450,16 @@ export default function UsuariosPage() {
                 <Spinner tamano="md" /> Cargando usuarios...
               </div>
             ) : listaOrdenada.length === 0 ? <Empty mensaje="Sin usuarios" /> : (
-              <>
-                {/* Cards en móvil: todo en una sola fila */}
-                <Lista className="tabla-scroll max-h-[340px] space-y-2 overflow-y-auto pb-1 pr-1 sm:hidden">
+                <Lista className="tabla-scroll max-h-[380px] space-y-2 overflow-y-auto pb-1 pr-1 text-sm sm:max-h-[420px]">
                   {listaOrdenada.map((u) => {
                     const esAdminFila = u.rol === "ADMIN";
                     return (
                     <ItemLi
                       key={u.id}
-                      className={`group flex items-center gap-2.5 overflow-hidden rounded-xl border p-2.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 ${
+                      className={`group flex items-center gap-2.5 overflow-hidden rounded-xl border p-2.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 sm:gap-3 ${
                         esAdminFila
-                          ? "border-violet-200 bg-gradient-to-r from-violet-50 via-white to-white ring-1 ring-inset ring-violet-100"
-                          : `border-stone-200 bg-white hover:border-blue-200 ${u.activo ? "" : "opacity-75"}`
+                          ? "border-violet-200 bg-gradient-to-r from-violet-50 via-white to-white ring-1 ring-inset ring-violet-100 hover:shadow-[0_18px_36px_-18px_rgba(109,40,217,0.35)]"
+                          : `border-stone-200/70 bg-stone-50/60 hover:border-blue-200 hover:bg-white hover:shadow-[0_18px_36px_-18px_rgba(30,64,175,0.35)] ${u.activo ? "" : "opacity-75"}`
                       }`}
                     >
                       <span className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-extrabold text-white ${
@@ -334,100 +491,39 @@ export default function UsuariosPage() {
                     );
                   })}
                 </Lista>
-                {/* Tabla en sm+ */}
-                <Reveal className="tabla-scroll hidden max-h-[380px] overflow-y-auto overflow-x-auto pr-1 sm:block">
-                  <table className="w-full min-w-[560px] text-left text-sm">
-                    <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_#e7e5e4]">
-                      <tr className="border-b border-stone-200 text-xs uppercase tracking-wide text-stone-500">
-                        <th className="py-2 pr-3 font-bold">Usuario</th>
-                        <th className="py-2 pr-3 font-bold">Rol</th>
-                        <th className="py-2 pr-3 font-bold">Estado</th>
-                        <th className="py-2 text-right font-bold">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {listaOrdenada.map((u) => {
-                        const esAdminFila = u.rol === "ADMIN";
-                        return (
-                        <tr
-                          key={u.id}
-                          className={`border-b border-stone-100 transition-colors last:border-0 hover:shadow-[inset_3px_0_0_0_var(--tw-shadow-color)] ${
-                            esAdminFila
-                              ? "bg-violet-50/50 shadow-[inset_3px_0_0_0_#7c3aed] hover:bg-violet-50"
-                              : "hover:bg-blue-50/50 hover:shadow-[inset_3px_0_0_0_#1e40af]"
-                          } ${u.activo ? "" : "opacity-75"}`}
-                        >
-                          <td className="py-2.5 pr-3">
-                            <div className="flex items-center gap-2.5">
-                              <span className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-extrabold text-white transition-transform duration-200 group-hover:scale-105 ${
-                                esAdminFila
-                                  ? "bg-gradient-to-br from-violet-600 to-violet-800 shadow-[0_8px_16px_-8px_rgba(109,40,217,0.7)] ring-2 ring-violet-200"
-                                  : "bg-blue-800 shadow-[0_8px_16px_-8px_rgba(30,64,175,0.6)] ring-2 ring-blue-100"
-                              } ${u.activo ? "" : "saturate-50"}`}>
-                                {(u.nombre[0] ?? "?").toUpperCase()}
-                                <span
-                                  title={u.activo ? "Activo" : "Inactivo"}
-                                  className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-white ${u.activo ? "bg-emerald-500" : "bg-stone-400"}`}
-                                />
-                              </span>
-                              <span className="min-w-0">
-                                <span className="flex items-center gap-1.5">
-                                  <span className="block truncate font-semibold text-stone-900">
-                                    {u.nombre} {esYo(u) && <span className="text-xs font-medium text-stone-400">(vos)</span>}
-                                  </span>
-                                  {esAdminFila && <FiShield size={13} className="shrink-0 text-violet-700" />}
-                                </span>
-                                <span className="block truncate text-xs text-stone-500">{u.email}</span>
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-2.5 pr-3">
-                            <Badge tono={esAdminFila ? "violet" : "blue"}>{u.rol}</Badge>
-                          </td>
-                          <td className="py-2.5 pr-3">
-                            <Badge tono={u.activo ? "green" : "zinc"}>{u.activo ? "Activo" : "Inactivo"}</Badge>
-                          </td>
-                          <td className="py-2.5">{acciones(u)}</td>
-                        </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </Reveal>
-              </>
-            )}
+              )}
             </div>
           </Card>
           <Reveal className="order-first lg:order-none" delay={0.08}><Card>
             <h2 className="flex items-center gap-2 font-bold text-stone-900">
               <IconTile tono="violet"><FiShield size={16} /></IconTile> Nuevo usuario
             </h2>
-            <form onSubmit={(e) => void crear(e)} className="mt-3 space-y-2">
+            <form onSubmit={(e) => void handleNuevo(crear)(e)} noValidate className="mt-3 space-y-2">
+              <Field id="nuevo-nombre" label="Nombre" required error={erroresNuevo.nombre?.message}>
+                <input id="nuevo-nombre" className={inputCls} required type="text" autoComplete="name" placeholder="Ej: Juan Pérez" {...registerNuevo("nombre")} />
+              </Field>
+              <Field id="nuevo-email" label="Email" required error={erroresNuevo.email?.message}>
+                <input id="nuevo-email" className={inputCls} required type="email" autoComplete="email" placeholder="Ej: juan@taller.com" {...registerNuevo("email")} />
+              </Field>
+              <Field id="nuevo-password" label="Contraseña" required error={erroresNuevo.password?.message}>
+                <input id="nuevo-password" className={inputCls} required type="password" autoComplete="new-password" minLength={6} placeholder="Mínimo 6 caracteres" {...registerNuevo("password")} />
+              </Field>
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nombre <span className="font-bold text-red-600">*</span></label>
-                <input className={inputCls} required placeholder="Ej: Juan Pérez" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Email <span className="font-bold text-red-600">*</span></label>
-                <input className={inputCls} required type="email" placeholder="Ej: juan@taller.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Contraseña <span className="font-bold text-red-600">*</span></label>
-                <input className={inputCls} required type="password" minLength={6} placeholder="Mínimo 6 caracteres" value={password} onChange={(e) => setPassword(e.target.value)} />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Rol <span className="font-bold text-red-600">*</span></label>
-                <select className={inputCls} value={rol} onChange={(e) => setRol(e.target.value as RolUsuario)}>
+                <label htmlFor="nuevo-rol" className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Rol <span className="font-bold text-red-600">*</span></label>
+                <select id="nuevo-rol" className={inputCls} {...registerNuevo("rol")}>
                   <option value="TECNICO">TÉCNICO</option>
                   <option value="ADMIN">ADMIN</option>
                 </select>
-                <p className={`mt-1.5 rounded-xl border px-3 py-2 text-xs leading-snug ring-1 ring-inset ${ROL_INFO[rol].caja}`}>
-                  <b className="block text-[11px] font-bold uppercase tracking-wider opacity-80">{ROL_INFO[rol].titulo}</b>
-                  <span className="mt-0.5 block">{ROL_INFO[rol].detalle}</span>
+                {erroresNuevo.rol?.message && (
+                  <p role="alert" className="mt-1 text-xs font-medium text-red-600">{erroresNuevo.rol.message}</p>
+                )}
+                <p className={`mt-1.5 rounded-xl border px-3 py-2 text-xs leading-snug ring-1 ring-inset ${ROL_INFO[rolNuevo].caja}`}>
+                  <b className="block text-[11px] font-bold uppercase tracking-wider opacity-80">{ROL_INFO[rolNuevo].titulo}</b>
+                  <span className="mt-0.5 block">{ROL_INFO[rolNuevo].detalle}</span>
                 </p>
               </div>
-              <button className={btnPrimary + " w-full"}>
-                <FiUserPlus size={15} /> Crear usuario
+              <button className={btnPrimary + " w-full"} disabled={creandoUsuario}>
+                <FiUserPlus size={15} /> {creandoUsuario ? "Creando..." : "Crear usuario"}
               </button>
             </form>
           </Card>
@@ -438,122 +534,12 @@ export default function UsuariosPage() {
       <AnimatePresence>
       {editando && (
         <Modal titulo={`Editar: ${editando.nombre}`} onClose={() => setEditando(null)}>
-          <form onSubmit={(e) => void guardarEdicion(e)} className="space-y-2">
-            <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nombre</label>
-              <input
-                className={inputCls}
-                required
-                value={formEdit.nombre}
-                onChange={(e) => setFormEdit({ ...formEdit, nombre: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Email</label>
-              <input
-                className={inputCls}
-                required
-                type="email"
-                value={formEdit.email}
-                onChange={(e) => setFormEdit({ ...formEdit, email: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Rol</label>
-              <select
-                className={inputCls}
-                value={formEdit.rol}
-                onChange={(e) => setFormEdit({ ...formEdit, rol: e.target.value as RolUsuario })}
-              >
-                <option value="TECNICO">TÉCNICO</option>
-                <option value="ADMIN">ADMIN</option>
-              </select>
-              <p className={`mt-1.5 rounded-xl border px-3 py-2 text-xs leading-snug ring-1 ring-inset ${ROL_INFO[formEdit.rol].caja}`}>
-                <b className="block text-[11px] font-bold uppercase tracking-wider opacity-80">{ROL_INFO[formEdit.rol].titulo}</b>
-                <span className="mt-0.5 block">{ROL_INFO[formEdit.rol].detalle}</span>
-              </p>
-            </div>
-            {/* Restablecer contraseña (solo ADMIN) */}
-            <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-3">
-              <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5">
-                <input
-                  type="checkbox"
-                  className="h-5 w-5 shrink-0 accent-blue-800"
-                  checked={cambiarClave}
-                  onChange={(e) => setCambiarClave(e.target.checked)}
-                />
-                <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-bold text-stone-800">
-                  <FiLock size={14} className="shrink-0 text-blue-800" />
-                  Cambiar contraseña
-                </span>
-              </label>
-              {cambiarClave && (
-                <div className="mt-2 space-y-2 border-t border-stone-200/70 pt-2">
-                  <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Nueva clave</label>
-                      <div className="relative">
-                        <input
-                          className={inputCls + " pr-11"}
-                          type={verNueva ? "text" : "password"}
-                          placeholder="Mínimo 6 caracteres"
-                          value={claveNueva}
-                          onChange={(e) => setClaveNueva(e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          aria-label={verNueva ? "Ocultar nueva clave" : "Mostrar nueva clave"}
-                          onClick={() => setVerNueva((v) => !v)}
-                          className="absolute inset-y-0 right-1 flex w-9 items-center justify-center rounded-lg text-stone-400 hover:text-stone-700"
-                        >
-                          {verNueva ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-stone-500">Repetir nueva clave</label>
-                      <div className="relative">
-                        <input
-                          className={inputCls + " pr-11"}
-                          type={verRepetir ? "text" : "password"}
-                          placeholder="Repetí la nueva clave"
-                          value={claveRepetir}
-                          onChange={(e) => setClaveRepetir(e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          aria-label={verRepetir ? "Ocultar confirmación" : "Mostrar confirmación"}
-                          onClick={() => setVerRepetir((v) => !v)}
-                          className="absolute inset-y-0 right-1 flex w-9 items-center justify-center rounded-lg text-stone-400 hover:text-stone-700"
-                        >
-                          {verRepetir ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  {claveNueva !== "" && claveNueva.length < 6 && (
-                    <p className="text-xs font-medium text-amber-700">La nueva clave debe tener al menos 6 caracteres.</p>
-                  )}
-                  {claveNueva !== "" && claveRepetir !== "" && (
-                    claveNueva === claveRepetir
-                      ? <p className="text-xs font-semibold text-emerald-700">Las claves nuevas coinciden ✓</p>
-                      : <p className="text-xs font-semibold text-red-600">Las claves nuevas no coinciden.</p>
-                  )}
-                  <p className="rounded-lg bg-blue-50 px-2.5 py-1.5 text-[11px] leading-snug text-blue-800 ring-1 ring-inset ring-blue-200/70">
-                    Como administrador, fijás una nueva contraseña sin necesidad de la anterior. El usuario deberá ingresar con la nueva.
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <button type="button" className={btnSecondary} onClick={() => setEditando(null)}>
-                Cancelar
-              </button>
-              <button className={btnPrimary} disabled={guardandoEdit || (cambiarClave && (claveNueva.length < 6 || claveNueva !== claveRepetir))}>
-                <FiEdit size={15} /> {guardandoEdit ? "Guardando..." : "Guardar"}
-              </button>
-            </div>
-          </form>
+          <EditarUsuarioForm
+            usuario={editando}
+            alGuardar={(claveOk) => void trasGuardarEdicion(claveOk)}
+            alFallar={fallaEdicion}
+            alCancelar={() => setEditando(null)}
+          />
         </Modal>
       )}
       </AnimatePresence>
